@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>用戶管理面板</title>
+    <link rel="stylesheet" href="css/responsive.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        .section h2 {
+            color: #1a5276;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .btn-primary { background: #007bff; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-info { background: #17a2b8; color: white; }
+        .btn-warning { background: #ffc107; color: black; }
+
+        .btn:hover { opacity: 0.8; }
+
+        .user-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            background: #f8f9fa;
+        }
+
+        .user-item {
+            padding: 8px;
+            margin-bottom: 8px;
+            background: white;
+            border-radius: 4px;
+            border-left: 4px solid #007bff;
+        }
+
+        .json-output {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        .copy-btn {
+            margin-top: 10px;
+            background: #28a745;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .back-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: #6c757d;
+            color: white;
+            padding: 10px 15px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+
+        .back-link:hover {
+            background: #5a6268;
+            color: white;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-link">← 返回主系統</a>
+
+    <div class="container">
+        <h1>🔧 用戶管理面板</h1>
+        
+        <div class="stats" id="statsContainer">
+            <!-- 統計卡片將由 JS 動態生成 -->
+        </div>
+
+        <div class="section">
+            <h2>📊 快速操作</h2>
+            <button class="btn btn-info" onclick="refreshData()">刷新資料</button>
+            <button class="btn btn-success" onclick="exportToFile()">匯出用戶檔案</button>
+            <button class="btn btn-warning" onclick="showSyncInstructions()">同步說明</button>
+            <button class="btn btn-primary" onclick="generateUsersJson()">產生 users.json</button>
+        </div>
+
+        <div class="section">
+            <h2>👥 註冊用戶列表</h2>
+            <div id="usersList" class="user-list">
+                載入中...
+            </div>
+        </div>
+
+        <div class="section" id="jsonSection" style="display: none;">
+            <h2>📁 users.json 內容</h2>
+            <p>複製以下內容到 <code>data/users.json</code> 檔案：</p>
+            <div id="jsonOutput" class="json-output"></div>
+            <button class="copy-btn" onclick="copyToClipboard()">複製到剪貼簿</button>
+        </div>
+    </div>
+
+    <script src="js/userManager.js"></script>
+    <script>
+        let currentUsersData = null;
+
+        // 頁面載入時初始化
+        window.addEventListener('load', async function() {
+            // 檢查管理員權限
+            const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            if (!currentUser.permissions || !currentUser.permissions.includes('manage')) {
+                alert('您沒有管理員權限，將跳轉到登入頁面');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            await refreshData();
+        });
+
+        async function refreshData() {
+            try {
+                await window.userManager.loadUsers();
+                const stats = window.userManager.getUserStats();
+                const allUsers = window.userManager.getAllUsers();
+                
+                updateStats(stats);
+                updateUsersList(allUsers);
+                
+            } catch (error) {
+                console.error('刷新資料失敗:', error);
+                alert('刷新資料失敗: ' + error.message);
+            }
+        }
+
+        function updateStats(stats) {
+            const container = document.getElementById('statsContainer');
+            container.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-number">${stats.totalUsers}</div>
+                    <div>總用戶數</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${stats.totalSystemUsers}</div>
+                    <div>系統用戶</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${stats.totalRegisteredUsers}</div>
+                    <div>註冊用戶</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${stats.activeUsers}</div>
+                    <div>活躍用戶</div>
+                </div>
+            `;
+        }
+
+        function updateUsersList(allUsers) {
+            const container = document.getElementById('usersList');
+            let html = '';
+
+            // 只顯示註冊用戶
+            const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '{}');
+            
+            if (Object.keys(registeredUsers).length === 0) {
+                html = '<div style="text-align: center; color: #666;">目前沒有註冊用戶</div>';
+            } else {
+                for (let username in registeredUsers) {
+                    const user = registeredUsers[username];
+                    html += `
+                        <div class="user-item">
+                            <strong>${user.name}</strong> (@${username})
+                            <br><small>📧 ${user.email} | 📞 ${user.phone}</small>
+                            <br><small>📅 註冊時間: ${new Date(user.registrationDate).toLocaleString('zh-TW')}</small>
+                        </div>
+                    `;
+                }
+            }
+
+            container.innerHTML = html;
+        }
+
+        async function generateUsersJson() {
+            try {
+                await window.userManager.loadUsers();
+                
+                // 獲取當前的 users.json 結構
+                const systemUsers = {
+                    "admin": {
+                        "password": "admin123",
+                        "role": "administrator",
+                        "name": "系統管理員",
+                        "permissions": ["view", "edit", "manage", "export"],
+                        "createdDate": "2026-01-01T00:00:00.000Z",
+                        "type": "system"
+                    },
+                    "operator": {
+                        "password": "op123",
+                        "role": "operator", 
+                        "name": "系統操作員",
+                        "permissions": ["view", "edit"],
+                        "createdDate": "2026-01-01T00:00:00.000Z",
+                        "type": "system"
+                    },
+                    "viewer": {
+                        "password": "view123",
+                        "role": "viewer",
+                        "name": "資料查看員", 
+                        "permissions": ["view"],
+                        "createdDate": "2026-01-01T00:00:00.000Z",
+                        "type": "system"
+                    }
+                };
+
+                // 獲取註冊用戶
+                const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '{}');
+                
+                // 組合完整的 users.json
+                const usersJson = {
+                    "systemUsers": systemUsers,
+                    "registeredUsers": registeredUsers,
+                    "metadata": {
+                        "totalUsers": Object.keys(systemUsers).length + Object.keys(registeredUsers).length,
+                        "totalRegistered": Object.keys(registeredUsers).length,
+                        "lastUpdated": new Date().toISOString(),
+                        "version": "1.0"
+                    }
+                };
+
+                currentUsersData = usersJson;
+                
+                // 顯示 JSON 內容
+                document.getElementById('jsonOutput').textContent = JSON.stringify(usersJson, null, 2);
+                document.getElementById('jsonSection').style.display = 'block';
+                
+                // 滾動到 JSON 區域
+                document.getElementById('jsonSection').scrollIntoView({ behavior: 'smooth' });
+
+            } catch (error) {
+                alert('產生 users.json 失敗: ' + error.message);
+            }
+        }
+
+        function copyToClipboard() {
+            const jsonText = document.getElementById('jsonOutput').textContent;
+            navigator.clipboard.writeText(jsonText).then(() => {
+                alert('已複製到剪貼簿！請貼到 data/users.json 檔案中');
+            }).catch(() => {
+                // 備用方案
+                const textarea = document.createElement('textarea');
+                textarea.value = jsonText;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                alert('已複製到剪貼簿！請貼到 data/users.json 檔案中');
+            });
+        }
+
+        function exportToFile() {
+            if (!currentUsersData) {
+                alert('請先點擊「產生 users.json」');
+                return;
+            }
+
+            const timestamp = new Date().toISOString().slice(0, 19).replace(/[:.]/g, '-');
+            const filename = `users_backup_${timestamp}.json`;
+            
+            const blob = new Blob([JSON.stringify(currentUsersData, null, 2)], {
+                type: 'application/json'
+            });
+            
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            alert('用戶資料已匯出為檔案！');
+        }
+
+        function showSyncInstructions() {
+            const instructions = `
+📋 同步說明
+
+1️⃣ 點擊「產生 users.json」按鈕
+2️⃣ 複製產生的 JSON 內容
+3️⃣ 開啟 data/users.json 檔案
+4️⃣ 將內容完全替換
+5️⃣ 儲存檔案
+6️⃣ 重新整理網站
+
+💡 提示：
+- 建議定期備份用戶資料
+- 可以使用「匯出用戶檔案」功能
+- 系統會自動合併系統用戶和註冊用戶
+            `;
+            
+            alert(instructions);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Install dependencies
+      run: |
+        if [ -f package.json ]; then
+          npm install
+        fi
+        
+    - name: Create production build
+      run: |
+        # 創建 dist 資料夾
+        mkdir -p dist
+        
+        # 複製所有檔案但排除 server.js 和 node_modules
+        cp -r *.html dist/
+        cp -r css dist/
+        cp -r js dist/
+        cp -r data dist/
+        
+        # 修改 API 呼叫改為使用 Netlify Functions
+        sed -i 's|http://localhost:3000/api|/.netlify/functions|g' dist/js/apiClient.js
+        
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./dist
+        cname: gis-pumping-stations.github.io

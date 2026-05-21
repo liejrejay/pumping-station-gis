@@ -1,0 +1,6 @@
+
+# API 重定向
+/api/*  /.netlify/functions/:splat  200
+
+# SPA 重定向
+/*      /index.html                200

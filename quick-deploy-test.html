@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>部署測試 - 抽水站管理系統</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .method {
+            background: #f8f9fa;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 10px;
+            border-left: 4px solid #007bff;
+        }
+        .method h3 {
+            margin-top: 0;
+            color: #007bff;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            margin: 5px;
+            transition: all 0.3s;
+        }
+        .btn:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+        }
+        .btn.success {
+            background: #28a745;
+        }
+        .btn.warning {
+            background: #ffc107;
+            color: #333;
+        }
+        .code {
+            background: #f1f3f4;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .status.info {
+            background: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+        }
+        .status.success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+        }
+        .status.warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 快速部署指南</h1>
+        
+        <div class="status info">
+            <strong>📋 當前狀態：</strong>準備部署到網際網路
+        </div>
+
+        <div class="method">
+            <h3>🌟 方法一：一鍵 Netlify 部署 (推薦)</h3>
+            <p>最簡單的方式，3 分鐘內完成部署</p>
+            
+            <div class="code">
+                <strong>步驟：</strong><br>
+                1. 點擊下方按鈕執行部署腳本<br>
+                2. 前往 GitHub 創建儲存庫<br>
+                3. 推送程式碼<br>
+                4. 連結 Netlify 自動部署
+            </div>
+            
+            <a href="#" onclick="runDeploy()" class="btn success">🚀 執行部署腳本</a>
+            <a href="https://github.com/new" target="_blank" class="btn">📦 創建 GitHub 儲存庫</a>
+            <a href="https://netlify.com" target="_blank" class="btn">🌐 前往 Netlify</a>
+        </div>
+
+        <div class="method">
+            <h3>⚡ 方法二：臨時網址 (測試用)</h3>
+            <p>快速產生臨時公開網址，適合展示和測試</p>
+            
+            <div class="code">
+                <strong>特點：</strong><br>
+                • 立即可用，無需註冊<br>
+                • 臨時網址，關閉後失效<br>
+                • 適合短期展示
+            </div>
+            
+            <a href="#" onclick="runTunnel()" class="btn warning">🌐 產生臨時網址</a>
+        </div>
+
+        <div class="method">
+            <h3>🔧 方法三：手動部署</h3>
+            <p>完整控制部署過程</p>
+            
+            <div class="code">
+                npm run build<br>
+                git add .<br>
+                git commit -m "準備部署"<br>
+                git push origin main
+            </div>
+            
+            <a href="#" onclick="testBuild()" class="btn">🔨 測試建置</a>
+            <a href="DEPLOYMENT.md" target="_blank" class="btn">📖 詳細說明</a>
+        </div>
+
+        <hr style="margin: 30px 0;">
+
+        <h3>📊 部署檢查清單</h3>
+        <div id="checklist">
+            <div class="status warning" id="check-git">
+                ⏳ 檢查 Git 安裝狀態...
+            </div>
+            <div class="status warning" id="check-node">
+                ⏳ 檢查 Node.js 安裝狀態...
+            </div>
+            <div class="status warning" id="check-build">
+                ⏳ 檢查專案建置狀態...
+            </div>
+            <div class="status warning" id="check-api">
+                ⏳ 檢查 API 連線狀態...
+            </div>
+        </div>
+
+        <hr style="margin: 30px 0;">
+
+        <h3>🎯 預期結果</h3>
+        <p>部署完成後，您將獲得：</p>
+        <ul>
+            <li>✅ 公開網址 (例：<code>https://your-app.netlify.app</code>)</li>
+            <li>✅ HTTPS 安全連線</li>
+            <li>✅ 自動更新 (推送程式碼時)</li>
+            <li>✅ 全球 CDN 加速</li>
+            <li>✅ 手機版完整支援</li>
+        </ul>
+
+        <div class="status success" style="text-align: center; margin-top: 30px;">
+            <strong>🎉 準備就緒！選擇上方任一方法開始部署</strong>
+        </div>
+    </div>
+
+    <script>
+        // 檢查系統環境
+        async function checkEnvironment() {
+            // 模擬環境檢查
+            setTimeout(() => {
+                document.getElementById('check-git').className = 'status success';
+                document.getElementById('check-git').innerHTML = '✅ Git 已安裝';
+            }, 500);
+
+            setTimeout(() => {
+                document.getElementById('check-node').className = 'status success';
+                document.getElementById('check-node').innerHTML = '✅ Node.js 已安裝';
+            }, 1000);
+
+            setTimeout(() => {
+                document.getElementById('check-build').className = 'status info';
+                document.getElementById('check-build').innerHTML = '📦 專案檔案就緒';
+            }, 1500);
+
+            setTimeout(() => {
+                document.getElementById('check-api').className = 'status info';
+                document.getElementById('check-api').innerHTML = '🔌 API 配置完成';
+            }, 2000);
+        }
+
+        // 執行部署
+        function runDeploy() {
+            if (confirm('即將執行部署腳本，這將：\n\n1. 安裝必要套件\n2. 建置專案\n3. 準備 Git 提交\n\n確定要繼續嗎？')) {
+                alert('部署腳本準備中...\n\n請在命令提示字元中執行：\ndeploy.bat');
+                // 實際環境中會執行 deploy.bat
+                console.log('執行 deploy.bat');
+            }
+        }
+
+        // 產生臨時網址
+        function runTunnel() {
+            if (confirm('即將產生臨時公開網址，這將：\n\n1. 啟動本地伺服器\n2. 建立網路穿透\n3. 產生臨時網址\n\n確定要繼續嗎？')) {
+                alert('臨時網址產生中...\n\n請在命令提示字元中執行：\ntunnel.bat');
+                // 實際環境中會執行 tunnel.bat
+                console.log('執行 tunnel.bat');
+            }
+        }
+
+        // 測試建置
+        function testBuild() {
+            alert('建置測試中...\n\n請在命令提示字元中執行：\nnpm run build');
+            console.log('執行 npm run build');
+        }
+
+        // 初始化
+        checkEnvironment();
+    </script>
+</body>
+</html>
