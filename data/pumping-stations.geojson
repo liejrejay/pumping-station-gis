@@ -1,0 +1,1145 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4604375,
+          25.0378125
+        ]
+      },
+      "properties": {
+        "id": 1,
+        "name": "抽水站 1",
+        "plus_code": "2FQ6+45",
+        "village": "文明里",
+        "district": "新北市新莊區",
+        "label": "文明里 · 新北市新莊區",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4428125,
+          25.025062499999997
+        ]
+      },
+      "properties": {
+        "id": 2,
+        "name": "抽水站 2",
+        "plus_code": "2CGV+24",
+        "village": "瓊林里",
+        "district": "新北市新莊區",
+        "label": "瓊林里 · 新北市新莊區",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4506875,
+          25.0324375
+        ]
+      },
+      "properties": {
+        "id": 3,
+        "name": "抽水站 3",
+        "plus_code": "2FJ2+X7",
+        "village": "瓊林里",
+        "district": "新北市新莊區",
+        "label": "瓊林里 · 新北市新莊區",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4460625,
+          25.0281875
+        ]
+      },
+      "properties": {
+        "id": 4,
+        "name": "抽水站 4",
+        "plus_code": "2CHW+7C",
+        "village": "新莊區",
+        "district": "新北市",
+        "label": "新莊區 · 新北市",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4701875,
+          25.0358125
+        ]
+      },
+      "properties": {
+        "id": 5,
+        "name": "抽水站 5",
+        "plus_code": "2FPC+83",
+        "village": "溪頭里",
+        "district": "新北市板橋區",
+        "label": "溪頭里 · 新北市板橋區",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4306875,
+          25.0249375
+        ]
+      },
+      "properties": {
+        "id": 6,
+        "name": "抽水站 6",
+        "plus_code": "2CFJ+X7",
+        "village": "新莊區",
+        "district": "新北市",
+        "label": "新莊區 · 新北市",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4285625,
+          24.980062500000003
+        ]
+      },
+      "properties": {
+        "id": 7,
+        "name": "抽水站 7",
+        "plus_code": "XCJH+2C",
+        "village": "溪福里",
+        "district": "新北市板橋區",
+        "label": "溪福里 · 新北市板橋區",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4554375,
+          25.0283125
+        ]
+      },
+      "properties": {
+        "id": 8,
+        "name": "抽水站 8",
+        "plus_code": "2FH4+85",
+        "village": "中正里",
+        "district": "新北市板橋區",
+        "label": "中正里 · 新北市板橋區",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4613125,
+          25.0383125
+        ]
+      },
+      "properties": {
+        "id": 9,
+        "name": "抽水站 9",
+        "plus_code": "2FQ6+8G",
+        "village": "文明里",
+        "district": "新北市新莊區",
+        "label": "文明里 · 新北市新莊區",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.48468749999999,
+          25.0238125
+        ]
+      },
+      "properties": {
+        "id": 10,
+        "name": "抽水站 10",
+        "plus_code": "2FFM+GV",
+        "village": "振義里",
+        "district": "新北市板橋區",
+        "label": "振義里 · 新北市板橋區",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4608125,
+          25.053062500000003
+        ]
+      },
+      "properties": {
+        "id": 11,
+        "name": "抽水站 11",
+        "plus_code": "3F36+68",
+        "village": "頭前里",
+        "district": "新北市新莊區",
+        "label": "頭前里 · 新北市新莊區",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4839375,
+          25.023937500000002
+        ]
+      },
+      "properties": {
+        "id": 12,
+        "name": "抽水站 12",
+        "plus_code": "2FFM+HH",
+        "village": "振義里",
+        "district": "新北市板橋區",
+        "label": "振義里 · 新北市板橋區",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4708125,
+          25.0428125
+        ]
+      },
+      "properties": {
+        "id": 13,
+        "name": "抽水站 13",
+        "plus_code": "2FVC+48",
+        "village": "中興里",
+        "district": "新北市三重區",
+        "label": "中興里 · 新北市三重區",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4558125,
+          25.0281875
+        ]
+      },
+      "properties": {
+        "id": 14,
+        "name": "抽水站 14",
+        "plus_code": "2FH4+78",
+        "village": "中正里",
+        "district": "新北市板橋區",
+        "label": "中正里 · 新北市板橋區",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4556875,
+          25.0281875
+        ]
+      },
+      "properties": {
+        "id": 15,
+        "name": "抽水站 15",
+        "plus_code": "2FH4+77",
+        "village": "中正里",
+        "district": "新北市板橋區",
+        "label": "中正里 · 新北市板橋區",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4808125,
+          25.0368125
+        ]
+      },
+      "properties": {
+        "id": 16,
+        "name": "抽水站 16",
+        "plus_code": "2FPJ+P8",
+        "village": "柏翠里",
+        "district": "新北市板橋區",
+        "label": "柏翠里 · 新北市板橋區",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4396875,
+          25.056312499999997
+        ]
+      },
+      "properties": {
+        "id": 17,
+        "name": "抽水站 17",
+        "plus_code": "3C4Q+GV",
+        "village": "中原里",
+        "district": "新北市新莊區",
+        "label": "中原里 · 新北市新莊區",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4556875,
+          25.0283125
+        ]
+      },
+      "properties": {
+        "id": 18,
+        "name": "抽水站 18",
+        "plus_code": "2FH4+87",
+        "village": "中正里",
+        "district": "新北市板橋區",
+        "label": "中正里 · 新北市板橋區",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4503125,
+          25.059312499999997
+        ]
+      },
+      "properties": {
+        "id": 19,
+        "name": "抽水站 19",
+        "plus_code": "3F52+P4",
+        "village": "中原里",
+        "district": "新北市新莊區",
+        "label": "中原里 · 新北市新莊區",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4351875,
+          25.0011875
+        ]
+      },
+      "properties": {
+        "id": 20,
+        "name": "抽水站 20",
+        "plus_code": "2C2P+F3",
+        "village": "西盛里",
+        "district": "新北市新莊區",
+        "label": "西盛里 · 新北市新莊區",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4411875,
+          25.0276875
+        ]
+      },
+      "properties": {
+        "id": 21,
+        "name": "抽水站 21",
+        "plus_code": "2CHR+3F",
+        "village": "新莊區",
+        "district": "新北市",
+        "label": "新莊區 · 新北市",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4886875,
+          25.030812500000003
+        ]
+      },
+      "properties": {
+        "id": 22,
+        "name": "抽水站 22",
+        "plus_code": "2FJQ+8F",
+        "village": "華江里",
+        "district": "臺北市萬華區",
+        "label": "華江里 · 臺北市萬華區",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4455625,
+          25.069312500000002
+        ]
+      },
+      "properties": {
+        "id": 23,
+        "name": "抽水站 23",
+        "plus_code": "3C9W+P6",
+        "village": "楓樹里",
+        "district": "新北市泰山區",
+        "label": "楓樹里 · 新北市泰山區",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4413125,
+          25.022062499999997
+        ]
+      },
+      "properties": {
+        "id": 24,
+        "name": "抽水站 24",
+        "plus_code": "2CCR+RG",
+        "village": "瓊林里",
+        "district": "新北市新莊區",
+        "label": "瓊林里 · 新北市新莊區",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4481875,
+          25.0210625
+        ]
+      },
+      "properties": {
+        "id": 25,
+        "name": "抽水站 25",
+        "plus_code": "2CCX+C7",
+        "village": "香社里",
+        "district": "新北市板橋區",
+        "label": "香社里 · 新北市板橋區",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.44806249999999,
+          25.0213125
+        ]
+      },
+      "properties": {
+        "id": 26,
+        "name": "抽水站 26",
+        "plus_code": "2CCX+G6",
+        "village": "香社里",
+        "district": "新北市板橋區",
+        "label": "香社里 · 新北市板橋區",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4389375,
+          24.9813125
+        ]
+      },
+      "properties": {
+        "id": 27,
+        "name": "抽水站 27",
+        "plus_code": "XCJQ+GH",
+        "village": "員福里",
+        "district": "新北市土城區",
+        "label": "員福里 · 新北市土城區",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4861875,
+          25.0180625
+        ]
+      },
+      "properties": {
+        "id": 28,
+        "name": "抽水站 28",
+        "plus_code": "2F9P+6F",
+        "village": "板橋區",
+        "district": "新北市",
+        "label": "板橋區 · 新北市",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4579375,
+          25.0584375
+        ]
+      },
+      "properties": {
+        "id": 29,
+        "name": "抽水站 29",
+        "plus_code": "3F55+95",
+        "village": "昌平里",
+        "district": "新北市新莊區",
+        "label": "昌平里 · 新北市新莊區",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4673125,
+          25.064437499999997
+        ]
+      },
+      "properties": {
+        "id": 30,
+        "name": "抽水站 30",
+        "plus_code": "3F78+QW",
+        "village": "三重區",
+        "district": "新北市",
+        "label": "三重區 · 新北市",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4995625,
+          25.0413125
+        ]
+      },
+      "properties": {
+        "id": 31,
+        "name": "抽水站 31",
+        "plus_code": "2FRX+GR",
+        "village": "菜園里",
+        "district": "臺北市萬華區",
+        "label": "菜園里 · 臺北市萬華區",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4350625,
+          25.0276875
+        ]
+      },
+      "properties": {
+        "id": 32,
+        "name": "抽水站 32",
+        "plus_code": "2CHP+32",
+        "village": "建安里",
+        "district": "新北市新莊區",
+        "label": "建安里 · 新北市新莊區",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4440625,
+          25.0690625
+        ]
+      },
+      "properties": {
+        "id": 33,
+        "name": "抽水站 33",
+        "plus_code": "3C9V+JJ",
+        "village": "楓樹里",
+        "district": "新北市泰山區",
+        "label": "楓樹里 · 新北市泰山區",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4649375,
+          25.0651875
+        ]
+      },
+      "properties": {
+        "id": 34,
+        "name": "抽水站 34",
+        "plus_code": "3F87+3X",
+        "village": "福基里",
+        "district": "新北市新莊區",
+        "label": "福基里 · 新北市新莊區",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.5004375,
+          25.057187499999998
+        ]
+      },
+      "properties": {
+        "id": 35,
+        "name": "抽水站 35",
+        "plus_code": "3G42+V5",
+        "village": "同慶里",
+        "district": "新北市三重區",
+        "label": "同慶里 · 新北市三重區",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4476875,
+          25.0835625
+        ]
+      },
+      "properties": {
+        "id": 36,
+        "name": "抽水站 36",
+        "plus_code": "3CMX+C3",
+        "village": "五股區",
+        "district": "新北市",
+        "label": "五股區 · 新北市",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4863125,
+          25.017812499999998
+        ]
+      },
+      "properties": {
+        "id": 37,
+        "name": "抽水站 37",
+        "plus_code": "2F9P+4G",
+        "village": "光復里",
+        "district": "新北市板橋區",
+        "label": "光復里 · 新北市板橋區",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4989375,
+          25.0084375
+        ]
+      },
+      "properties": {
+        "id": 38,
+        "name": "抽水站 38",
+        "plus_code": "2F5X+9H",
+        "village": "中和區",
+        "district": "新北市",
+        "label": "中和區 · 新北市",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.3436875,
+          24.929812499999997
+        ]
+      },
+      "properties": {
+        "id": 39,
+        "name": "抽水站 39",
+        "plus_code": "W8HV+WF",
+        "village": "鳶山里",
+        "district": "新北市三峽區",
+        "label": "鳶山里 · 新北市三峽區",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4298125,
+          25.027562500000002
+        ]
+      },
+      "properties": {
+        "id": 40,
+        "name": "抽水站 40",
+        "plus_code": "2CHH+2W",
+        "village": "建福里",
+        "district": "新北市新莊區",
+        "label": "建福里 · 新北市新莊區",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.5043125,
+          25.0126875
+        ]
+      },
+      "properties": {
+        "id": 41,
+        "name": "抽水站 41",
+        "plus_code": "2G73+3P",
+        "village": "保順里",
+        "district": "新北市永和區",
+        "label": "保順里 · 新北市永和區",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.5046875,
+          25.0681875
+        ]
+      },
+      "properties": {
+        "id": 42,
+        "name": "抽水站 42",
+        "plus_code": "3G93+7V",
+        "village": "三重區",
+        "district": "新北市",
+        "label": "三重區 · 新北市",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4895625,
+          25.0096875
+        ]
+      },
+      "properties": {
+        "id": 43,
+        "name": "抽水站 43",
+        "plus_code": "2F5Q+VR",
+        "village": "中原里",
+        "district": "新北市中和區",
+        "label": "中原里 · 新北市中和區",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4751875,
+          25.065687500000003
+        ]
+      },
+      "properties": {
+        "id": 44,
+        "name": "抽水站 44",
+        "plus_code": "3F8G+73",
+        "village": "二重里",
+        "district": "新北市三重區",
+        "label": "二重里 · 新北市三重區",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.5046875,
+          25.067812500000002
+        ]
+      },
+      "properties": {
+        "id": 45,
+        "name": "抽水站 45",
+        "plus_code": "3G93+4V",
+        "village": "三重區",
+        "district": "新北市",
+        "label": "三重區 · 新北市",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.5081875,
+          25.0574375
+        ]
+      },
+      "properties": {
+        "id": 46,
+        "name": "抽水站 46",
+        "plus_code": "3G45+X7",
+        "village": "大有里",
+        "district": "臺北市大同區",
+        "label": "大有里 · 臺北市大同區",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4929375,
+          25.0075625
+        ]
+      },
+      "properties": {
+        "id": 47,
+        "name": "抽水站 47",
+        "plus_code": "2F5V+25",
+        "village": "中原里",
+        "district": "新北市中和區",
+        "label": "中原里 · 新北市中和區",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.50631249999999,
+          25.0498125
+        ]
+      },
+      "properties": {
+        "id": 48,
+        "name": "抽水站 48",
+        "plus_code": "2GX4+WG",
+        "village": "玉泉里",
+        "district": "臺北市大同區",
+        "label": "玉泉里 · 臺北市大同區",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4471875,
+          25.085812500000003
+        ]
+      },
+      "properties": {
+        "id": 49,
+        "name": "抽水站 49",
+        "plus_code": "3CPW+8V",
+        "village": "成泰里",
+        "district": "新北市五股區",
+        "label": "成泰里 · 新北市五股區",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4921875,
+          25.007687500000003
+        ]
+      },
+      "properties": {
+        "id": 50,
+        "name": "抽水站 50",
+        "plus_code": "2F5R+3V",
+        "village": "中原里",
+        "district": "新北市中和區",
+        "label": "中原里 · 新北市中和區",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.5011875,
+          25.0793125
+        ]
+      },
+      "properties": {
+        "id": 51,
+        "name": "抽水站 51",
+        "plus_code": "3GH2+PF",
+        "village": "五常里",
+        "district": "新北市三重區",
+        "label": "五常里 · 新北市三重區",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4975625,
+          25.004937499999997
+        ]
+      },
+      "properties": {
+        "id": 52,
+        "name": "抽水站 52",
+        "plus_code": "2F3X+X2",
+        "village": "福善里",
+        "district": "新北市中和區",
+        "label": "福善里 · 新北市中和區",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.48231249999999,
+          25.0508125
+        ]
+      },
+      "properties": {
+        "id": 53,
+        "name": "抽水站 53",
+        "plus_code": "3F2J+8W",
+        "village": "德厚里",
+        "district": "新北市三重區",
+        "label": "德厚里 · 新北市三重區",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.42581249999999,
+          24.979187500000002
+        ]
+      },
+      "properties": {
+        "id": 54,
+        "name": "抽水站 54",
+        "plus_code": "XCHG+M8",
+        "village": "彭福里",
+        "district": "新北市樹林區",
+        "label": "彭福里 · 新北市樹林區",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4550625,
+          25.0279375
+        ]
+      },
+      "properties": {
+        "id": 55,
+        "name": "抽水站 55",
+        "plus_code": "2FH4+52",
+        "village": "中正里",
+        "district": "新北市板橋區",
+        "label": "中正里 · 新北市板橋區",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4466875,
+          25.029562499999997
+        ]
+      },
+      "properties": {
+        "id": 56,
+        "name": "抽水站 56",
+        "plus_code": "2CHW+RM",
+        "village": "泰豐里",
+        "district": "新北市新莊區",
+        "label": "泰豐里 · 新北市新莊區",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4581875,
+          25.0844375
+        ]
+      },
+      "properties": {
+        "id": 57,
+        "name": "抽水站 57",
+        "plus_code": "3FM5+Q7",
+        "village": "蘆洲區",
+        "district": "新北市",
+        "label": "蘆洲區 · 新北市",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4683125,
+          25.0763125
+        ]
+      },
+      "properties": {
+        "id": 58,
+        "name": "抽水站 58",
+        "plus_code": "3FG9+G8",
+        "village": "蘆洲區",
+        "district": "新北市",
+        "label": "蘆洲區 · 新北市",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.5350625,
+          25.0095625
+        ]
+      },
+      "properties": {
+        "id": 59,
+        "name": "抽水站 59",
+        "plus_code": "2G5P+R2",
+        "village": "文山區",
+        "district": "臺北市",
+        "label": "文山區 · 臺北市",
+        "river": "大漢溪"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.6194375,
+          25.063187499999998
+        ]
+      },
+      "properties": {
+        "id": 60,
+        "name": "抽水站 60",
+        "plus_code": "3J79+7Q",
+        "village": "環河里",
+        "district": "新北市汐止區",
+        "label": "環河里 · 新北市汐止區",
+        "river": "大漢溪"
+      }
+    }
+  ]
+}
