@@ -3,13 +3,19 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
-    
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -30,19 +36,33 @@ jobs:
         # 創建 dist 資料夾
         mkdir -p dist
         
-        # 複製所有檔案但排除 server.js 和 node_modules
-        cp -r *.html dist/
-        cp -r css dist/
-        cp -r js dist/
-        cp -r data dist/
+        # 複製所有檔案
+        cp *.html dist/ 2>/dev/null || true
+        cp -r css dist/ 2>/dev/null || true
+        cp -r js dist/ 2>/dev/null || true
+        cp -r data dist/ 2>/dev/null || true
         
-        # 修改 API 呼叫改為使用 Netlify Functions
-        sed -i 's|http://localhost:3000/api|/.netlify/functions|g' dist/js/apiClient.js
+        # 創建 GitHub Pages 需要的檔案
+        echo "" > dist/.nojekyll
         
-    - name: Deploy to GitHub Pages
-      uses: peaceiris/actions-gh-pages@v3
-      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        # 創建簡單的重定向檔案
+        echo "/* /index.html 200" > dist/_redirects
+
+    - name: Setup Pages
+      uses: actions/configure-pages@v3
+      
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v2
       with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./dist
-        cname: gis-pumping-stations.github.io
+        path: './dist'
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v2
