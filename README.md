@@ -1,35 +1,34 @@
-# 大漢溪抽水站 GIS
+# 🗺️ 雙北大漢溪抽水站管理系統
 
-將 Plus Code 抽水站地點轉為 GeoJSON，並提供互動地圖。
+[![Deploy to GitHub Pages](https://github.com/liejrejay/GIS/actions/workflows/deploy.yml/badge.svg)](https://github.com/liejrejay/GIS/actions/workflows/deploy.yml)
 
-## 檔案
+## 🌐 線上訪問
+**網站網址：** https://liejrejay.github.io/GIS/
 
-| 檔案 | 說明 |
-|------|------|
-| `data/pumping-stations.geojson` | 60 處抽水站（GeoJSON FeatureCollection） |
-| `index.html` | Leaflet 互動地圖 |
-| `scripts/build_geojson.py` | 從 Plus Code 重新產生 GeoJSON |
+## ✨ 系統功能
+- 🗺️ 互動式抽水站地圖
+- 📊 即時政府 API 資料整合
+- 👥 多角色用戶系統 (管理員/操作員/查看員/民眾)
+- 📱 完整響應式設計 (RWD)
+- 🔐 安全登入驗證
+- 📈 用戶統計管理
 
-## 在 geojson.io 使用
+## 🏢 支援單位
+- 雙北大漢溪流域抽水站
+- 水利署 IoT 平台
+- 政府資料開放平台
 
-1. 開啟 [geojson.io](https://geojson.io)
-2. **Open** → 選擇 `data/pumping-stations.geojson`，或直接拖曳檔案到頁面
-3. 即可檢視、編輯與匯出
+## 📱 支援設備
+- 💻 桌面電腦
+- 📱 手機 (iOS/Android)
+- 🖥️ 平板電腦
 
-## 本機地圖網站
+## 🔧 技術架構
+- **前端**: HTML5, CSS3, JavaScript, Leaflet.js
+- **地圖**: Google Maps + OpenStreetMap
+- **API**: 政府開放資料
+- **部署**: GitHub Pages + Actions
+- **響應式**: Mobile-First RWD
 
-```bash
-cd GIS
-python3 -m http.server 8080
-```
-
-瀏覽器開啟：http://localhost:8080
-
-## 重新產生 GeoJSON
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-python scripts/build_geojson.py
-```
+---
+*自動部署於 ${new Date().toLocaleString('zh-TW')} (台北時間)*
