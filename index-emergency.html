@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0" />
+  <title>🚨 緊急版本 - 大漢溪抽水站 Google Maps</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { 
+      font-family: "Microsoft JhengHei", Arial, sans-serif; 
+      background: #f0f2f5; 
+      overflow: hidden;
+    }
+    
+    #map { 
+      width: 100vw; 
+      height: 100vh; 
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    }
+    
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(26, 82, 118, 0.95);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      color: white;
+    }
+    
+    .loading-spinner {
+      width: 60px;
+      height: 60px;
+      border: 4px solid rgba(255,255,255,0.3);
+      border-top: 4px solid white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .status-box {
+      background: rgba(255,255,255,0.1);
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      max-width: 400px;
+      margin: 20px;
+    }
+    
+    .error-box {
+      background: rgba(220, 53, 69, 0.9);
+      color: white;
+      padding: 20px;
+      border-radius: 10px;
+      margin: 20px;
+      text-align: center;
+    }
+    
+    .success-box {
+      background: rgba(40, 167, 69, 0.9);
+      color: white;
+      padding: 20px;
+      border-radius: 10px;
+      margin: 20px;
+      text-align: center;
+    }
+    
+    .retry-btn {
+      background: #28a745;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 10px;
+    }
+    
+    .retry-btn:hover {
+      background: #218838;
+    }
+    
+    .diagnostic-info {
+      font-size: 14px;
+      margin-top: 15px;
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-spinner"></div>
+    <div class="status-box">
+      <h2>🗺️ 載入 Google Maps</h2>
+      <p id="loadingStatus">正在初始化...</p>
+      <div class="diagnostic-info">
+        <div id="diagnosticInfo"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="map"></div>
+
+  <script>
+    // 全域變數
+    let map;
+    let loadingStartTime = Date.now();
+    
+    // 診斷資訊
+    function updateDiagnostic(message) {
+      const info = document.getElementById('diagnosticInfo');
+      const elapsed = ((Date.now() - loadingStartTime) / 1000).toFixed(1);
+      info.innerHTML += `<div>[${elapsed}s] ${message}</div>`;
+      console.log(`[${elapsed}s] ${message}`);
+    }
+    
+    // 更新載入狀態
+    function updateStatus(message) {
+      document.getElementById('loadingStatus').textContent = message;
+      updateDiagnostic(message);
+    }
+    
+    // 隱藏載入畫面
+    function hideLoading() {
+      document.getElementById('loadingOverlay').style.display = 'none';
+    }
+    
+    // 顯示錯誤
+    function showError(title, message, details = '') {
+      const overlay = document.getElementById('loadingOverlay');
+      overlay.innerHTML = `
+        <div class="error-box">
+          <h2>❌ ${title}</h2>
+          <p>${message}</p>
+          ${details ? `<div class="diagnostic-info">${details}</div>` : ''}
+          <button class="retry-btn" onclick="location.reload()">重新載入</button>
+          <button class="retry-btn" onclick="openDiagnostic()" style="background: #007bff;">診斷工具</button>
+        </div>
+      `;
+    }
+    
+    // 顯示成功
+    function showSuccess(message) {
+      const overlay = document.getElementById('loadingOverlay');
+      overlay.innerHTML = `
+        <div class="success-box">
+          <h2>✅ ${message}</h2>
+          <p>地圖載入成功！正在初始化...</p>
+        </div>
+      `;
+      setTimeout(hideLoading, 2000);
+    }
+    
+    function openDiagnostic() {
+      window.open('quick-fix.html', '_blank');
+    }
+    
+    // 開始診斷
+    updateStatus('檢查環境...');
+    updateDiagnostic('網域: ' + window.location.hostname);
+    updateDiagnostic('協定: ' + window.location.protocol);
+    updateDiagnostic('User Agent: ' + navigator.userAgent.substring(0, 50) + '...');
+    
+    // API Key (你的金鑰)
+    const GOOGLE_MAPS_API_KEY = 'AIzaSyAWvgoKH9b7sfI_6yMG4U1teg-Dq4wQ9Fk';
+    updateDiagnostic('API Key: ' + GOOGLE_MAPS_API_KEY.substring(0, 20) + '...');
+    
+    // Google Maps 鑑權失敗處理
+    window.gm_authFailure = function() {
+      updateDiagnostic('❌ Google Maps 鑑權失敗');
+      showError(
+        'Google Maps 鑑權失敗',
+        '這通常表示 API Key 設定問題',
+        `
+          <strong>可能原因：</strong><br>
+          1. 計費帳戶未設定<br>
+          2. Maps JavaScript API 未啟用<br>
+          3. API Key 網域限制<br>
+          <br>
+          <strong>當前網域：</strong> ${window.location.hostname}<br>
+          <strong>需要在 Google Cloud Console 設定網域白名單</strong>
+        `
+      );
+    };
+    
+    // 載入 Google Maps
+    function loadGoogleMaps() {
+      updateStatus('載入 Google Maps API...');
+      
+      // 30秒超時
+      const timeout = setTimeout(() => {
+        updateDiagnostic('❌ 載入超時 (30秒)');
+        showError(
+          '載入超時',
+          'Google Maps API 載入時間過長',
+          `
+            <strong>可能原因：</strong><br>
+            1. 網路連線問題<br>
+            2. Google 服務被封鎖<br>
+            3. API Key 網域限制<br>
+            <br>
+            <strong>建議：</strong><br>
+            • 檢查網路連線<br>
+            • 使用 VPN 嘗試<br>
+            • 檢查 API Key 設定
+          `
+        );
+      }, 30000);
+      
+      // 載入成功回調
+      window.initMap = function() {
+        clearTimeout(timeout);
+        updateDiagnostic('✅ Google Maps API 載入成功');
+        updateStatus('初始化地圖...');
+        
+        try {
+          // 檢查 Google Maps API
+          if (typeof google === 'undefined' || !google.maps) {
+            throw new Error('Google Maps API 物件未找到');
+          }
+          
+          updateDiagnostic('✅ Google Maps 物件可用');
+          updateDiagnostic('API 版本: ' + (google.maps.version || '未知'));
+          
+          // 建立地圖
+          map = new google.maps.Map(document.getElementById("map"), {
+            center: { lat: 24.9516, lng: 121.2325 }, // 大漢溪流域中心
+            zoom: 11,
+            minZoom: 8,
+            maxZoom: 18,
+            mapTypeId: google.maps.MapTypeId.ROADMAP,
+            mapTypeControl: true,
+            fullscreenControl: true,
+            streetViewControl: true,
+            zoomControl: true,
+            scaleControl: true,
+            // 限制地圖範圍到台灣
+            restriction: {
+              latLngBounds: {
+                north: 25.3,
+                south: 21.9,
+                east: 122.0,
+                west: 120.0
+              },
+              strictBounds: false
+            }
+          });
+          
+          updateDiagnostic('✅ 地圖物件建立成功');
+          
+          // 等待地圖完全載入
+          google.maps.event.addListenerOnce(map, 'idle', function() {
+            updateDiagnostic('✅ 地圖完全載入完成');
+            showSuccess('Google Maps 載入成功！');
+            
+            // 添加測試標記
+            const marker = new google.maps.Marker({
+              position: { lat: 24.9516, lng: 121.2325 },
+              map: map,
+              title: '🏭 大漢溪抽水站區域',
+              icon: {
+                url: 'data:image/svg+xml,' + encodeURIComponent(`
+                  <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="16" cy="16" r="12" fill="#1a5276" stroke="white" stroke-width="2"/>
+                    <text x="16" y="20" text-anchor="middle" fill="white" font-size="16">🏭</text>
+                  </svg>
+                `),
+                scaledSize: new google.maps.Size(32, 32)
+              }
+            });
+            
+            updateDiagnostic('✅ 測試標記已添加');
+          });
+          
+        } catch (error) {
+          updateDiagnostic('❌ 地圖初始化失敗: ' + error.message);
+          showError(
+            '地圖初始化失敗',
+            error.message,
+            `
+              <strong>錯誤詳情：</strong><br>
+              ${error.stack || error.message}<br>
+              <br>
+              <strong>建議：</strong><br>
+              • 重新整理頁面<br>
+              • 清除瀏覽器快取<br>
+              • 檢查瀏覽器相容性
+            `
+          );
+        }
+      };
+      
+      // 載入腳本
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&callback=initMap&v=weekly&libraries=geometry&language=zh-TW&region=TW`;
+      script.async = true;
+      script.defer = true;
+      
+      script.onerror = function() {
+        clearTimeout(timeout);
+        updateDiagnostic('❌ 腳本載入失敗');
+        showError(
+          '腳本載入失敗',
+          'Google Maps JavaScript API 無法載入',
+          `
+            <strong>可能原因：</strong><br>
+            1. 網路連線問題<br>
+            2. DNS 解析問題<br>
+            3. 防火牆封鎖<br>
+            4. API Key 完全無效<br>
+            <br>
+            <strong>API URL：</strong><br>
+            <small>${script.src}</small>
+          `
+        );
+      };
+      
+      document.head.appendChild(script);
+      updateDiagnostic('📡 開始載入 Google Maps 腳本');
+    }
+    
+    // 開始載入
+    setTimeout(loadGoogleMaps, 1000);
+  </script>
+</body>
+</html>
