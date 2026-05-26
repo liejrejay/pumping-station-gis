@@ -32,6 +32,54 @@
     .panel .count { font-weight: 600; color: #2471a3; }
     .leaflet-popup-content { font-size: 0.9rem; line-height: 1.5; }
     .leaflet-popup-content strong { color: #1a5276; }
+    .layer-filter-panel {
+      position: absolute;
+      right: 12px;
+      bottom: 28px;
+      z-index: 1000;
+      background: rgba(255, 255, 255, 0.96);
+      border-radius: 8px;
+      padding: 10px 12px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
+      min-width: 148px;
+      font-size: 0.85rem;
+    }
+    .layer-filter-title {
+      font-weight: 600;
+      color: #1a5276;
+      margin-bottom: 8px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #e0e0e0;
+      font-size: 0.8rem;
+    }
+    .layer-filter-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+      cursor: pointer;
+      user-select: none;
+      color: #333;
+    }
+    .layer-filter-item:last-child {
+      margin-bottom: 0;
+    }
+    .layer-filter-item input {
+      width: 15px;
+      height: 15px;
+      cursor: pointer;
+      accent-color: #2471a3;
+    }
+    .layer-swatch {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 2px solid #fff;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+      flex-shrink: 0;
+    }
+    .layer-swatch--pump { background: #2471a3; }
+    .layer-swatch--waterfront { background: #e74c3c; }
     
     /* 確保用戶面板在圖層控制器上方 */
     .user-panel {
@@ -101,6 +149,14 @@
       .leaflet-control-attribution a {
         color: #ccc !important;
       }
+
+      .layer-filter-panel {
+        right: 8px;
+        bottom: 36px;
+        padding: 8px 10px;
+        min-width: 132px;
+        font-size: 0.8rem;
+      }
     }
   </style>
 </head>
@@ -122,6 +178,22 @@
   </div>
 
   <div id="map"></div>
+
+  <!-- 右下角圖層篩選 -->
+  <div class="layer-filter-panel" id="layerFilterPanel">
+    <div class="layer-filter-title">圖層顯示</div>
+    <label class="layer-filter-item">
+      <input type="checkbox" id="filter-pumps" checked>
+      <span class="layer-swatch layer-swatch--pump" aria-hidden="true"></span>
+      <span>抽水站</span>
+    </label>
+    <label class="layer-filter-item">
+      <input type="checkbox" id="filter-waterfront">
+      <span class="layer-swatch layer-swatch--waterfront" aria-hidden="true"></span>
+      <span>親水廊道</span>
+    </label>
+  </div>
+
   <!-- 用戶資訊面板 -->
   <div class="user-panel user-panel-enter" id="userPanel" style="
     position: absolute;
@@ -148,7 +220,7 @@
   <!-- 主控制面板 -->
   <div class="panel panel-enter">
     <h1>雙北大漢溪 - 抽水站</h1>
-    <p>共 <span class="count" id="count">載入中...</span> 處</p>
+    <p>共 <span class="count" id="count">載入中...</span> 處抽水站</p>
     <p>資料來源：<span id="source">政府開放資料</span></p>
     <p style="margin-top:6px;font-size:0.8rem;">
       涵蓋範圍：台北市、新北市大漢溪流域
@@ -292,10 +364,162 @@
 
     const icon = L.divIcon({
       className: "pump-marker",
-      html: '<div style="background:#2471a3;width:14px;height:14px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)"></div>',
+      html: '<div class="marker-dot" style="background:#2471a3;"></div>',
       iconSize: [14, 14],
       iconAnchor: [7, 7],
     });
+
+    const WATERFRONT_GEOJSON = {
+      "type": "FeatureCollection",
+      "features": [
+        {
+          "type": "Feature",
+          "geometry": { "type": "Point", "coordinates": [121.2863125, 24.8876875] },
+          "properties": {
+            "name": "大漢溪山豬湖生態親水園區",
+            "plus_code": "8QW3W833+GC",
+            "address": "桃園市大溪區"
+          }
+        },
+        {
+          "type": "Feature",
+          "geometry": { "type": "Point", "coordinates": [121.2941875, 24.9044375] },
+          "properties": {
+            "name": "大嵙崁親水園區",
+            "plus_code": "8QW3W8F8+VV",
+            "address": "桃園市大溪區瑞興里"
+          }
+        },
+        {
+          "type": "Feature",
+          "geometry": { "type": "Point", "coordinates": [121.2891875, 24.8941875] },
+          "properties": {
+            "name": "中庄調整池",
+            "plus_code": "8QW3W874+H6",
+            "address": "桃園市大溪區"
+          }
+        },
+        {
+          "type": "Feature",
+          "geometry": { "type": "Point", "coordinates": [121.4508125, 25.0454375] },
+          "properties": {
+            "name": "中港大排親水步道",
+            "plus_code": "8QW32FX3+86",
+            "address": "新北市新莊區自信里"
+          }
+        },
+        {
+          "type": "Feature",
+          "geometry": { "type": "Point", "coordinates": [121.2921875, 24.9104375] },
+          "properties": {
+            "name": "大鶯綠野景觀自行車道",
+            "plus_code": "8QW3W8HC+3X",
+            "address": "桃園市大溪區"
+          }
+        }
+      ]
+    };
+
+    function buildWaterfrontPopupHtml(feature) {
+      const p = feature.properties;
+      const [lng, lat] = feature.geometry.coordinates;
+      return `
+        <div style="min-width: 240px;">
+          <h3 style="margin: 0 0 8px 0; color: #1e8449; font-size: 1.1rem;">${p.name}</h3>
+          <div style="margin-bottom: 6px;"><strong>地址:</strong> ${p.address || '—'}</div>
+          ${p.plus_code ? `<div style="margin-bottom: 6px;"><strong>Plus Code:</strong> <code>${p.plus_code}</code></div>` : ''}
+          <hr style="margin: 8px 0; border: none; border-top: 1px solid #eee;">
+          <div style="font-size: 0.85rem; color: #666;">
+            <div>座標: ${lat.toFixed(5)}, ${lng.toFixed(5)}</div>
+            <div>類型: 親水園區／水利景點</div>
+          </div>
+        </div>
+      `;
+    }
+
+    let waterfrontLayer = null;
+    let waterfrontBounds = null;
+
+    function initWaterfrontPoints() {
+      if (waterfrontLayer && map.hasLayer(waterfrontLayer)) {
+        map.removeLayer(waterfrontLayer);
+      }
+
+      waterfrontLayer = L.geoJSON(WATERFRONT_GEOJSON, {
+        pointToLayer: (feature, latlng) => L.circleMarker(latlng, {
+          radius: 10,
+          fillColor: '#e74c3c',
+          color: '#ffffff',
+          weight: 3,
+          opacity: 1,
+          fillOpacity: 1
+        }),
+        onEachFeature: (feature, layer) => {
+          layer.bindPopup(() => buildWaterfrontPopupHtml(feature));
+        }
+      });
+
+      waterfrontBounds = waterfrontLayer.getBounds();
+      applyLayerVisibility();
+      console.log(`[親水廊道] 已載入 ${WATERFRONT_GEOJSON.features.length} 處`);
+    }
+
+    function isLayerFilterChecked(id) {
+      const el = document.getElementById(id);
+      return el ? el.checked : false;
+    }
+
+    function applyLayerVisibility() {
+      const showPumps = isLayerFilterChecked('filter-pumps');
+      const showWaterfront = isLayerFilterChecked('filter-waterfront');
+
+      currentLayers.forEach(layer => {
+        if (showPumps) {
+          if (!map.hasLayer(layer)) layer.addTo(map);
+        } else if (map.hasLayer(layer)) {
+          map.removeLayer(layer);
+        }
+      });
+
+      if (waterfrontLayer) {
+        if (showWaterfront) {
+          if (!map.hasLayer(waterfrontLayer)) waterfrontLayer.addTo(map);
+        } else if (map.hasLayer(waterfrontLayer)) {
+          map.removeLayer(waterfrontLayer);
+        }
+      }
+    }
+
+    function setupLayerFilterPanel() {
+      ['filter-pumps', 'filter-waterfront'].forEach(id => {
+        const input = document.getElementById(id);
+        if (input) {
+          input.addEventListener('change', () => {
+            applyLayerVisibility();
+            fitMapToVisibleLayers();
+          });
+        }
+      });
+    }
+
+    function fitMapToVisibleLayers() {
+      let bounds = null;
+
+      if (isLayerFilterChecked('filter-waterfront') && waterfrontLayer?.getBounds?.()?.isValid()) {
+        bounds = waterfrontLayer.getBounds();
+      }
+      if (isLayerFilterChecked('filter-pumps')) {
+        currentLayers.forEach(layer => {
+          if (layer.getBounds && layer.getBounds().isValid()) {
+            bounds = bounds ? bounds.extend(layer.getBounds()) : layer.getBounds();
+          }
+        });
+      }
+
+      if (bounds && bounds.isValid()) {
+        map.fitBounds(bounds.pad(0.06), { maxZoom: 12 });
+      }
+    }
 
     // 雙北大漢溪流域邊界 (台北市+新北市)
     const DAHAN_RIVER_BOUNDS = {
@@ -384,6 +608,9 @@
       updateStatus('手動更新中...', false, false);
       clearLayers();
       loadLocalData(); // 優先載入本地資料
+      initWaterfrontPoints();
+      applyLayerVisibility();
+      setTimeout(() => fitMapToVisibleLayers(), 300);
     }
 
     // 定期更新功能
@@ -396,6 +623,9 @@
           updateStatus('自動更新中...', false, false);
           clearLayers();
           loadLocalData(); // 自動更新時也優先載入本地資料
+          initWaterfrontPoints();
+          applyLayerVisibility();
+          setTimeout(() => fitMapToVisibleLayers(), 300);
         }
       }, UPDATE_INTERVAL);
       
@@ -623,10 +853,10 @@
               onEachFeature: (feature, layer) => {
                 layer.bindPopup(() => buildStationPopupHtml(feature));
               }
-            }).addTo(map);
-            
-            // 記錄圖層以便後續清除
+            });
+
             currentLayers.push(layer);
+            applyLayerVisibility();
             
             totalCount += features.length;
             loadedAny = true;
@@ -991,12 +1221,14 @@
             </div>
           `);
         }
-      }).addTo(map);
-      
-      // 記錄圖層
+      });
+
       currentLayers.push(layer);
+      applyLayerVisibility();
       
-      map.fitBounds(layer.getBounds().pad(0.1));
+      if (isLayerFilterChecked('filter-pumps')) {
+        map.fitBounds(layer.getBounds().pad(0.1));
+      }
       document.getElementById("count").textContent = sampleData.features.length;
       document.getElementById("source").textContent = "大漢溪流域完整資料";
       
@@ -1201,13 +1433,13 @@
           // popup 內容用函式包起來：每次打開都會重新取最新即時水位
           layer.bindPopup(() => buildStationPopupHtml(feature));
         }
-      }).addTo(map);
-      
-      // 記錄圖層
+      });
+
       currentLayers.push(layer);
+      applyLayerVisibility();
       
-      // 調整地圖範圍
-      if (geojson.features.length > 0) {
+      // 調整地圖範圍（僅在抽水站圖層勾選時）
+      if (isLayerFilterChecked('filter-pumps') && geojson.features.length > 0) {
         const bounds = layer.getBounds();
         const constrainedBounds = L.latLngBounds(
           [Math.max(bounds.getSouth(), DAHAN_RIVER_BOUNDS.south), Math.max(bounds.getWest(), DAHAN_RIVER_BOUNDS.west)],
@@ -2650,8 +2882,12 @@
         console.warn('用戶管理器初始化失敗，使用備援方案:', error);
       }
       
+      setupLayerFilterPanel();
+
       // 優先載入本地 GeoJSON 資料
       loadLocalData();
+      initWaterfrontPoints();
+      setTimeout(() => fitMapToVisibleLayers(), 300);
       
       // 啟動自動更新 (但會以本地資料為主)
       startAutoUpdate();
