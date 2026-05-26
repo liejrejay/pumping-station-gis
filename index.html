@@ -1237,10 +1237,40 @@
     //   兩者都沒有 → 顯示提示，不載入地圖
     // ============================================================
     function _resolveApiKey() {
+      // 1. 從本地配置檔案 (開發環境)
       const fromFile = (typeof window !== "undefined") ? window.GOOGLE_MAPS_API_KEY : null;
       if (fromFile && fromFile !== "YOUR_GOOGLE_MAPS_API_KEY") return fromFile;
+      
+      // 2. 從 localStorage (用戶手動設定)
       const fromStorage = localStorage.getItem("GOOGLE_MAPS_API_KEY");
       if (fromStorage && fromStorage !== "YOUR_GOOGLE_MAPS_API_KEY") return fromStorage;
+      
+      // 3. 從 URL 參數 (臨時使用)
+      const urlParams = new URLSearchParams(window.location.search);
+      const fromUrl = urlParams.get('api_key');
+      if (fromUrl) return fromUrl;
+      
+      // 4. 提示用戶輸入
+      return promptForApiKey();
+    }
+
+    function promptForApiKey() {
+      const key = prompt(`請輸入您的 Google Maps API Key：
+
+如何取得 API Key：
+1. 前往 https://console.cloud.google.com/
+2. 建立專案並啟用 Maps JavaScript API  
+3. 建立 API Key 並設定網域限制
+
+或者您也可以：
+• 在網址後加上 ?api_key=您的金鑰
+• 點擊取消使用免費的 OpenStreetMap`);
+      
+      if (key && key.trim() && key !== "YOUR_GOOGLE_MAPS_API_KEY") {
+        // 儲存到 localStorage 以便下次使用
+        localStorage.setItem("GOOGLE_MAPS_API_KEY", key.trim());
+        return key.trim();
+      }
       return null;
     }
 
