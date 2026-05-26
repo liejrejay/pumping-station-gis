@@ -10,6 +10,10 @@
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
     crossorigin=""
   />
+  <!-- Leaflet plugins (digital basemaps, GIS tools) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol@0.79.0/dist/L.Control.Locate.min.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-fullscreen@1.0.2/dist/leaflet.fullscreen.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-measure@3.1.0/dist/leaflet-measure.css" />
   <link rel="stylesheet" href="css/animations.css" />
   <link rel="stylesheet" href="css/responsive.css" />
   <style>
@@ -42,6 +46,13 @@
     .leaflet-control-layers {
       margin-top: 85px !important;
     }
+
+    /* 搜尋框與工具圖示位置 */
+    .gis-search input::placeholder { color: #999; }
+    .leaflet-top.leaflet-left .leaflet-bar { margin-top: 8px; }
+    .leaflet-control-locate, .leaflet-control-fullscreen, .leaflet-control-zoom { z-index: 1000; }
+    /* leaflet-measure 的 widget 美化 */
+    .leaflet-control-measure { box-shadow: 0 1px 4px rgba(0,0,0,.15) !important; }
     
     /* 讓用戶面板更緊湊 */
     .user-panel .user-info {
@@ -217,6 +228,10 @@
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
     crossorigin=""
   ></script>
+  <!-- Leaflet GIS plugins -->
+  <script src="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol@0.79.0/dist/L.Control.Locate.min.js"></script>
+  <script src="https://unpkg.com/leaflet-fullscreen@1.0.2/dist/Leaflet.fullscreen.min.js"></script>
+  <script src="https://unpkg.com/leaflet-measure@3.1.0/dist/leaflet-measure.cn.js"></script>
   <script src="js/userManager.js"></script>
   <script src="js/mobileOptimization.js"></script>
   <script>
@@ -236,51 +251,288 @@
       maxBoundsViscosity: 1.0             // 邊界彈性 (1.0 = 完全限制)
     });
 
-    // Google 地圖圖層
+    // ============================================================
+    // Digital basemaps（數位底圖） — 多套可切換
+    // ============================================================
     const googleStreets = L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
-      maxZoom: 20,
-      minZoom: 7,
+      maxZoom: 20, minZoom: 7,
       subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-      attribution: '&copy; <a href="https://www.google.com/maps">Google Maps</a> | 範圍限制：台灣地區'
+      attribution: '&copy; <a href="https://www.google.com/maps">Google Maps</a>'
     });
-
     const googleSatellite = L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
-      maxZoom: 20,
-      minZoom: 7,
+      maxZoom: 20, minZoom: 7,
       subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-      attribution: '&copy; <a href="https://www.google.com/maps">Google Maps</a> | 範圍限制：台灣地區'
+      attribution: '&copy; <a href="https://www.google.com/maps">Google Maps</a>'
     });
-
     const googleHybrid = L.tileLayer('https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', {
-      maxZoom: 20,
-      minZoom: 7,
+      maxZoom: 20, minZoom: 7,
       subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-      attribution: '&copy; <a href="https://www.google.com/maps">Google Maps</a> | 範圍限制：台灣地區'
+      attribution: '&copy; <a href="https://www.google.com/maps">Google Maps</a>'
+    });
+    const googleTerrain = L.tileLayer('https://{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}', {
+      maxZoom: 20, minZoom: 7,
+      subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+      attribution: '&copy; <a href="https://www.google.com/maps">Google Maps</a>'
     });
 
-    const googleTerrain = L.tileLayer('https://{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}', {
-      maxZoom: 20,
-      minZoom: 7,
-      subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-      attribution: '&copy; <a href="https://www.google.com/maps">Google Maps</a> | 範圍限制：台灣地區'
+    const osmStreets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19, minZoom: 7,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    });
+    const osmTopo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+      maxZoom: 17, minZoom: 7,
+      subdomains: ['a','b','c'],
+      attribution: '地圖：&copy; <a href="https://opentopomap.org">OpenTopoMap</a> (CC-BY-SA), 資料：&copy; OSM'
+    });
+    const cartoLight = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      maxZoom: 19, minZoom: 7,
+      subdomains: 'abcd',
+      attribution: '&copy; OSM &copy; <a href="https://carto.com/attributions">CARTO</a>'
     });
 
     // 預設使用 Google 街道圖
     googleStreets.addTo(map);
 
-    // 圖層控制器
     const baseMaps = {
       "Google 街道圖": googleStreets,
       "Google 衛星圖": googleSatellite,
       "Google 混合圖": googleHybrid,
-      "Google 地形圖": googleTerrain
+      "Google 地形圖": googleTerrain,
+      "OpenStreetMap": osmStreets,
+      "OpenTopoMap (地形)": osmTopo,
+      "CARTO 簡潔白底": cartoLight,
     };
 
-    // 圖層控制器 - 調整位置避免與用戶面板重疊
-    L.control.layers(baseMaps, null, {
+    // ============================================================
+    // Operational layers（業務圖層） — overlays
+    // ============================================================
+    const districtsLayer = L.geoJSON(null, {
+      style: {
+        color: '#1a5276',
+        weight: 1.6,
+        fillColor: '#1a5276',
+        fillOpacity: 0.05,
+        opacity: 0.7,
+      },
+      onEachFeature: (feat, layer) => {
+        const p = feat.properties || {};
+        layer.bindTooltip(p.name || '行政區', { sticky: true, direction: 'top' });
+        layer.on('mouseover', () => layer.setStyle({ fillOpacity: 0.18, weight: 2.4 }));
+        layer.on('mouseout', () => layer.setStyle({ fillOpacity: 0.05, weight: 1.6 }));
+      }
+    });
+
+    const riverLayer = L.geoJSON(null, {
+      style: { color: '#0b8fe6', weight: 4, opacity: 0.85, lineCap: 'round' }
+    });
+
+    const wlIcon = L.divIcon({
+      className: 'wl-marker',
+      html: '<div style="width:14px;height:14px;border-radius:50%;background:#0b5394;border:2px solid #fff;box-shadow:0 0 0 1px #0b5394;"></div>',
+      iconSize: [14, 14],
+      iconAnchor: [7, 7],
+    });
+    const wlActiveIcon = L.divIcon({
+      className: 'wl-marker',
+      html: '<div style="width:14px;height:14px;border-radius:50%;background:#27ae60;border:2px solid #fff;box-shadow:0 0 0 1px #27ae60;"></div>',
+      iconSize: [14, 14],
+      iconAnchor: [7, 7],
+    });
+    const waterStationsLayer = L.geoJSON(null, {
+      pointToLayer: (feat, latlng) => {
+        const active = feat.properties && feat.properties.status === '現存';
+        return L.marker(latlng, { icon: active ? wlActiveIcon : wlIcon });
+      },
+      onEachFeature: (feat, layer) => {
+        const p = feat.properties || {};
+        layer.bindPopup(() => {
+          const rt = realtimeWaterLevels[p.stationid];
+          let valueHtml = `<span style="color:#888;">${p.status === '現存' ? '載入中…' : '已廢站，無即時資料'}</span>`;
+          if (rt && rt.waterlevel !== '' && rt.waterlevel != null) {
+            const t = (rt.datetime || '').replace('T', ' ').slice(0, 16);
+            valueHtml = `<span style="color:#0b5394;font-weight:600;">${parseFloat(rt.waterlevel).toFixed(2)} m</span>
+                         <span style="color:#888;font-size:0.8rem;"> @ ${t}</span>`;
+          }
+          return `
+            <div style="min-width:240px;">
+              <h3 style="margin:0 0 6px 0;color:#0b5394;font-size:1rem;">💧 ${p.name}</h3>
+              <div style="margin-bottom:4px;"><strong>站號:</strong> <code>${p.stationid}</code></div>
+              <div style="margin-bottom:4px;"><strong>所屬河川:</strong> ${p.river}</div>
+              <div style="margin-bottom:4px;"><strong>狀態:</strong> ${p.status || '—'}</div>
+              <div style="margin-bottom:4px;"><strong>位置:</strong> ${p.address || '—'}</div>
+              <hr style="margin:6px 0;border:none;border-top:1px solid #eee;">
+              <div><strong>即時水位:</strong> ${valueHtml}</div>
+              <div style="font-size:0.78rem;color:#666;margin-top:4px;">資料來源：${p.source || 'WRA'}</div>
+            </div>
+          `;
+        });
+      }
+    });
+
+    const pumpingStationsGroup = L.layerGroup().addTo(map);
+
+    const overlayMaps = {
+      '🏢 抽水站 (Pumping Stations)': pumpingStationsGroup,
+      '💧 水位站 (Water-Level Stations)': waterStationsLayer,
+      '🌊 大漢溪河道 (Dahan River)': riverLayer,
+      '🗾 沿岸行政區 (Districts)': districtsLayer,
+    };
+
+    // 圖層控制器 (basemaps + overlays)
+    const layersControl = L.control.layers(baseMaps, overlayMaps, {
       position: 'topright',
       collapsed: true
     }).addTo(map);
+
+    // ============================================================
+    // 載入 operational layers（3 個 overlay GeoJSON）
+    // ============================================================
+    fetch('data/water-level-stations.geojson').then(r => r.ok ? r.json() : null).then(d => {
+      if (d) waterStationsLayer.addData(d);
+    }).catch(() => {});
+    fetch('data/dahan-river.geojson').then(r => r.ok ? r.json() : null).then(d => {
+      if (d) riverLayer.addData(d);
+    }).catch(() => {});
+    fetch('data/districts.geojson').then(r => r.ok ? r.json() : null).then(d => {
+      if (d) districtsLayer.addData(d);
+    }).catch(() => {});
+
+    // ============================================================
+    // Tasks & Tools（GIS 工具列）
+    // ============================================================
+    // (1) 比例尺
+    L.control.scale({ position: 'bottomleft', metric: true, imperial: false, maxWidth: 180 }).addTo(map);
+
+    // (2) 即時座標小視窗（依滑鼠位置顯示經緯度）
+    const CoordinatesControl = L.Control.extend({
+      options: { position: 'bottomleft' },
+      onAdd: function () {
+        const el = L.DomUtil.create('div', 'leaflet-bar coord-box');
+        el.style.cssText = 'background:rgba(255,255,255,0.92);padding:4px 8px;font:12px/1.4 monospace;color:#1a5276;border-radius:4px;box-shadow:0 1px 4px rgba(0,0,0,.15);';
+        el.innerHTML = '經緯度：—';
+        map.on('mousemove', (e) => {
+          el.innerHTML = `緯度 ${e.latlng.lat.toFixed(5)} · 經度 ${e.latlng.lng.toFixed(5)}`;
+        });
+        return el;
+      }
+    });
+    new CoordinatesControl().addTo(map);
+
+    // (3) 我的位置（GPS 定位）
+    if (L.control.locate) {
+      L.control.locate({
+        position: 'topleft',
+        flyTo: true,
+        strings: { title: '顯示我的位置' },
+        locateOptions: { maxZoom: 15, enableHighAccuracy: true }
+      }).addTo(map);
+    }
+
+    // (4) 量測（距離 / 面積）
+    if (L.control.measure) {
+      L.control.measure({
+        position: 'topleft',
+        primaryLengthUnit: 'meters',
+        secondaryLengthUnit: 'kilometers',
+        primaryAreaUnit: 'sqmeters',
+        secondaryAreaUnit: 'hectares',
+        activeColor: '#1a5276',
+        completedColor: '#27ae60'
+      }).addTo(map);
+    }
+
+    // (5) 全螢幕
+    if (L.control.fullscreen) {
+      L.control.fullscreen({ position: 'topleft', title: '進入全螢幕', titleCancel: '離開全螢幕' }).addTo(map);
+    }
+
+    // (6) 列印 / 匯出（用瀏覽器列印對話框）
+    const PrintControl = L.Control.extend({
+      options: { position: 'topleft' },
+      onAdd: function () {
+        const a = L.DomUtil.create('a', 'leaflet-bar leaflet-control');
+        a.href = '#'; a.title = '列印 / 匯出 PDF';
+        a.style.cssText = 'background:#fff;width:30px;height:30px;line-height:30px;text-align:center;font-size:16px;color:#333;text-decoration:none;display:block;';
+        a.innerHTML = '🖨️';
+        L.DomEvent.on(a, 'click', (ev) => { L.DomEvent.preventDefault(ev); window.print(); });
+        return a;
+      }
+    });
+    new PrintControl().addTo(map);
+
+    // (7) 搜尋抽水站（屬性查詢工具）
+    const SearchControl = L.Control.extend({
+      options: { position: 'topleft' },
+      onAdd: function () {
+        const wrap = L.DomUtil.create('div', 'leaflet-bar gis-search');
+        wrap.style.cssText = 'background:#fff;padding:4px;border-radius:4px;box-shadow:0 1px 4px rgba(0,0,0,.15);';
+        wrap.innerHTML = `
+          <input id="gisSearchInput" type="search" placeholder="🔎 搜尋抽水站 / 行政區"
+                 style="width:200px;padding:4px 8px;border:1px solid #ccc;border-radius:3px;font-size:13px;outline:none;" />
+          <div id="gisSearchResult"
+               style="display:none;max-height:220px;overflow-y:auto;background:#fff;border:1px solid #ddd;border-radius:3px;margin-top:4px;font-size:12px;"></div>
+        `;
+        L.DomEvent.disableClickPropagation(wrap);
+        L.DomEvent.disableScrollPropagation(wrap);
+        return wrap;
+      }
+    });
+    new SearchControl().addTo(map);
+
+    // 搜尋邏輯：在抽水站 + 行政區 features 中比對
+    function gisSearch(q) {
+      q = (q || '').trim().toLowerCase();
+      const out = document.getElementById('gisSearchResult');
+      if (!q) { out.style.display = 'none'; out.innerHTML = ''; return; }
+      const hits = [];
+      pumpingStationsGroup.eachLayer((subLayer) => {
+        if (typeof subLayer.eachLayer === 'function') {
+          subLayer.eachLayer((m) => {
+            const f = m.feature; if (!f) return;
+            const p = f.properties || {};
+            const text = `${p.name||''} ${p.address||''}`.toLowerCase();
+            if (text.includes(q)) {
+              hits.push({ kind: '抽水站', name: p.name || '抽水站', sub: p.address || '', latlng: m.getLatLng(), marker: m });
+            }
+          });
+        }
+      });
+      districtsLayer.eachLayer((m) => {
+        const p = (m.feature || {}).properties || {};
+        if ((p.name || '').toLowerCase().includes(q)) {
+          hits.push({ kind: '行政區', name: p.name, sub: '', bounds: m.getBounds() });
+        }
+      });
+      out.style.display = 'block';
+      if (!hits.length) {
+        out.innerHTML = '<div style="padding:6px 10px;color:#888;">查無結果</div>';
+        return;
+      }
+      out.innerHTML = hits.slice(0, 30).map((h, i) =>
+        `<div data-idx="${i}" style="padding:6px 10px;border-bottom:1px solid #f0f0f0;cursor:pointer;">
+          <span style="display:inline-block;background:#1a5276;color:#fff;font-size:10px;padding:1px 6px;border-radius:8px;margin-right:6px;">${h.kind}</span>
+          <strong>${h.name}</strong>${h.sub ? `<br><span style="color:#666;font-size:11px;">${h.sub}</span>` : ''}
+        </div>`
+      ).join('');
+      out.querySelectorAll('[data-idx]').forEach(el => {
+        el.addEventListener('click', () => {
+          const h = hits[parseInt(el.dataset.idx, 10)];
+          if (h.bounds) map.fitBounds(h.bounds, { maxZoom: 14 });
+          else if (h.latlng) { map.flyTo(h.latlng, 16); if (h.marker && h.marker.openPopup) setTimeout(() => h.marker.openPopup(), 250); }
+          out.style.display = 'none';
+          document.getElementById('gisSearchInput').value = h.name;
+        });
+      });
+    }
+    setTimeout(() => {
+      const input = document.getElementById('gisSearchInput');
+      if (input) input.addEventListener('input', (e) => gisSearch(e.target.value));
+      document.addEventListener('click', (e) => {
+        const r = document.getElementById('gisSearchResult');
+        const i = document.getElementById('gisSearchInput');
+        if (r && i && !r.contains(e.target) && e.target !== i) r.style.display = 'none';
+      });
+    }, 200);
 
     // 調整圖層控制器的 CSS，讓它在用戶面板下方
     setTimeout(() => {
@@ -367,7 +619,9 @@
     // 清除現有圖層
     function clearLayers() {
       currentLayers.forEach(layer => {
-        if (map.hasLayer(layer)) {
+        if (typeof pumpingStationsGroup !== 'undefined' && pumpingStationsGroup.hasLayer && pumpingStationsGroup.hasLayer(layer)) {
+          pumpingStationsGroup.removeLayer(layer);
+        } else if (map.hasLayer(layer)) {
           map.removeLayer(layer);
         }
       });
@@ -623,7 +877,7 @@
               onEachFeature: (feature, layer) => {
                 layer.bindPopup(() => buildStationPopupHtml(feature));
               }
-            }).addTo(map);
+            }).addTo(pumpingStationsGroup);
             
             // 記錄圖層以便後續清除
             currentLayers.push(layer);
@@ -991,7 +1245,7 @@
             </div>
           `);
         }
-      }).addTo(map);
+      }).addTo(pumpingStationsGroup);
       
       // 記錄圖層
       currentLayers.push(layer);
@@ -1201,7 +1455,7 @@
           // popup 內容用函式包起來：每次打開都會重新取最新即時水位
           layer.bindPopup(() => buildStationPopupHtml(feature));
         }
-      }).addTo(map);
+      }).addTo(pumpingStationsGroup);
       
       // 記錄圖層
       currentLayers.push(layer);
