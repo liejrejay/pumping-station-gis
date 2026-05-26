@@ -420,10 +420,11 @@
       <section class="section">
         <h2>業務圖層 (Operational Layers)</h2>
         <div class="layer-list">
-          <label><input type="checkbox" id="layerPumping"   checked> <span class="layer-swatch" style="background:#e74c3c"></span> 🏢 抽水站</label>
-          <label><input type="checkbox" id="layerWL"        checked> <span class="layer-swatch" style="background:#2980b9"></span> 💧 水位站</label>
-          <label><input type="checkbox" id="layerRiver"     checked> <span class="layer-swatch" style="background:#0b8fe6"></span> 🌊 大漢溪河道</label>
-          <label><input type="checkbox" id="layerWaterfront"> <span class="layer-swatch" style="background:#27ae60"></span> 🌿 親水廊道</label>
+          <label><input type="checkbox" id="layerPumping"    checked> <span class="layer-swatch" style="background:#e74c3c"></span> 🏢 抽水站</label>
+          <label><input type="checkbox" id="layerWlActive"   checked> <span class="layer-swatch" style="background:#2980b9"></span> 💧 水位站（現存）</label>
+          <label><input type="checkbox" id="layerWlInactive">        <span class="layer-swatch" style="background:#95a5a6"></span> 💧 水位站（已廢）</label>
+          <label><input type="checkbox" id="layerRiver"      checked> <span class="layer-swatch" style="background:#0b8fe6"></span> 🌊 大漢溪河道</label>
+          <label><input type="checkbox" id="layerWaterfront">         <span class="layer-swatch" style="background:#27ae60"></span> 🌿 親水廊道</label>
         </div>
       </section>
 
@@ -480,9 +481,10 @@
 
     // ---------- 全域狀態 ----------
     let map, infoWindow, currentUser = null;
-    const pumpingMarkers = [];     // 抽水站 markers
-    const wlMarkers = [];          // 水位站 markers
-    const waterfrontMarkers = [];  // 親水廊道 markers（預設關閉）
+    const pumpingMarkers = [];        // 抽水站 markers
+    const wlActiveMarkers = [];       // 水位站（現存）
+    const wlInactiveMarkers = [];     // 水位站（已廢，預設關閉）
+    const waterfrontMarkers = [];     // 親水廊道 markers（預設關閉）
     let riverPolylines = [];       // 大漢溪河道（多條 LineString）
     let realtimeWaterLevels = {};  // { stationid: { waterlevel, datetime } }
     let lastUpdateTime = null;
@@ -674,24 +676,26 @@
       const res = await fetch("data/water-level-stations.geojson", { cache: "no-store" });
       if (!res.ok) throw new Error("water-level-stations.geojson HTTP " + res.status);
       const gj = await res.json();
-      clearMarkers(wlMarkers);
+      clearMarkers(wlActiveMarkers);
+      clearMarkers(wlInactiveMarkers);
+      const showInactive = document.getElementById("layerWlInactive")?.checked;
       (gj.features || []).forEach((feat) => {
         const [lng, lat] = feat.geometry.coordinates;
         const active = (feat.properties || {}).status === "現存";
         const marker = new google.maps.Marker({
-          map,
+          map: active || showInactive ? map : null,
           position: { lat, lng },
           icon: waterStationIcon(active),
           title: feat.properties.name,
           zIndex: 50,
         });
         marker._feature = feat;
-        marker._kind = "wl";
+        marker._kind = active ? "wl-active" : "wl-inactive";
         marker.addListener("click", () => {
           infoWindow.setContent(buildWaterLevelPopupHtml(feat));
           infoWindow.open({ map, anchor: marker });
         });
-        wlMarkers.push(marker);
+        (active ? wlActiveMarkers : wlInactiveMarkers).push(marker);
       });
     }
 
@@ -888,10 +892,11 @@
 
       // 圖層 toggle
       const toggle = (els, checked) => els.forEach((m) => m.setMap(checked ? map : null));
-      document.getElementById("layerPumping").addEventListener("change",   (e) => toggle(pumpingMarkers,    e.target.checked));
-      document.getElementById("layerWL").addEventListener("change",        (e) => toggle(wlMarkers,         e.target.checked));
-      document.getElementById("layerRiver").addEventListener("change",     (e) => toggle(riverPolylines,    e.target.checked));
-      document.getElementById("layerWaterfront").addEventListener("change",(e) => toggle(waterfrontMarkers, e.target.checked));
+      document.getElementById("layerPumping").addEventListener("change",    (e) => toggle(pumpingMarkers,    e.target.checked));
+      document.getElementById("layerWlActive").addEventListener("change",   (e) => toggle(wlActiveMarkers,   e.target.checked));
+      document.getElementById("layerWlInactive").addEventListener("change", (e) => toggle(wlInactiveMarkers, e.target.checked));
+      document.getElementById("layerRiver").addEventListener("change",      (e) => toggle(riverPolylines,    e.target.checked));
+      document.getElementById("layerWaterfront").addEventListener("change", (e) => toggle(waterfrontMarkers, e.target.checked));
 
       // 我的位置
       let locateMarker = null, locateCircle = null;
@@ -1013,10 +1018,13 @@
         const text = `${p.name || ""} ${p.address || ""}`.toLowerCase();
         if (text.includes(q)) hits.push({ kind: "抽水站", name: p.name, sub: p.address || "", marker: m });
       });
-      wlMarkers.forEach((m) => {
+      [...wlActiveMarkers, ...wlInactiveMarkers].forEach((m) => {
         const p = (m._feature.properties) || {};
         const text = `${p.name || ""} ${p.address || ""} ${p.stationid || ""}`.toLowerCase();
-        if (text.includes(q)) hits.push({ kind: "水位站", name: p.name, sub: p.address || "", marker: m });
+        if (text.includes(q)) {
+          const status = p.status || "";
+          hits.push({ kind: `水位站${status ? `·${status}` : ""}`, name: p.name, sub: p.address || "", marker: m });
+        }
       });
       waterfrontMarkers.forEach((m) => {
         const p = (m._feature.properties) || {};
