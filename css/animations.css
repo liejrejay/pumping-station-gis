@@ -11,7 +11,7 @@
     align-items: center;
     justify-content: center;
     z-index: 9999;
-    transition: opacity 0.5s ease;
+    transition: opacity 0.18s ease;
 }
 
 .loading-logo {
@@ -81,7 +81,7 @@
 
 /* 面板進入動畫 */
 .panel-enter {
-    animation: slideInFromLeft 0.6s ease-out;
+    animation: slideInFromLeft 0.3s ease-out;
 }
 
 @keyframes slideInFromLeft {
@@ -96,7 +96,7 @@
 }
 
 .user-panel-enter {
-    animation: slideInFromRight 0.6s ease-out 0.2s both;
+    animation: slideInFromRight 0.3s ease-out 0.05s both;
 }
 
 @keyframes slideInFromRight {
@@ -113,7 +113,7 @@
 /* 地圖載入動畫 */
 #map {
     opacity: 0;
-    transition: opacity 1s ease-in-out;
+    transition: opacity 0.25s ease-in-out;
 }
 
 #map.loaded {

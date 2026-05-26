@@ -522,7 +522,7 @@
                 // 延遲跳轉到主系統
                 setTimeout(() => {
                     window.location.href = 'index.html';
-                }, 1500);
+                }, 350);
                 
             } else {
                 // 登入失敗
@@ -615,14 +615,15 @@
 
         // 載入動畫
         window.addEventListener('load', function() {
-            document.querySelector('.login-container').style.opacity = '0';
-            document.querySelector('.login-container').style.transform = 'translateY(20px)';
-            
-            setTimeout(() => {
-                document.querySelector('.login-container').style.transition = 'all 0.6s ease';
-                document.querySelector('.login-container').style.opacity = '1';
-                document.querySelector('.login-container').style.transform = 'translateY(0)';
-            }, 100);
+            const container = document.querySelector('.login-container');
+            container.style.opacity = '0';
+            container.style.transform = 'translateY(10px)';
+
+            requestAnimationFrame(() => {
+                container.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+                container.style.opacity = '1';
+                container.style.transform = 'translateY(0)';
+            });
         });
     </script>
 </body>
