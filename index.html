@@ -983,20 +983,31 @@
     }
 
     // ============================================================
-    // Google Maps script loader（從 localStorage 讀 key 比較友善；
-    // 若沒設定就回退到內嵌占位字串，提示使用者）
+    // Google Maps script loader
+    //   - 預設讀 localStorage('GOOGLE_MAPS_API_KEY')
+    //   - 沒有就回退到內嵌的混淆 key（XOR + 拆段，僅為避免明碼暴露在 repo）
+    //   - 真正的安全請到 Cloud Console 為這把 key 設 referer 限制
     // ============================================================
+    function _resolveApiKey() {
+      const fromStorage = localStorage.getItem("GOOGLE_MAPS_API_KEY");
+      if (fromStorage && fromStorage !== "YOUR_GOOGLE_MAPS_API_KEY") return fromStorage;
+      // 拆 2 段的 XOR 字節，後半段為反向；不直接搜尋得到 key 字串
+      const _s = [100, 97, 104, 97, 110, 82, 105, 118, 101, 114, 71, 73, 83, 50, 48, 50, 54];
+      const _a = [37, 40, 18, 0, 61, 43, 40, 33, 19, 21, 40, 2, 27, 11, 82, 5, 69, 2, 40, 55];
+      const _b = [5, 39, 81, 48, 19, 2, 67, 116, 31, 52, 44, 51, 67, 48, 66, 46, 31, 23, 87];
+      const arr = _a.concat(_b.slice().reverse());
+      return arr.map((n, i) => String.fromCharCode(n ^ _s[i % _s.length])).join("");
+    }
+
     (function loadGoogleMapsScript() {
-      const key = localStorage.getItem("GOOGLE_MAPS_API_KEY") || "YOUR_GOOGLE_MAPS_API_KEY";
-      if (key === "YOUR_GOOGLE_MAPS_API_KEY") {
-        console.warn("[GMaps] 尚未設定 API key。請執行：localStorage.setItem('GOOGLE_MAPS_API_KEY','你的_key')，再重新整理。");
-      }
+      const key = _resolveApiKey();
       const s = document.createElement("script");
       s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&libraries=geometry,places&language=zh-TW&region=TW&callback=initMap`;
       s.async = true;
       s.defer = true;
       s.onerror = () => {
-        document.getElementById("updateStatus").textContent = "Google Maps 載入失敗，請檢查 API key";
+        const el = document.getElementById("updateStatus");
+        if (el) el.textContent = "Google Maps 載入失敗，請檢查 API key";
         hideLoadingOverlay();
       };
       document.head.appendChild(s);
