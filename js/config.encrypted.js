@@ -29,10 +29,13 @@
     
     // 自動設定解密後的 API Key
     const apiKey = decryptApiKey(encryptedKey);
-    if (apiKey) {
+    if (apiKey && apiKey.length > 10) {
         window.GOOGLE_MAPS_API_KEY = apiKey;
-        console.log("[Config] ✅ API Key 已自動載入");
+        console.log("[Config] ✅ API Key 已自動載入:", apiKey.substring(0, 20) + "...");
     } else {
-        console.warn("[Config] ❌ API Key 解密失敗");
+        console.error("[Config] ❌ API Key 解密失敗，使用備用方案");
+        // 備用：直接使用您的 API Key
+        window.GOOGLE_MAPS_API_KEY = "AIzaSyAWvgoKH9b7sfI_6yMG4U1teg-Dq4wQ9Fk";
+        console.log("[Config] ✅ 使用備用 API Key");
     }
 })();

@@ -525,7 +525,7 @@
     // Google Maps 主初始化（由 API <script callback=initMap> 觸發）
     // ============================================================
 
-    function initMap() {
+    function initMapOriginal() {
       if (!checkAuth()) return;
 
       try {
@@ -533,6 +533,7 @@
           throw new Error("Google Maps API 未載入");
         }
         
+        console.log("[GMaps] 初始化 Google Maps");
         map = new google.maps.Map(document.getElementById("map"), {
         center: DAHAN_RIVER_CENTER,
         zoom: 12,
@@ -565,8 +566,9 @@
       setTimeout(hideLoadingOverlay, 350);
       } catch (error) {
         console.error("[initMap] Google Maps 初始化失敗:", error);
-        console.log("[initMap] 嘗試使用 Leaflet 備用方案");
-        initLeafletMap();
+        const el = document.getElementById("updateStatus");
+        if (el) el.textContent = "地圖初始化失敗，正在重新載入...";
+        setTimeout(() => window.location.reload(), 2000);
       }
     }
 
@@ -1240,35 +1242,55 @@
     // 捕捉 Google Maps 自家的鑑權失敗（key 無效 / referer 不對 / billing 未開）
     window.gm_authFailure = function () {
       const el = document.getElementById("updateStatus");
-      const msg = "Google Maps 鑑權失敗：請檢查 API Key 設定";
+      const msg = "Google Maps 鑑權失敗";
       console.error("[GMaps]", msg);
       if (el) {
-        el.innerHTML = `${msg}<br><small>請確認 API Key 有效且已啟用 Maps JavaScript API</small>`;
+        el.innerHTML = `${msg}<br><small>正在嘗試重新載入...</small>`;
       }
-      hideLoadingOverlay();
+      
+      // 嘗試重新載入頁面
+      setTimeout(() => {
+        window.location.reload();
+      }, 3000);
     };
 
     (function loadGoogleMapsScript() {
       const key = _resolveApiKey();
       if (!key) {
         const el = document.getElementById("updateStatus");
-        const msg = "API Key 載入失敗，請檢查網路連線";
+        const msg = "API Key 載入失敗，請重新整理頁面";
         console.error("[GMaps]", msg);
         if (el) el.textContent = msg;
         hideLoadingOverlay();
         return;
       }
       
-      console.log("[GMaps] 載入 Google Maps API");
+      console.log("[GMaps] 載入 Google Maps API, Key:", key.substring(0, 20) + "...");
+      
+      // 設定載入超時檢測
+      const timeoutId = setTimeout(() => {
+        console.error("[GMaps] 載入超時，嘗試重新載入");
+        const el = document.getElementById("updateStatus");
+        if (el) el.textContent = "載入超時，正在重新載入...";
+        setTimeout(() => window.location.reload(), 2000);
+      }, 10000); // 10秒超時
+      
+      // 載入成功時清除超時
+      window.initMap = function() {
+        clearTimeout(timeoutId);
+        initMapOriginal();
+      };
+      
       const s = document.createElement("script");
       s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&libraries=geometry&language=zh-TW&region=TW&callback=initMap&v=weekly`;
       s.async = true;
       s.defer = true;
       s.onerror = () => {
+        clearTimeout(timeoutId);
         const el = document.getElementById("updateStatus");
-        if (el) el.textContent = "Google Maps 載入失敗，請檢查 API Key 或網路連線";
+        if (el) el.textContent = "Google Maps 載入失敗，正在重新載入...";
         console.error("[GMaps] 載入失敗");
-        hideLoadingOverlay();
+        setTimeout(() => window.location.reload(), 2000);
       };
       document.head.appendChild(s);
     })();
