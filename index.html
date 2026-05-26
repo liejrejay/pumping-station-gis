@@ -604,7 +604,16 @@
 
           if (features.length > 0) {
             console.log(`${api.name} 成功載入 ${features.length} 筆資料`);
-            
+
+            // 為每個 feature 補上最近水位站，使 popup 與本地路徑一致
+            features = features.map(f => {
+              const c = f.geometry.coordinates;
+              const np = { ...(f.properties || {}) };
+              if (np.year_ce && !np.construction_year) np.construction_year = np.year_ce;
+              np.nearest_wl = findNearestWaterStation(c[1], c[0]);
+              return { ...f, properties: np };
+            });
+
             // 建立圖層
             const layer = L.geoJSON({
               type: "FeatureCollection",
@@ -612,43 +621,7 @@
             }, {
               pointToLayer: (_, latlng) => L.marker(latlng, { icon }),
               onEachFeature: (feature, layer) => {
-                const p = feature.properties;
-                layer.bindPopup(`
-                  <div style="min-width: 250px;">
-                    <h3 style="margin: 0 0 8px 0; color: #1a5276; font-size: 1.1rem;">${p.name}</h3>
-                    
-                    <div style="margin-bottom: 6px;">
-                      <strong>抽水站 ID:</strong> <code style="background: #f0f0f0; padding: 2px 4px; border-radius: 3px;">${p.id}</code>
-                    </div>
-                    
-                    <div style="margin-bottom: 6px;">
-                      <strong>維修狀態:</strong> 
-                      <span style="color: ${p.maintenance_status === '正常' ? '#28a745' : p.maintenance_status === '維修中' ? '#dc3545' : '#ffc107'};">
-                        ●
-                      </span>
-                      ${p.maintenance_status}
-                    </div>
-                    
-                    <div style="margin-bottom: 6px;">
-                      <strong>水位高度:</strong> ${p.water_level}${typeof p.water_level === 'number' || p.water_level.match(/^\d/) ? ' 公尺' : ''}
-                    </div>
-                    
-                    <div style="margin-bottom: 6px;">
-                      <strong>建造年份:</strong> ${p.construction_year}
-                    </div>
-                    
-                    ${p.district ? `<div style="margin-bottom: 6px;"><strong>行政區:</strong> ${p.district}</div>` : ''}
-                    ${p.address ? `<div style="margin-bottom: 6px;"><strong>地址:</strong> ${p.address}</div>` : ''}
-                    
-                    <hr style="margin: 8px 0; border: none; border-top: 1px solid #eee;">
-                    
-                    <div style="font-size: 0.85rem; color: #666;">
-                      <div>座標: ${feature.geometry.coordinates[1].toFixed(5)}, ${feature.geometry.coordinates[0].toFixed(5)}</div>
-                      <div>資料來源: ${p.source}</div>
-                      <div>更新時間: ${lastUpdateTime ? new Date(lastUpdateTime).toLocaleString('zh-TW') : '載入中'}</div>
-                    </div>
-                  </div>
-                `);
+                layer.bindPopup(() => buildStationPopupHtml(feature));
               }
             }).addTo(map);
             
@@ -1072,19 +1045,7 @@
       }
     }
 
-    // 生成隨機維修狀態
-    function generateRandomStatus() {
-      const statuses = ["正常", "正常", "正常", "正常", "維修中", "檢查中"];
-      return statuses[Math.floor(Math.random() * statuses.length)];
-    }
-
-    // 生成建造年份
-    function generateConstructionYear() {
-      const years = [2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022];
-      return years[Math.floor(Math.random() * years.length)];
-    }
-
-    // 生成地址
+    // 生成地址（僅當 GeoJSON 中沒有真實地址時 fallback）
     function generateAddress(props) {
       const district = props.district || "";
       const village = props.village || "";
@@ -1096,70 +1057,149 @@
       }
     }
 
+    // ============================================================
+    // 大漢溪即時水位（資料來源：經濟部水利署 opendata）
+    // ------------------------------------------------------------
+    // 8 個現存水位站清單（座標已由 TWD97 轉成 WGS84）。
+    // 每個抽水站會綁定最近的水位站，popup 開啟時讀取即時水位。
+    // ============================================================
+    const WATER_LEVEL_STATIONS = [
+      { stationid: "1140H001", name: "玉峰(馬利哥灣)", lat: 24.656435, lng: 121.298120, address: "新竹縣尖石鄉玉峰村" },
+      { stationid: "1140H043", name: "高義", lat: 24.714366, lng: 121.364322, address: "桃園市復興區高義里" },
+      { stationid: "1140H054", name: "霞雲", lat: 24.768025, lng: 121.362343, address: "桃園市復興區羅浮里" },
+      { stationid: "1140H076", name: "石門(後池)", lat: 24.822952, lng: 121.253027, address: "桃園市龍潭區大坪里" },
+      { stationid: "1140H105", name: "城林橋", lat: 24.979353, lng: 121.430520, address: "新北市土城區城林橋" },
+      { stationid: "1140H067", name: "三鶯橋", lat: 24.944756, lng: 121.353383, address: "新北市鶯歌區南靖里" },
+      { stationid: "1140H111", name: "新海大橋(即時)", lat: 25.033318, lng: 121.454806, address: "新北市板橋區環河路" },
+      { stationid: "1140H118", name: "柑園橋(即時)", lat: 24.985300, lng: 121.381900, address: "新北市樹林區佳園路二段" },
+    ];
+
+    const WL_REALTIME_API = "https://opendata.wra.gov.tw/api/v2/73c4c3de-4045-4765-abeb-89f9f9cd5ff0?page=1&size=1000";
+    const WL_REFRESH_INTERVAL_MS = 5 * 60 * 1000; // 5 分鐘
+    // 即時水位快取：{ stationid: { waterlevel, datetime } }
+    let realtimeWaterLevels = {};
+
+    async function loadRealtimeWaterLevels() {
+      try {
+        const res = await fetch(WL_REALTIME_API, { cache: "no-store" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const arr = await res.json();
+        const wanted = new Set(WATER_LEVEL_STATIONS.map(s => s.stationid));
+        const next = {};
+        for (const r of arr) {
+          if (wanted.has(r.stationid)) {
+            next[r.stationid] = {
+              waterlevel: r.waterlevel,
+              datetime: r.datetime,
+            };
+          }
+        }
+        realtimeWaterLevels = next;
+        console.log(`[水位] 已更新 ${Object.keys(next).length}/${WATER_LEVEL_STATIONS.length} 站`);
+      } catch (err) {
+        console.warn("[水位] 即時資料載入失敗:", err);
+      }
+    }
+
+    // 找最近水位站
+    function findNearestWaterStation(lat, lng) {
+      let best = null;
+      let bestDist = Infinity;
+      for (const s of WATER_LEVEL_STATIONS) {
+        const d = calculateDistance(lat, lng, s.lat, s.lng);
+        if (d < bestDist) {
+          bestDist = d;
+          best = s;
+        }
+      }
+      return best ? { ...best, distance_m: bestDist } : null;
+    }
+
+    // 將 feature 渲染成 popup HTML（會在每次打開 popup 時呼叫，因此可顯示最新即時水位）
+    function buildStationPopupHtml(feature) {
+      const p = feature.properties;
+      const yearText = p.construction_year
+        ? (p.year_ce_range && p.year_ce_range[0] !== p.year_ce_range[1]
+            ? `${p.year_ce_range[0]}–${p.year_ce_range[1]} 年（西元）`
+            : `${p.construction_year} 年（西元）`)
+        : '—（資料源未提供）';
+      const pumpTypeText = p.pump_type ? p.pump_type : '—（資料源未提供）';
+      const districtText = p.district || '';
+      const villageText = p.village || '';
+      const plusCodeRow = p.plus_code
+        ? `<div>Plus Code: <code>${p.plus_code}</code></div>`
+        : '';
+
+      // 即時水位（讀取目前快取，每次打開 popup 取最新值）
+      let waterRow = '';
+      const wl = p.nearest_wl;
+      if (wl) {
+        const rt = realtimeWaterLevels[wl.stationid];
+        const distText = wl.distance_m >= 1000
+          ? `${(wl.distance_m / 1000).toFixed(1)} 公里`
+          : `${Math.round(wl.distance_m)} 公尺`;
+        let valueHtml;
+        if (rt && rt.waterlevel !== '' && rt.waterlevel != null) {
+          const t = (rt.datetime || '').replace('T', ' ').slice(0, 16);
+          valueHtml = `<span style="color:#0b5394;font-weight:600;">${parseFloat(rt.waterlevel).toFixed(2)} m</span>
+                       <span style="color:#888; font-size:0.8rem;"> @ ${t}</span>`;
+        } else {
+          valueHtml = `<span style="color:#888;">載入中…</span>`;
+        }
+        waterRow = `
+          <div style="margin-bottom: 6px;">
+            <strong>鄰近河川水位:</strong> ${valueHtml}
+          </div>
+          <div style="font-size: 0.8rem; color: #666; margin-bottom: 6px;">
+            水位站：${wl.name}（${wl.stationid}）· 距離 ${distText}
+          </div>
+        `;
+      }
+
+      return `
+        <div style="min-width: 260px;">
+          <h3 style="margin: 0 0 8px 0; color: #1a5276; font-size: 1.1rem;">${p.name}</h3>
+
+          <div style="margin-bottom: 6px;">
+            <strong>抽水站 ID:</strong> <code style="background: #f0f0f0; padding: 2px 4px; border-radius: 3px;">${p.id}</code>
+          </div>
+
+          <div style="margin-bottom: 6px;">
+            <strong>竣工年份:</strong> ${yearText}
+          </div>
+
+          <div style="margin-bottom: 6px;">
+            <strong>抽水站類型:</strong> ${pumpTypeText}
+          </div>
+
+          <div style="margin-bottom: 6px;"><strong>地址:</strong> ${p.address || '—'}</div>
+          ${districtText ? `<div style="margin-bottom: 6px;"><strong>行政區:</strong> ${districtText}</div>` : ''}
+          ${villageText ? `<div style="margin-bottom: 6px;"><strong>村里:</strong> ${villageText}</div>` : ''}
+          <div style="margin-bottom: 6px;"><strong>所屬河川:</strong> ${p.river || '大漢溪'}</div>
+
+          <hr style="margin: 8px 0; border: none; border-top: 1px solid #eee;">
+
+          ${waterRow}
+
+          <hr style="margin: 8px 0; border: none; border-top: 1px solid #eee;">
+
+          <div style="font-size: 0.85rem; color: #666;">
+            ${plusCodeRow}
+            <div>座標: ${feature.geometry.coordinates[1].toFixed(5)}, ${feature.geometry.coordinates[0].toFixed(5)}</div>
+            <div>資料來源: ${p.source || '—'}</div>
+            <div>更新時間: ${lastUpdateTime ? new Date(lastUpdateTime).toLocaleString('zh-TW') : '載入中'}</div>
+          </div>
+        </div>
+      `;
+    }
+
     // 顯示 GeoJSON 資料
     function displayGeoJSONData(geojson) {
       const layer = L.geoJSON(geojson, {
         pointToLayer: (_, latlng) => L.marker(latlng, { icon }),
         onEachFeature: (feature, layer) => {
-          const p = feature.properties;
-          const yearText = p.construction_year
-            ? (p.year_ce_range && p.year_ce_range[0] !== p.year_ce_range[1]
-                ? `${p.year_ce_range[0]}–${p.year_ce_range[1]} 年（西元）`
-                : `${p.construction_year} 年（西元）`)
-            : '—（資料源未提供）';
-          const pumpTypeText = p.pump_type ? p.pump_type : '—（資料源未提供）';
-          const districtText = p.district || '';
-          const villageText = p.village || '';
-          const plusCodeRow = p.plus_code
-            ? `<div>Plus Code: <code>${p.plus_code}</code></div>`
-            : '';
-          const statusColor = p.maintenance_status === '正常' ? '#28a745'
-            : p.maintenance_status === '維修中' ? '#dc3545' : '#ffc107';
-          layer.bindPopup(`
-            <div style="min-width: 260px;">
-              <h3 style="margin: 0 0 8px 0; color: #1a5276; font-size: 1.1rem;">${p.name}</h3>
-
-              <div style="margin-bottom: 6px;">
-                <strong>抽水站 ID:</strong> <code style="background: #f0f0f0; padding: 2px 4px; border-radius: 3px;">${p.id}</code>
-              </div>
-
-              <div style="margin-bottom: 6px;">
-                <strong>竣工年份:</strong> ${yearText}
-              </div>
-
-              <div style="margin-bottom: 6px;">
-                <strong>抽水站類型:</strong> ${pumpTypeText}
-              </div>
-
-              <div style="margin-bottom: 6px;"><strong>地址:</strong> ${p.address || '—'}</div>
-              ${districtText ? `<div style="margin-bottom: 6px;"><strong>行政區:</strong> ${districtText}</div>` : ''}
-              ${villageText ? `<div style="margin-bottom: 6px;"><strong>村里:</strong> ${villageText}</div>` : ''}
-              <div style="margin-bottom: 6px;"><strong>所屬河川:</strong> ${p.river || '大漢溪'}</div>
-
-              <hr style="margin: 8px 0; border: none; border-top: 1px solid #eee;">
-
-              <div style="font-size: 0.85rem; color: #666; margin-bottom: 4px;">
-                <em>以下為示意模擬資料：</em>
-              </div>
-              <div style="font-size: 0.9rem; margin-bottom: 4px;">
-                <strong>維修狀態:</strong>
-                <span style="color: ${statusColor};">●</span>
-                ${p.maintenance_status} <span style="color:#999;">(模擬)</span>
-              </div>
-              <div style="font-size: 0.9rem; margin-bottom: 6px;">
-                <strong>水位高度:</strong> ${p.water_level} 公尺 <span style="color:#999;">(模擬)</span>
-              </div>
-
-              <hr style="margin: 8px 0; border: none; border-top: 1px solid #eee;">
-
-              <div style="font-size: 0.85rem; color: #666;">
-                ${plusCodeRow}
-                <div>座標: ${feature.geometry.coordinates[1].toFixed(5)}, ${feature.geometry.coordinates[0].toFixed(5)}</div>
-                <div>資料來源: ${p.source || '—'}</div>
-                <div>更新時間: ${lastUpdateTime ? new Date(lastUpdateTime).toLocaleString('zh-TW') : '載入中'}</div>
-              </div>
-            </div>
-          `);
+          // popup 內容用函式包起來：每次打開都會重新取最新即時水位
+          layer.bindPopup(() => buildStationPopupHtml(feature));
         }
       }).addTo(map);
       
@@ -1256,6 +1296,9 @@
           const orig = feature.properties || {};
           const realName = (orig.name && !/^抽水站\s*\d+$/.test(orig.name)) ? orig.name : null;
           const realAddress = orig.address && orig.address.startsWith('新北市') ? orig.address : null;
+          // 為每個抽水站尋找最近的水利署水位站
+          const coords = feature.geometry.coordinates;
+          const nearest = findNearestWaterStation(coords[1], coords[0]);
           enhanced.properties = {
             ...orig,
             id: `DH${String(index + 1).padStart(3, '0')}`,
@@ -1265,9 +1308,7 @@
             construction_year: (orig.year_ce ?? null),
             year_ce_range: orig.year_ce_range ?? null,
             pump_type: orig.pump_type ?? null,
-            // 以下為模擬欄位（資料源沒有，僅供示意）
-            maintenance_status: generateRandomStatus(),
-            water_level: (Math.random() * 2 + 0.5).toFixed(1),
+            nearest_wl: nearest, // { stationid, name, lat, lng, address, distance_m }
             source: orig.source || "實地調查資料"
           };
           return enhanced;
@@ -2614,6 +2655,10 @@
       
       // 啟動自動更新 (但會以本地資料為主)
       startAutoUpdate();
+
+      // 載入水利署即時水位（非阻塞），並設定 5 分鐘更新一次
+      loadRealtimeWaterLevels();
+      setInterval(loadRealtimeWaterLevels, WL_REFRESH_INTERVAL_MS);
       
       // 隱藏載入畫面（極短時間，僅作淡出過渡）
       setTimeout(() => {
