@@ -1242,16 +1242,19 @@
     // 捕捉 Google Maps 自家的鑑權失敗（key 無效 / referer 不對 / billing 未開）
     window.gm_authFailure = function () {
       const el = document.getElementById("updateStatus");
-      const msg = "Google Maps 鑑權失敗";
+      const msg = "Google Maps API Key 驗證失敗";
       console.error("[GMaps]", msg);
+      console.error("[GMaps] 可能原因：1) API Key 有網域限制 2) 計費未啟用 3) API 未啟用");
+      console.error("[GMaps] 請檢查 Google Cloud Console 設定");
       if (el) {
-        el.innerHTML = `${msg}<br><small>正在嘗試重新載入...</small>`;
+        el.innerHTML = `
+          ${msg}<br>
+          <small style="color: #e74c3c;">可能原因：API Key 網域限制</small><br>
+          <small>請到 Google Cloud Console 設定 HTTP referrers</small><br>
+          <small>新增：*.github.io/*</small>
+        `;
       }
-      
-      // 嘗試重新載入頁面
-      setTimeout(() => {
-        window.location.reload();
-      }, 3000);
+      // 不自動重新載入，讓使用者看到錯誤訊息
     };
 
     (function loadGoogleMapsScript() {
@@ -1267,13 +1270,21 @@
       
       console.log("[GMaps] 載入 Google Maps API, Key:", key.substring(0, 20) + "...");
       
-      // 設定載入超時檢測
-      const timeoutId = setTimeout(() => {
-        console.error("[GMaps] 載入超時，嘗試重新載入");
-        const el = document.getElementById("updateStatus");
-        if (el) el.textContent = "載入超時，正在重新載入...";
-        setTimeout(() => window.location.reload(), 2000);
-      }, 10000); // 10秒超時
+        // 設定載入超時檢測
+        const timeoutId = setTimeout(() => {
+          console.error("[GMaps] 載入超時 - 可能是網路問題或 API 限制");
+          console.error("[GMaps] 當前網域:", window.location.origin);
+          console.error("[GMaps] 請確認 API Key 允許此網域存取");
+          const el = document.getElementById("updateStatus");
+          if (el) {
+            el.innerHTML = `
+              載入超時<br>
+              <small style="color: #e74c3c;">網域：${window.location.hostname}</small><br>
+              <small>請檢查 API Key 網域限制設定</small>
+            `;
+          }
+          // 不自動重新載入，顯示錯誤資訊
+        }, 10000); // 10秒超時
       
       // 載入成功時清除超時
       window.initMap = function() {
@@ -1285,13 +1296,20 @@
       s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&libraries=geometry&language=zh-TW&region=TW&callback=initMap&v=weekly`;
       s.async = true;
       s.defer = true;
-      s.onerror = () => {
-        clearTimeout(timeoutId);
-        const el = document.getElementById("updateStatus");
-        if (el) el.textContent = "Google Maps 載入失敗，正在重新載入...";
-        console.error("[GMaps] 載入失敗");
-        setTimeout(() => window.location.reload(), 2000);
-      };
+        s.onerror = () => {
+          clearTimeout(timeoutId);
+          const el = document.getElementById("updateStatus");
+          console.error("[GMaps] 腳本載入失敗 - 網路問題或 API Key 問題");
+          console.error("[GMaps] 請檢查：1) 網路連線 2) API Key 是否有效 3) 計費是否啟用");
+          if (el) {
+            el.innerHTML = `
+              Google Maps 載入失敗<br>
+              <small style="color: #e74c3c;">請檢查網路連線或 API Key 設定</small><br>
+              <small>按 F12 查看詳細錯誤訊息</small>
+            `;
+          }
+          // 不自動重新載入，讓使用者看到錯誤
+        };
       document.head.appendChild(s);
     })();
   </script>

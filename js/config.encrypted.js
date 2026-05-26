@@ -34,8 +34,12 @@
         console.log("[Config] ✅ API Key 已自動載入:", apiKey.substring(0, 20) + "...");
     } else {
         console.error("[Config] ❌ API Key 解密失敗，使用備用方案");
-        // 備用：直接使用您的 API Key
+        // 備用：直接使用您的 API Key（暫時移除網域限制用於測試）
         window.GOOGLE_MAPS_API_KEY = "AIzaSyAWvgoKH9b7sfI_6yMG4U1teg-Dq4wQ9Fk";
         console.log("[Config] ✅ 使用備用 API Key");
+        console.warn("[Config] ⚠️  如果仍無法載入，請到 Google Cloud Console 檢查：");
+        console.warn("[Config] 1. Maps JavaScript API 是否已啟用");
+        console.warn("[Config] 2. 計費帳戶是否已設定");
+        console.warn("[Config] 3. HTTP referrers 是否包含 *.github.io/*");
     }
 })();
