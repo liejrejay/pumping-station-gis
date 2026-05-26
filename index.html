@@ -8,113 +8,246 @@
   <link rel="stylesheet" href="css/responsive.css" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: "PingFang TC", "Noto Sans TC", system-ui, sans-serif; }
+    body { font-family: "PingFang TC", "Noto Sans TC", system-ui, sans-serif; color: #2d3436; }
     #map { width: 100%; height: 100vh; background: #e9eef3; }
 
-    /* ----------- panels ----------- */
-    .panel {
+    /* =========================================================
+       Sidebar：左側統一面板（資訊 + 工具 + 圖層 + 管理）
+       ========================================================= */
+    .sidebar {
       position: absolute;
       top: 12px;
       left: 12px;
+      bottom: 12px;
+      width: 304px;
       z-index: 1000;
-      background: rgba(255, 255, 255, 0.96);
-      border-radius: 8px;
-      padding: 12px 16px;
-      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
-      max-width: 300px;
-    }
-    .panel h1 { font-size: 1.05rem; margin-bottom: 4px; color: #1a5276; }
-    .panel p { font-size: 0.82rem; color: #555; line-height: 1.4; }
-    .panel .count { font-weight: 600; color: #2471a3; }
-
-    .user-panel {
-      position: absolute;
-      top: 12px;
-      right: 60px;
-      z-index: 1001;
-      background: rgba(255, 255, 255, 0.96);
-      border-radius: 8px;
-      padding: 8px 12px;
-      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
-      max-width: 200px;
-      font-size: 0.75rem;
-    }
-    .user-panel .user-info { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
-    .user-panel .user-details { flex: 1; min-width: 0; }
-    .user-panel .logout-btn {
-      width: 100%; padding: 4px 6px; background: #dc3545; color: white;
-      border: none; border-radius: 3px; font-size: 0.7rem; cursor: pointer;
-    }
-    .user-panel .logout-btn:hover { background: #c82333; }
-
-    /* ----------- GIS toolbar ----------- */
-    .gis-tools {
-      position: absolute;
-      top: 12px;
-      left: 330px;
-      z-index: 1000;
-      background: rgba(255, 255, 255, 0.96);
-      border-radius: 8px;
-      padding: 8px 10px;
-      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+      background: rgba(255, 255, 255, 0.98);
+      border-radius: 14px;
+      box-shadow: 0 8px 28px rgba(20, 50, 90, 0.18);
       display: flex;
       flex-direction: column;
-      gap: 6px;
-      max-width: 260px;
+      overflow: hidden;
+      transition: transform 0.28s cubic-bezier(.45,.05,.55,.95);
+      backdrop-filter: blur(6px);
     }
-    .gis-tools input[type="search"] {
+    .sidebar.collapsed { transform: translateX(-310px); }
+
+    .sidebar-toggle {
+      position: absolute;
+      top: 60px;
+      left: 316px;
+      width: 26px;
+      height: 50px;
+      background: #1a5276;
+      color: #fff;
+      border: none;
+      border-radius: 0 8px 8px 0;
+      cursor: pointer;
+      font-size: 14px;
+      z-index: 1001;
+      box-shadow: 2px 2px 8px rgba(0,0,0,.18);
+      transition: left 0.28s cubic-bezier(.45,.05,.55,.95);
+    }
+    .sidebar.collapsed ~ .sidebar-toggle { left: 6px; }
+    .sidebar-toggle:hover { background: #154360; }
+
+    .sidebar-header {
+      padding: 14px 16px 12px;
+      background: linear-gradient(135deg, #1a5276 0%, #2471a3 60%, #2980b9 100%);
+      color: #fff;
+      flex-shrink: 0;
+    }
+    .sidebar-header h1 {
+      font-size: 1rem;
+      margin-bottom: 3px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+    }
+    .sidebar-header .subtitle {
+      font-size: 0.7rem;
+      opacity: 0.88;
+      line-height: 1.3;
+    }
+
+    .sidebar-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 4px 14px 10px;
+    }
+    .sidebar-body::-webkit-scrollbar { width: 6px; }
+    .sidebar-body::-webkit-scrollbar-thumb { background: #cdd6e0; border-radius: 3px; }
+    .sidebar-body::-webkit-scrollbar-thumb:hover { background: #8a9ba8; }
+
+    .section {
+      padding: 12px 0;
+      border-bottom: 1px dashed #e3e8ee;
+    }
+    .section:last-child { border-bottom: none; padding-bottom: 6px; }
+    .section h2 {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: #7f8c9b;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+    .stat-card {
+      background: linear-gradient(135deg, #f5f9fc 0%, #e8f0f7 100%);
+      padding: 8px 10px;
+      border-radius: 8px;
+      border-left: 3px solid #2471a3;
+    }
+    .stat-card .label { font-size: 0.68rem; color: #6c7a89; }
+    .stat-card .value { font-size: 1.15rem; font-weight: 700; color: #1a5276; margin-top: 1px; }
+    .stat-card.alt { border-left-color: #16a085; }
+    .stat-card.alt .value { color: #16a085; font-size: 0.72rem; line-height: 1.2; padding-top: 5px; }
+
+    .status-row {
+      display: flex; align-items: center; gap: 8px;
+      margin-top: 8px; padding: 6px 8px; background: #f5f9fc; border-radius: 6px;
+      font-size: 0.78rem; color: #555;
+    }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #ccc; }
+
+    /* ---- search ---- */
+    .search-input {
       width: 100%;
-      padding: 5px 8px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
+      padding: 8px 10px;
+      border: 1px solid #d5dde6;
+      border-radius: 8px;
       font-size: 13px;
       outline: none;
+      transition: border-color .15s, box-shadow .15s;
+      background: #fbfcfd;
     }
-    .gis-tools input[type="search"]:focus { border-color: #2471a3; }
+    .search-input:focus { border-color: #2471a3; box-shadow: 0 0 0 3px rgba(36,113,163,.15); background: #fff; }
+
     .gis-search-result {
       display: none;
       max-height: 220px;
       overflow-y: auto;
       background: #fff;
-      border: 1px solid #ddd;
-      border-radius: 4px;
+      border: 1px solid #e0e6ed;
+      border-radius: 8px;
       font-size: 12px;
+      margin-top: 6px;
     }
-    .gis-search-result .hit {
-      padding: 6px 10px;
-      border-bottom: 1px solid #f0f0f0;
-      cursor: pointer;
-    }
+    .gis-search-result .hit { padding: 7px 10px; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: background .12s; }
+    .gis-search-result .hit:last-child { border-bottom: none; }
     .gis-search-result .hit:hover { background: #f5faff; }
     .gis-search-result .hit-kind {
-      display: inline-block; background: #1a5276; color: #fff;
-      font-size: 10px; padding: 1px 6px; border-radius: 8px; margin-right: 6px;
+      display: inline-block;
+      background: linear-gradient(135deg, #1a5276 0%, #2980b9 100%);
+      color: #fff; font-size: 10px; padding: 1px 6px;
+      border-radius: 8px; margin-right: 6px; font-weight: 600;
     }
-    .gis-row { display: flex; gap: 6px; flex-wrap: wrap; }
-    .gis-btn {
-      padding: 5px 8px;
+
+    /* ---- tools ---- */
+    .tools-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .tool-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      padding: 8px 10px;
       font-size: 12px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
       background: #fff;
+      border: 1px solid #d5dde6;
+      border-radius: 8px;
       cursor: pointer;
-      color: #333;
+      color: #2c3e50;
+      transition: all .15s;
+      font-weight: 500;
     }
-    .gis-btn.active { background: #1a5276; color: #fff; border-color: #1a5276; }
-    .gis-btn:hover { background: #f0f5fa; }
-    .gis-btn.active:hover { background: #154360; }
-    .gis-tools select {
-      padding: 4px 6px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
+    .tool-btn:hover { background: #f5f9fc; border-color: #2471a3; color: #1a5276; }
+    .tool-btn.active { background: linear-gradient(135deg, #1a5276 0%, #2471a3 100%); color: #fff; border-color: #1a5276; }
+    .tool-btn.active:hover { background: linear-gradient(135deg, #154360 0%, #1a5276 100%); }
+
+    .select-input {
+      width: 100%;
+      padding: 7px 10px;
+      border: 1px solid #d5dde6;
+      border-radius: 8px;
+      font-size: 13px;
+      background: #fbfcfd;
+      cursor: pointer;
+    }
+    .select-input:focus { border-color: #2471a3; outline: none; }
+
+    .layer-list { display: flex; flex-direction: column; gap: 6px; }
+    .layer-list label {
+      display: flex; align-items: center; gap: 9px;
+      padding: 6px 8px;
+      background: #f9fbfd;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: background .12s;
+    }
+    .layer-list label:hover { background: #eef4fa; }
+    .layer-list input[type="checkbox"] { accent-color: #2471a3; width: 15px; height: 15px; cursor: pointer; }
+    .layer-list .layer-swatch {
+      width: 12px; height: 12px; border-radius: 50%;
+      border: 2px solid #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.18);
+      flex-shrink: 0;
+    }
+
+    /* ---- action buttons (refresh / admin) ---- */
+    .action-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      padding: 8px 10px;
       font-size: 12px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      color: #fff;
+      width: 100%;
+      margin-bottom: 5px;
+      font-weight: 600;
+      transition: filter .15s, transform .05s;
     }
-    .gis-tools .layer-toggles {
-      display: flex; flex-direction: column; gap: 3px;
-      border-top: 1px solid #eee; padding-top: 6px; font-size: 12px;
+    .action-btn:hover { filter: brightness(1.08); }
+    .action-btn:active { transform: translateY(1px); }
+    .action-btn.primary { background: linear-gradient(135deg, #2471a3 0%, #2980b9 100%); }
+    .action-btn.success { background: linear-gradient(135deg, #16a085 0%, #27ae60 100%); }
+    .action-btn.info    { background: linear-gradient(135deg, #17a2b8 0%, #20c4d6 100%); }
+    .action-btn.warning { background: linear-gradient(135deg, #d68910 0%, #f39c12 100%); }
+    .action-btn.neutral { background: linear-gradient(135deg, #5d6d7e 0%, #7f8c8d 100%); }
+
+    /* =========================================================
+       User panel：頂右
+       ========================================================= */
+    .user-panel {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      z-index: 1001;
+      background: rgba(255, 255, 255, 0.98);
+      border-radius: 12px;
+      padding: 8px 12px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+      max-width: 220px;
+      font-size: 0.75rem;
     }
-    .gis-tools .layer-toggles label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
-    .gis-tools .basemap-row { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+    .user-panel .user-info { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .user-panel .user-details { flex: 1; min-width: 0; }
+    .user-panel .logout-btn {
+      width: 100%; padding: 5px 6px; background: #e74c3c; color: #fff;
+      border: none; border-radius: 6px; font-size: 0.7rem; cursor: pointer;
+      transition: background .15s;
+    }
+    .user-panel .logout-btn:hover { background: #c0392b; }
 
     /* ----------- coordinate readout & measure result ----------- */
     .coord-box {
@@ -196,13 +329,13 @@
 
     @media screen and (max-width: 767px) {
       body { overflow: auto !important; -webkit-overflow-scrolling: touch !important; }
-      .gis-tools { left: 12px; top: 220px; max-width: calc(100% - 24px); }
-      .user-panel { right: 12px; max-width: 160px; }
-      .panel { max-width: calc(100% - 24px); }
+      .sidebar { width: 280px; top: 8px; bottom: 8px; left: 8px; }
+      .sidebar.collapsed { transform: translateX(-290px); }
+      .sidebar-toggle { left: 292px; }
+      .sidebar.collapsed ~ .sidebar-toggle { left: 4px; }
+      .user-panel { right: 8px; top: 8px; max-width: 150px; padding: 6px 10px; }
+      .legend { right: 8px; bottom: 36px; font-size: 11px; min-width: 130px; }
     }
-
-    /* admin buttons */
-    #adminControls button { margin: 2px 4px 2px 0; }
   </style>
 </head>
 <body>
@@ -223,6 +356,93 @@
 
   <div id="map"></div>
 
+  <!-- ============================================================
+       Sidebar：左側統一面板
+       ============================================================ -->
+  <aside class="sidebar panel-enter" id="sidebar" style="display:none;">
+    <div class="sidebar-header">
+      <h1>🌊 大漢溪抽水站 Web GIS</h1>
+      <div class="subtitle">雙北流域 · 政府開放資料 · Google Maps Platform</div>
+    </div>
+
+    <div class="sidebar-body">
+      <!-- 概覽統計 -->
+      <section class="section">
+        <h2>系統概覽</h2>
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="label">🏢 抽水站</div>
+            <div class="value"><span id="count">—</span></div>
+          </div>
+          <div class="stat-card alt">
+            <div class="label">📦 資料來源</div>
+            <div class="value" id="source">data/*.geojson</div>
+          </div>
+        </div>
+        <div class="status-row">
+          <div class="status-dot" id="refreshIndicator"></div>
+          <span id="updateStatus">準備中...</span>
+        </div>
+        <button class="action-btn primary" id="manualRefresh" onclick="manualRefresh()" style="margin-top:8px;">🔄 立即更新</button>
+      </section>
+
+      <!-- 屬性查詢 -->
+      <section class="section">
+        <h2>屬性查詢</h2>
+        <input type="search" class="search-input" id="gisSearchInput" placeholder="🔎 搜尋抽水站 / 行政區 / 水位站" />
+        <div id="gisSearchResult" class="gis-search-result"></div>
+      </section>
+
+      <!-- 地圖工具 -->
+      <section class="section">
+        <h2>地圖工具 (Tools)</h2>
+        <div class="tools-grid">
+          <button class="tool-btn" id="btnLocate"     title="顯示我的位置">📍 我的位置</button>
+          <button class="tool-btn" id="btnMeasure"    title="距離量測：點擊地圖加點，雙擊結束">📏 量測</button>
+          <button class="tool-btn" id="btnFullscreen" title="全螢幕">⛶ 全螢幕</button>
+          <button class="tool-btn" id="btnPrint"      title="列印 / 匯出 PDF">🖨️ 列印</button>
+        </div>
+      </section>
+
+      <!-- 底圖 -->
+      <section class="section">
+        <h2>底圖 (Basemap)</h2>
+        <select id="basemapSelect" class="select-input">
+          <option value="roadmap">🗺️ Google 街道圖</option>
+          <option value="satellite">🛰️ Google 衛星圖</option>
+          <option value="hybrid">🌐 Google 混合圖</option>
+          <option value="terrain">⛰️ Google 地形圖</option>
+          <option value="osm">📐 OpenStreetMap</option>
+        </select>
+      </section>
+
+      <!-- 業務圖層 -->
+      <section class="section">
+        <h2>業務圖層 (Operational Layers)</h2>
+        <div class="layer-list">
+          <label><input type="checkbox" id="layerPumping"   checked> <span class="layer-swatch" style="background:#e74c3c"></span> 🏢 抽水站</label>
+          <label><input type="checkbox" id="layerWL"        checked> <span class="layer-swatch" style="background:#2980b9"></span> 💧 水位站</label>
+          <label><input type="checkbox" id="layerRiver"     checked> <span class="layer-swatch" style="background:#0b8fe6"></span> 🌊 大漢溪河道</label>
+          <label><input type="checkbox" id="layerDistricts" checked> <span class="layer-swatch" style="background:#8e44ad"></span> 🗾 沿岸行政區</label>
+          <label><input type="checkbox" id="layerWaterfront"> <span class="layer-swatch" style="background:#27ae60"></span> 🌿 親水廊道</label>
+        </div>
+      </section>
+
+      <!-- 管理員區（依權限顯示） -->
+      <section class="section" id="adminControls" style="display:none;">
+        <h2>⚙️ 管理員功能</h2>
+        <button class="action-btn success" onclick="exportData()">📥 匯出抽水站資料</button>
+        <button class="action-btn info"    onclick="exportUsers()">👥 匯出用戶資料</button>
+        <button class="action-btn neutral" onclick="showUserStats()">📊 用戶統計</button>
+        <button class="action-btn warning" onclick="openAdminPanel()">⚙️ 開啟管理面板</button>
+      </section>
+    </div>
+  </aside>
+
+  <!-- 收合按鈕（獨立於 sidebar，因兄弟 selector 才能配合動畫） -->
+  <button class="sidebar-toggle" id="sidebarToggle" title="收合 / 展開側邊欄">◀</button>
+
+  <!-- 用戶資訊 -->
   <div class="user-panel user-panel-enter" id="userPanel">
     <div class="user-info">
       <span style="font-size: 1rem;">👤</span>
@@ -232,60 +452,6 @@
       </div>
     </div>
     <button onclick="logout()" class="logout-btn">登出</button>
-  </div>
-
-  <div class="panel panel-enter">
-    <h1>大漢溪抽水站 Web GIS</h1>
-    <p>共 <span class="count" id="count">載入中...</span> 處抽水站</p>
-    <p>資料來源：<span id="source">data/pumping-stations.geojson</span></p>
-    <p style="margin-top:6px;font-size:0.78rem;color:#666;">
-      涵蓋雙北市大漢溪流域；地圖：Google Maps Platform
-    </p>
-    <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #ddd;">
-      <div style="display:flex;align-items:center;gap:8px;font-size:0.8rem;">
-        <span id="updateStatus" style="color:#666;">準備中...</span>
-        <div id="refreshIndicator" style="width:10px;height:10px;border-radius:50%;background:#ccc;"></div>
-      </div>
-      <button id="manualRefresh" onclick="manualRefresh()" style="margin-top:4px;padding:4px 8px;font-size:0.75rem;background:#2471a3;color:#fff;border:none;border-radius:4px;cursor:pointer;">立即更新</button>
-      <div id="adminControls" style="margin-top: 6px; display: none;">
-        <button onclick="exportData()"   style="padding:4px 8px;font-size:0.72rem;background:#28a745;color:#fff;border:none;border-radius:4px;cursor:pointer;">匯出抽水站資料</button>
-        <button onclick="exportUsers()"  style="padding:4px 8px;font-size:0.72rem;background:#17a2b8;color:#fff;border:none;border-radius:4px;cursor:pointer;">匯出用戶資料</button>
-        <button onclick="showUserStats()" style="padding:4px 8px;font-size:0.72rem;background:#6c757d;color:#fff;border:none;border-radius:4px;cursor:pointer;">用戶統計</button>
-        <button onclick="openAdminPanel()" style="padding:4px 8px;font-size:0.72rem;background:#fd7e14;color:#fff;border:none;border-radius:4px;cursor:pointer;">管理面板</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- GIS Tasks & Tools 工具列 -->
-  <div class="gis-tools" id="gisTools" style="display:none;">
-    <input id="gisSearchInput" type="search" placeholder="🔎 搜尋抽水站 / 行政區 / 水位站" />
-    <div id="gisSearchResult" class="gis-search-result"></div>
-
-    <div class="gis-row">
-      <button class="gis-btn" id="btnLocate"     title="顯示我的位置">📍 我的位置</button>
-      <button class="gis-btn" id="btnMeasure"    title="距離量測（點兩次以上的點，雙擊結束）">📏 量測</button>
-      <button class="gis-btn" id="btnFullscreen" title="全螢幕">⛶ 全螢幕</button>
-      <button class="gis-btn" id="btnPrint"      title="列印/匯出 PDF">🖨️ 列印</button>
-    </div>
-
-    <div class="basemap-row">
-      <span>底圖：</span>
-      <select id="basemapSelect">
-        <option value="roadmap">Google 街道圖</option>
-        <option value="satellite">Google 衛星圖</option>
-        <option value="hybrid">Google 混合圖</option>
-        <option value="terrain">Google 地形圖</option>
-        <option value="osm">OpenStreetMap</option>
-      </select>
-    </div>
-
-    <div class="layer-toggles">
-      <label><input type="checkbox" id="layerPumping"   checked> 🏢 抽水站</label>
-      <label><input type="checkbox" id="layerWL"        checked> 💧 水位站</label>
-      <label><input type="checkbox" id="layerRiver"     checked> 🌊 大漢溪河道</label>
-      <label><input type="checkbox" id="layerDistricts" checked> 🗾 沿岸行政區</label>
-      <label><input type="checkbox" id="layerWaterfront"> 🌿 親水廊道</label>
-    </div>
   </div>
 
   <div class="coord-box" id="coordBox">緯度 — / 經度 —</div>
@@ -377,7 +543,8 @@
       registerOsmBasemap();
       attachCoordTracker();
       attachToolbar();
-      document.getElementById("gisTools").style.display = "flex";
+      document.getElementById("sidebar").style.display = "flex";
+      attachSidebarToggle();
 
       loadAllLayers();
       loadRealtimeWaterLevels();
@@ -862,6 +1029,15 @@
       input.addEventListener("input", (e) => gisSearch(e.target.value, out));
       document.addEventListener("click", (e) => {
         if (!out.contains(e.target) && e.target !== input) out.style.display = "none";
+      });
+    }
+
+    function attachSidebarToggle() {
+      const sidebar = document.getElementById("sidebar");
+      const btn = document.getElementById("sidebarToggle");
+      btn.addEventListener("click", () => {
+        sidebar.classList.toggle("collapsed");
+        btn.textContent = sidebar.classList.contains("collapsed") ? "▶" : "◀";
       });
     }
 
