@@ -2,5 +2,8 @@
 __pycache__/
 .DS_Store
 
-# 本機 API key / 秘密設定（請勿提交）
+# 本機開發 API key（請勿提交，會覆蓋加密版本）
 js/config.local.js
+
+# 加密工具（開發完成後刪除）
+js/encrypt-api-key.js
