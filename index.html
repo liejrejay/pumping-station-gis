@@ -471,6 +471,12 @@
   <script src="js/mobileOptimization.js"></script>
   <!-- 本機 API key（js/config.local.js 不會被 commit；若不存在會 404 但不影響其他邏輯） -->
   <script src="js/config.local.js" onerror="console.warn('[config] js/config.local.js 不存在，請依 js/config.local.example.js 建立')"></script>
+  
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <script>
     // ============================================================
@@ -521,10 +527,43 @@
     // ============================================================
     // Google Maps 主初始化（由 API <script callback=initMap> 觸發）
     // ============================================================
+    // Leaflet 備用地圖初始化
+    function initLeafletMap() {
+      console.log("[initLeafletMap] 使用 Leaflet 初始化地圖");
+      
+      // 創建 Leaflet 地圖
+      map = L.map('map', {
+        center: [24.95, 121.25],
+        zoom: 11,
+        minZoom: 9,
+        maxZoom: 18
+      });
+
+      // 添加 OpenStreetMap 圖層
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+      }).addTo(map);
+
+      // 模擬 Google Maps 的一些方法
+      map.addListener = function(event, callback) {
+        map.on(event === 'click' ? 'click' : event, callback);
+      };
+
+      // 載入抽水站資料
+      loadPumpingStations();
+      
+      console.log("[initLeafletMap] Leaflet 地圖初始化完成");
+    }
+
     function initMap() {
       if (!checkAuth()) return;
 
-      map = new google.maps.Map(document.getElementById("map"), {
+      try {
+        if (typeof google === 'undefined' || !google.maps) {
+          throw new Error("Google Maps API 未載入");
+        }
+        
+        map = new google.maps.Map(document.getElementById("map"), {
         center: DAHAN_RIVER_CENTER,
         zoom: 12,
         minZoom: 7,
@@ -554,6 +593,11 @@
       startAutoUpdate();
 
       setTimeout(hideLoadingOverlay, 350);
+      } catch (error) {
+        console.error("[initMap] Google Maps 初始化失敗:", error);
+        console.log("[initMap] 嘗試使用 Leaflet 備用方案");
+        initLeafletMap();
+      }
     }
 
     // 暴露給 Google Maps callback
@@ -1203,20 +1247,26 @@
     // 捕捉 Google Maps 自家的鑑權失敗（key 無效 / referer 不對 / billing 未開）
     window.gm_authFailure = function () {
       const el = document.getElementById("updateStatus");
-      const msg = "Google Maps 鑑權失敗：請確認 (1) Maps JavaScript API 已啟用 (2) 已開 billing (3) referer 限制涵蓋目前網址";
-      console.error("[GMaps]", msg);
+      const msg = "Google Maps 鑑權失敗，切換到開源地圖";
+      console.warn("[GMaps]", msg);
       if (el) el.textContent = msg;
-      hideLoadingOverlay();
+      // 改用 Leaflet
+      setTimeout(() => {
+        initLeafletMap();
+      }, 1000);
     };
 
     (function loadGoogleMapsScript() {
       const key = _resolveApiKey();
       if (!key) {
         const el = document.getElementById("updateStatus");
-        const msg = "未設定 Google Maps API key：請建立 js/config.local.js（複製自 js/config.local.example.js）後填入 key";
-        console.error("[GMaps]", msg);
+        const msg = "未設定 Google Maps API key，使用開源地圖";
+        console.warn("[GMaps]", msg);
         if (el) el.textContent = msg;
-        hideLoadingOverlay();
+        // 直接使用 Leaflet
+        setTimeout(() => {
+          initLeafletMap();
+        }, 1000);
         return;
       }
       const s = document.createElement("script");
@@ -1225,8 +1275,12 @@
       s.defer = true;
       s.onerror = () => {
         const el = document.getElementById("updateStatus");
-        if (el) el.textContent = "Google Maps script 無法下載，請檢查網路 / API key";
-        hideLoadingOverlay();
+        if (el) el.textContent = "Google Maps 載入失敗，切換到開源地圖";
+        console.warn("[GMaps] 載入失敗，使用 Leaflet 備用方案");
+        // 改用 Leaflet
+        setTimeout(() => {
+          initLeafletMap();
+        }, 1000);
       };
       document.head.appendChild(s);
     })();
