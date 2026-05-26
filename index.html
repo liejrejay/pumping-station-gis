@@ -3,120 +3,161 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0" />
-  <title>大漢溪抽水站地圖</title>
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-    crossorigin=""
-  />
-  <!-- Leaflet plugins (digital basemaps, GIS tools) -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol@0.79.0/dist/L.Control.Locate.min.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet-fullscreen@1.0.2/dist/leaflet.fullscreen.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet-measure@3.1.0/dist/leaflet-measure.css" />
+  <title>大漢溪抽水站 Web GIS</title>
   <link rel="stylesheet" href="css/animations.css" />
   <link rel="stylesheet" href="css/responsive.css" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: "PingFang TC", "Noto Sans TC", system-ui, sans-serif; }
-    #map { width: 100%; height: 100vh; }
+    #map { width: 100%; height: 100vh; background: #e9eef3; }
+
+    /* ----------- panels ----------- */
     .panel {
       position: absolute;
       top: 12px;
-      left: 52px;
+      left: 12px;
       z-index: 1000;
-      background: rgba(255, 255, 255, 0.95);
+      background: rgba(255, 255, 255, 0.96);
       border-radius: 8px;
       padding: 12px 16px;
       box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
-      max-width: 320px;
+      max-width: 300px;
     }
-    .panel h1 { font-size: 1.1rem; margin-bottom: 4px; color: #1a5276; }
-    .panel p { font-size: 0.85rem; color: #555; line-height: 1.4; }
+    .panel h1 { font-size: 1.05rem; margin-bottom: 4px; color: #1a5276; }
+    .panel p { font-size: 0.82rem; color: #555; line-height: 1.4; }
     .panel .count { font-weight: 600; color: #2471a3; }
-    .leaflet-popup-content { font-size: 0.9rem; line-height: 1.5; }
-    .leaflet-popup-content strong { color: #1a5276; }
-    
-    /* 確保用戶面板在圖層控制器上方 */
+
     .user-panel {
-      z-index: 1001 !important;
+      position: absolute;
+      top: 12px;
+      right: 60px;
+      z-index: 1001;
+      background: rgba(255, 255, 255, 0.96);
+      border-radius: 8px;
+      padding: 8px 12px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+      max-width: 200px;
+      font-size: 0.75rem;
     }
-    
-    /* 調整圖層控制器位置 */
-    .leaflet-control-layers {
-      margin-top: 85px !important;
-    }
-
-    /* 搜尋框與工具圖示位置 */
-    .gis-search input::placeholder { color: #999; }
-    .leaflet-top.leaflet-left .leaflet-bar { margin-top: 8px; }
-    .leaflet-control-locate, .leaflet-control-fullscreen, .leaflet-control-zoom { z-index: 1000; }
-    /* leaflet-measure 的 widget 美化 */
-    .leaflet-control-measure { box-shadow: 0 1px 4px rgba(0,0,0,.15) !important; }
-    
-    /* 讓用戶面板更緊湊 */
-    .user-panel .user-info {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      margin-bottom: 6px;
-    }
-    
-    .user-panel .user-details {
-      flex: 1;
-      min-width: 0;
-    }
-    
+    .user-panel .user-info { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+    .user-panel .user-details { flex: 1; min-width: 0; }
     .user-panel .logout-btn {
+      width: 100%; padding: 4px 6px; background: #dc3545; color: white;
+      border: none; border-radius: 3px; font-size: 0.7rem; cursor: pointer;
+    }
+    .user-panel .logout-btn:hover { background: #c82333; }
+
+    /* ----------- GIS toolbar ----------- */
+    .gis-tools {
+      position: absolute;
+      top: 12px;
+      left: 330px;
+      z-index: 1000;
+      background: rgba(255, 255, 255, 0.96);
+      border-radius: 8px;
+      padding: 8px 10px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-width: 260px;
+    }
+    .gis-tools input[type="search"] {
       width: 100%;
-      padding: 4px 6px;
-      background: #dc3545;
-      color: white;
-      border: none;
-      border-radius: 3px;
-      font-size: 0.7rem;
+      padding: 5px 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 13px;
+      outline: none;
+    }
+    .gis-tools input[type="search"]:focus { border-color: #2471a3; }
+    .gis-search-result {
+      display: none;
+      max-height: 220px;
+      overflow-y: auto;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    .gis-search-result .hit {
+      padding: 6px 10px;
+      border-bottom: 1px solid #f0f0f0;
       cursor: pointer;
-      transition: background-color 0.2s;
     }
-    
-    .user-panel .logout-btn:hover {
-      background: #c82333;
+    .gis-search-result .hit:hover { background: #f5faff; }
+    .gis-search-result .hit-kind {
+      display: inline-block; background: #1a5276; color: #fff;
+      font-size: 10px; padding: 1px 6px; border-radius: 8px; margin-right: 6px;
+    }
+    .gis-row { display: flex; gap: 6px; flex-wrap: wrap; }
+    .gis-btn {
+      padding: 5px 8px;
+      font-size: 12px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background: #fff;
+      cursor: pointer;
+      color: #333;
+    }
+    .gis-btn.active { background: #1a5276; color: #fff; border-color: #1a5276; }
+    .gis-btn:hover { background: #f0f5fa; }
+    .gis-btn.active:hover { background: #154360; }
+    .gis-tools select {
+      padding: 4px 6px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    .gis-tools .layer-toggles {
+      display: flex; flex-direction: column; gap: 3px;
+      border-top: 1px solid #eee; padding-top: 6px; font-size: 12px;
+    }
+    .gis-tools .layer-toggles label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+    .gis-tools .basemap-row { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+
+    /* ----------- coordinate readout & measure result ----------- */
+    .coord-box {
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+      z-index: 1000;
+      background: rgba(255, 255, 255, 0.92);
+      padding: 4px 10px;
+      font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+      color: #1a5276;
+      border-radius: 4px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.15);
+    }
+    .measure-readout {
+      position: absolute;
+      bottom: 48px;
+      left: 12px;
+      z-index: 1000;
+      background: rgba(255, 255, 255, 0.96);
+      padding: 6px 10px;
+      font: 13px/1.4 system-ui;
+      color: #154360;
+      border-radius: 4px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.15);
+      display: none;
     }
 
-    /* 手機版 body 滑動修復 */
+    .gm-style .gm-style-iw-c { padding: 8px 10px !important; }
+    .gm-style .gm-style-iw-d { overflow: auto !important; }
+
     @media screen and (max-width: 767px) {
-      body {
-        overflow: auto !important;
-        -webkit-overflow-scrolling: touch !important;
-        height: 100vh !important;
-      }
-      
-      #map {
-        touch-action: pan-x pan-y !important;
-      }
-
-      /* 移動 Leaflet 版權資訊到底部 */
-      .leaflet-control-attribution {
-        position: fixed !important;
-        bottom: 0 !important;
-        right: 0 !important;
-        left: auto !important;
-        background: rgba(0, 0, 0, 0.5) !important;
-        color: white !important;
-        padding: 2px 6px !important;
-        font-size: 0.6rem !important;
-        border-radius: 3px 0 0 0 !important;
-        z-index: 999 !important;
-      }
-
-      .leaflet-control-attribution a {
-        color: #ccc !important;
-      }
+      body { overflow: auto !important; -webkit-overflow-scrolling: touch !important; }
+      .gis-tools { left: 12px; top: 220px; max-width: calc(100% - 24px); }
+      .user-panel { right: 12px; max-width: 160px; }
+      .panel { max-width: calc(100% - 24px); }
     }
+
+    /* admin buttons */
+    #adminControls button { margin: 2px 4px 2px 0; }
   </style>
 </head>
 <body>
-  <!-- 載入畫面 -->
   <div id="loadingOverlay" class="loading-overlay">
     <div class="loading-logo">
       <span style="font-size: 3rem; color: #1e3c72;">🌊</span>
@@ -133,19 +174,8 @@
   </div>
 
   <div id="map"></div>
-  <!-- 用戶資訊面板 -->
-  <div class="user-panel user-panel-enter" id="userPanel" style="
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    z-index: 1001;
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 8px;
-    padding: 8px 12px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
-    max-width: 180px;
-    font-size: 0.75rem;
-  ">
+
+  <div class="user-panel user-panel-enter" id="userPanel">
     <div class="user-info">
       <span style="font-size: 1rem;">👤</span>
       <div class="user-details">
@@ -156,1236 +186,385 @@
     <button onclick="logout()" class="logout-btn">登出</button>
   </div>
 
-  <!-- 主控制面板 -->
   <div class="panel panel-enter">
-    <h1>雙北大漢溪 - 抽水站</h1>
-    <p>共 <span class="count" id="count">載入中...</span> 處</p>
-    <p>資料來源：<span id="source">政府開放資料</span></p>
-    <p style="margin-top:6px;font-size:0.8rem;">
-      涵蓋範圍：台北市、新北市大漢溪流域
+    <h1>大漢溪抽水站 Web GIS</h1>
+    <p>共 <span class="count" id="count">載入中...</span> 處抽水站</p>
+    <p>資料來源：<span id="source">data/pumping-stations.geojson</span></p>
+    <p style="margin-top:6px;font-size:0.78rem;color:#666;">
+      涵蓋雙北市大漢溪流域；地圖：Google Maps Platform
     </p>
     <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #ddd;">
-      <div style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem;">
-        <span id="updateStatus" style="color: #666;">載入中...</span>
-        <div id="refreshIndicator" style="width: 12px; height: 12px; border-radius: 50%; background: #ccc;"></div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:0.8rem;">
+        <span id="updateStatus" style="color:#666;">準備中...</span>
+        <div id="refreshIndicator" style="width:10px;height:10px;border-radius:50%;background:#ccc;"></div>
       </div>
-      <button id="manualRefresh" onclick="manualRefresh()" style="
-        margin-top: 4px; 
-        padding: 4px 8px; 
-        font-size: 0.75rem; 
-        background: #2471a3; 
-        color: white; 
-        border: none; 
-        border-radius: 4px; 
-        cursor: pointer;
-      ">立即更新</button>
+      <button id="manualRefresh" onclick="manualRefresh()" style="margin-top:4px;padding:4px 8px;font-size:0.75rem;background:#2471a3;color:#fff;border:none;border-radius:4px;cursor:pointer;">立即更新</button>
       <div id="adminControls" style="margin-top: 6px; display: none;">
-        <button onclick="exportData()" style="
-          padding: 4px 8px;
-          font-size: 0.75rem;
-          background: #28a745;
-          color: white;
-          border: none;
-          border-radius: 4px;
-          cursor: pointer;
-          margin-right: 4px;
-        ">匯出抽水站資料</button>
-        <button onclick="exportUsers()" style="
-          padding: 4px 8px;
-          font-size: 0.75rem;
-          background: #17a2b8;
-          color: white;
-          border: none;
-          border-radius: 4px;
-          cursor: pointer;
-          margin-right: 4px;
-        ">匯出用戶資料</button>
-        <button onclick="showUserStats()" style="
-          padding: 4px 8px;
-          font-size: 0.75rem;
-          background: #6c757d;
-          color: white;
-          border: none;
-          border-radius: 4px;
-          cursor: pointer;
-          margin-right: 4px;
-        ">用戶統計</button>
-        <button onclick="openAdminPanel()" style="
-          padding: 4px 8px;
-          font-size: 0.75rem;
-          background: #fd7e14;
-          color: white;
-          border: none;
-          border-radius: 4px;
-          cursor: pointer;
-        ">管理面板</button>
+        <button onclick="exportData()"   style="padding:4px 8px;font-size:0.72rem;background:#28a745;color:#fff;border:none;border-radius:4px;cursor:pointer;">匯出抽水站資料</button>
+        <button onclick="exportUsers()"  style="padding:4px 8px;font-size:0.72rem;background:#17a2b8;color:#fff;border:none;border-radius:4px;cursor:pointer;">匯出用戶資料</button>
+        <button onclick="showUserStats()" style="padding:4px 8px;font-size:0.72rem;background:#6c757d;color:#fff;border:none;border-radius:4px;cursor:pointer;">用戶統計</button>
+        <button onclick="openAdminPanel()" style="padding:4px 8px;font-size:0.72rem;background:#fd7e14;color:#fff;border:none;border-radius:4px;cursor:pointer;">管理面板</button>
       </div>
     </div>
   </div>
 
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-    crossorigin=""
-  ></script>
-  <!-- Leaflet GIS plugins -->
-  <script src="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol@0.79.0/dist/L.Control.Locate.min.js"></script>
-  <script src="https://unpkg.com/leaflet-fullscreen@1.0.2/dist/Leaflet.fullscreen.min.js"></script>
-  <script src="https://unpkg.com/leaflet-measure@3.1.0/dist/leaflet-measure.cn.js"></script>
+  <!-- GIS Tasks & Tools 工具列 -->
+  <div class="gis-tools" id="gisTools" style="display:none;">
+    <input id="gisSearchInput" type="search" placeholder="🔎 搜尋抽水站 / 行政區 / 水位站" />
+    <div id="gisSearchResult" class="gis-search-result"></div>
+
+    <div class="gis-row">
+      <button class="gis-btn" id="btnLocate"     title="顯示我的位置">📍 我的位置</button>
+      <button class="gis-btn" id="btnMeasure"    title="距離量測（點兩次以上的點，雙擊結束）">📏 量測</button>
+      <button class="gis-btn" id="btnFullscreen" title="全螢幕">⛶ 全螢幕</button>
+      <button class="gis-btn" id="btnPrint"      title="列印/匯出 PDF">🖨️ 列印</button>
+    </div>
+
+    <div class="basemap-row">
+      <span>底圖：</span>
+      <select id="basemapSelect">
+        <option value="roadmap">Google 街道圖</option>
+        <option value="satellite">Google 衛星圖</option>
+        <option value="hybrid">Google 混合圖</option>
+        <option value="terrain">Google 地形圖</option>
+        <option value="osm">OpenStreetMap</option>
+      </select>
+    </div>
+
+    <div class="layer-toggles">
+      <label><input type="checkbox" id="layerPumping"   checked> 🏢 抽水站</label>
+      <label><input type="checkbox" id="layerWL"        checked> 💧 水位站</label>
+      <label><input type="checkbox" id="layerRiver"     checked> 🌊 大漢溪河道</label>
+      <label><input type="checkbox" id="layerDistricts" checked> 🗾 沿岸行政區</label>
+    </div>
+  </div>
+
+  <div class="coord-box" id="coordBox">緯度 — / 經度 —</div>
+  <div class="measure-readout" id="measureReadout"></div>
+
   <script src="js/userManager.js"></script>
   <script src="js/mobileOptimization.js"></script>
+
   <script>
-    // 台灣範圍限制
-    const TAIWAN_BOUNDS = L.latLngBounds(
-      [21.5, 119.5], // 西南角 (屏東、澎湖)
-      [25.5, 122.5]  // 東北角 (基隆、宜蘭)
-    );
-
-    // 雙北大漢溪流域範圍 (台北市、新北市)
-    const map = L.map("map", {
-      center: [25.02, 121.45],
-      zoom: 13,
-      minZoom: 7,        // 最小縮放級別 (可以看到整個台灣)
-      maxZoom: 20,       // 最大縮放級別 (Google Maps 支援更高縮放)
-      maxBounds: TAIWAN_BOUNDS,           // 限制平移範圍在台灣
-      maxBoundsViscosity: 1.0             // 邊界彈性 (1.0 = 完全限制)
-    });
-
     // ============================================================
-    // Digital basemaps（數位底圖） — 多套可切換
+    // Google Maps Web GIS：四大組成
+    //   1. Digital basemaps：Google roadmap/satellite/hybrid/terrain + OSM
+    //   2. Operational layers：抽水站 / 水位站 / 大漢溪河道 / 沿岸行政區
+    //   3. Tasks & tools：搜尋、量測、定位、座標、列印、全螢幕、圖層切換
+    //   4. Geodatabase：data/*.geojson（pumping/water-level/river/districts）
     // ============================================================
-    const googleStreets = L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
-      maxZoom: 20, minZoom: 7,
-      subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-      attribution: '&copy; <a href="https://www.google.com/maps">Google Maps</a>'
-    });
-    const googleSatellite = L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
-      maxZoom: 20, minZoom: 7,
-      subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-      attribution: '&copy; <a href="https://www.google.com/maps">Google Maps</a>'
-    });
-    const googleHybrid = L.tileLayer('https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', {
-      maxZoom: 20, minZoom: 7,
-      subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-      attribution: '&copy; <a href="https://www.google.com/maps">Google Maps</a>'
-    });
-    const googleTerrain = L.tileLayer('https://{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}', {
-      maxZoom: 20, minZoom: 7,
-      subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-      attribution: '&copy; <a href="https://www.google.com/maps">Google Maps</a>'
-    });
 
-    const osmStreets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19, minZoom: 7,
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    });
-    const osmTopo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-      maxZoom: 17, minZoom: 7,
-      subdomains: ['a','b','c'],
-      attribution: '地圖：&copy; <a href="https://opentopomap.org">OpenTopoMap</a> (CC-BY-SA), 資料：&copy; OSM'
-    });
-    const cartoLight = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      maxZoom: 19, minZoom: 7,
-      subdomains: 'abcd',
-      attribution: '&copy; OSM &copy; <a href="https://carto.com/attributions">CARTO</a>'
-    });
-
-    // 預設使用 Google 街道圖
-    googleStreets.addTo(map);
-
-    const baseMaps = {
-      "Google 街道圖": googleStreets,
-      "Google 衛星圖": googleSatellite,
-      "Google 混合圖": googleHybrid,
-      "Google 地形圖": googleTerrain,
-      "OpenStreetMap": osmStreets,
-      "OpenTopoMap (地形)": osmTopo,
-      "CARTO 簡潔白底": cartoLight,
-    };
-
-    // ============================================================
-    // Operational layers（業務圖層） — overlays
-    // ============================================================
-    const districtsLayer = L.geoJSON(null, {
-      style: {
-        color: '#1a5276',
-        weight: 1.6,
-        fillColor: '#1a5276',
-        fillOpacity: 0.05,
-        opacity: 0.7,
-      },
-      onEachFeature: (feat, layer) => {
-        const p = feat.properties || {};
-        layer.bindTooltip(p.name || '行政區', { sticky: true, direction: 'top' });
-        layer.on('mouseover', () => layer.setStyle({ fillOpacity: 0.18, weight: 2.4 }));
-        layer.on('mouseout', () => layer.setStyle({ fillOpacity: 0.05, weight: 1.6 }));
-      }
-    });
-
-    const riverLayer = L.geoJSON(null, {
-      style: { color: '#0b8fe6', weight: 4, opacity: 0.85, lineCap: 'round' }
-    });
-
-    const wlIcon = L.divIcon({
-      className: 'wl-marker',
-      html: '<div style="width:14px;height:14px;border-radius:50%;background:#0b5394;border:2px solid #fff;box-shadow:0 0 0 1px #0b5394;"></div>',
-      iconSize: [14, 14],
-      iconAnchor: [7, 7],
-    });
-    const wlActiveIcon = L.divIcon({
-      className: 'wl-marker',
-      html: '<div style="width:14px;height:14px;border-radius:50%;background:#27ae60;border:2px solid #fff;box-shadow:0 0 0 1px #27ae60;"></div>',
-      iconSize: [14, 14],
-      iconAnchor: [7, 7],
-    });
-    const waterStationsLayer = L.geoJSON(null, {
-      pointToLayer: (feat, latlng) => {
-        const active = feat.properties && feat.properties.status === '現存';
-        return L.marker(latlng, { icon: active ? wlActiveIcon : wlIcon });
-      },
-      onEachFeature: (feat, layer) => {
-        const p = feat.properties || {};
-        layer.bindPopup(() => {
-          const rt = realtimeWaterLevels[p.stationid];
-          let valueHtml = `<span style="color:#888;">${p.status === '現存' ? '載入中…' : '已廢站，無即時資料'}</span>`;
-          if (rt && rt.waterlevel !== '' && rt.waterlevel != null) {
-            const t = (rt.datetime || '').replace('T', ' ').slice(0, 16);
-            valueHtml = `<span style="color:#0b5394;font-weight:600;">${parseFloat(rt.waterlevel).toFixed(2)} m</span>
-                         <span style="color:#888;font-size:0.8rem;"> @ ${t}</span>`;
-          }
-          return `
-            <div style="min-width:240px;">
-              <h3 style="margin:0 0 6px 0;color:#0b5394;font-size:1rem;">💧 ${p.name}</h3>
-              <div style="margin-bottom:4px;"><strong>站號:</strong> <code>${p.stationid}</code></div>
-              <div style="margin-bottom:4px;"><strong>所屬河川:</strong> ${p.river}</div>
-              <div style="margin-bottom:4px;"><strong>狀態:</strong> ${p.status || '—'}</div>
-              <div style="margin-bottom:4px;"><strong>位置:</strong> ${p.address || '—'}</div>
-              <hr style="margin:6px 0;border:none;border-top:1px solid #eee;">
-              <div><strong>即時水位:</strong> ${valueHtml}</div>
-              <div style="font-size:0.78rem;color:#666;margin-top:4px;">資料來源：${p.source || 'WRA'}</div>
-            </div>
-          `;
-        });
-      }
-    });
-
-    const pumpingStationsGroup = L.layerGroup().addTo(map);
-
-    const overlayMaps = {
-      '🏢 抽水站 (Pumping Stations)': pumpingStationsGroup,
-      '💧 水位站 (Water-Level Stations)': waterStationsLayer,
-      '🌊 大漢溪河道 (Dahan River)': riverLayer,
-      '🗾 沿岸行政區 (Districts)': districtsLayer,
-    };
-
-    // 圖層控制器 (basemaps + overlays)
-    const layersControl = L.control.layers(baseMaps, overlayMaps, {
-      position: 'topright',
-      collapsed: true
-    }).addTo(map);
-
-    // ============================================================
-    // 載入 operational layers（3 個 overlay GeoJSON）
-    // ============================================================
-    fetch('data/water-level-stations.geojson').then(r => r.ok ? r.json() : null).then(d => {
-      if (d) waterStationsLayer.addData(d);
-    }).catch(() => {});
-    fetch('data/dahan-river.geojson').then(r => r.ok ? r.json() : null).then(d => {
-      if (d) riverLayer.addData(d);
-    }).catch(() => {});
-    fetch('data/districts.geojson').then(r => r.ok ? r.json() : null).then(d => {
-      if (d) districtsLayer.addData(d);
-    }).catch(() => {});
-
-    // ============================================================
-    // Tasks & Tools（GIS 工具列）
-    // ============================================================
-    // (1) 比例尺
-    L.control.scale({ position: 'bottomleft', metric: true, imperial: false, maxWidth: 180 }).addTo(map);
-
-    // (2) 即時座標小視窗（依滑鼠位置顯示經緯度）
-    const CoordinatesControl = L.Control.extend({
-      options: { position: 'bottomleft' },
-      onAdd: function () {
-        const el = L.DomUtil.create('div', 'leaflet-bar coord-box');
-        el.style.cssText = 'background:rgba(255,255,255,0.92);padding:4px 8px;font:12px/1.4 monospace;color:#1a5276;border-radius:4px;box-shadow:0 1px 4px rgba(0,0,0,.15);';
-        el.innerHTML = '經緯度：—';
-        map.on('mousemove', (e) => {
-          el.innerHTML = `緯度 ${e.latlng.lat.toFixed(5)} · 經度 ${e.latlng.lng.toFixed(5)}`;
-        });
-        return el;
-      }
-    });
-    new CoordinatesControl().addTo(map);
-
-    // (3) 我的位置（GPS 定位）
-    if (L.control.locate) {
-      L.control.locate({
-        position: 'topleft',
-        flyTo: true,
-        strings: { title: '顯示我的位置' },
-        locateOptions: { maxZoom: 15, enableHighAccuracy: true }
-      }).addTo(map);
-    }
-
-    // (4) 量測（距離 / 面積）
-    if (L.control.measure) {
-      L.control.measure({
-        position: 'topleft',
-        primaryLengthUnit: 'meters',
-        secondaryLengthUnit: 'kilometers',
-        primaryAreaUnit: 'sqmeters',
-        secondaryAreaUnit: 'hectares',
-        activeColor: '#1a5276',
-        completedColor: '#27ae60'
-      }).addTo(map);
-    }
-
-    // (5) 全螢幕
-    if (L.control.fullscreen) {
-      L.control.fullscreen({ position: 'topleft', title: '進入全螢幕', titleCancel: '離開全螢幕' }).addTo(map);
-    }
-
-    // (6) 列印 / 匯出（用瀏覽器列印對話框）
-    const PrintControl = L.Control.extend({
-      options: { position: 'topleft' },
-      onAdd: function () {
-        const a = L.DomUtil.create('a', 'leaflet-bar leaflet-control');
-        a.href = '#'; a.title = '列印 / 匯出 PDF';
-        a.style.cssText = 'background:#fff;width:30px;height:30px;line-height:30px;text-align:center;font-size:16px;color:#333;text-decoration:none;display:block;';
-        a.innerHTML = '🖨️';
-        L.DomEvent.on(a, 'click', (ev) => { L.DomEvent.preventDefault(ev); window.print(); });
-        return a;
-      }
-    });
-    new PrintControl().addTo(map);
-
-    // (7) 搜尋抽水站（屬性查詢工具）
-    const SearchControl = L.Control.extend({
-      options: { position: 'topleft' },
-      onAdd: function () {
-        const wrap = L.DomUtil.create('div', 'leaflet-bar gis-search');
-        wrap.style.cssText = 'background:#fff;padding:4px;border-radius:4px;box-shadow:0 1px 4px rgba(0,0,0,.15);';
-        wrap.innerHTML = `
-          <input id="gisSearchInput" type="search" placeholder="🔎 搜尋抽水站 / 行政區"
-                 style="width:200px;padding:4px 8px;border:1px solid #ccc;border-radius:3px;font-size:13px;outline:none;" />
-          <div id="gisSearchResult"
-               style="display:none;max-height:220px;overflow-y:auto;background:#fff;border:1px solid #ddd;border-radius:3px;margin-top:4px;font-size:12px;"></div>
-        `;
-        L.DomEvent.disableClickPropagation(wrap);
-        L.DomEvent.disableScrollPropagation(wrap);
-        return wrap;
-      }
-    });
-    new SearchControl().addTo(map);
-
-    // 搜尋邏輯：在抽水站 + 行政區 features 中比對
-    function gisSearch(q) {
-      q = (q || '').trim().toLowerCase();
-      const out = document.getElementById('gisSearchResult');
-      if (!q) { out.style.display = 'none'; out.innerHTML = ''; return; }
-      const hits = [];
-      pumpingStationsGroup.eachLayer((subLayer) => {
-        if (typeof subLayer.eachLayer === 'function') {
-          subLayer.eachLayer((m) => {
-            const f = m.feature; if (!f) return;
-            const p = f.properties || {};
-            const text = `${p.name||''} ${p.address||''}`.toLowerCase();
-            if (text.includes(q)) {
-              hits.push({ kind: '抽水站', name: p.name || '抽水站', sub: p.address || '', latlng: m.getLatLng(), marker: m });
-            }
-          });
-        }
-      });
-      districtsLayer.eachLayer((m) => {
-        const p = (m.feature || {}).properties || {};
-        if ((p.name || '').toLowerCase().includes(q)) {
-          hits.push({ kind: '行政區', name: p.name, sub: '', bounds: m.getBounds() });
-        }
-      });
-      out.style.display = 'block';
-      if (!hits.length) {
-        out.innerHTML = '<div style="padding:6px 10px;color:#888;">查無結果</div>';
-        return;
-      }
-      out.innerHTML = hits.slice(0, 30).map((h, i) =>
-        `<div data-idx="${i}" style="padding:6px 10px;border-bottom:1px solid #f0f0f0;cursor:pointer;">
-          <span style="display:inline-block;background:#1a5276;color:#fff;font-size:10px;padding:1px 6px;border-radius:8px;margin-right:6px;">${h.kind}</span>
-          <strong>${h.name}</strong>${h.sub ? `<br><span style="color:#666;font-size:11px;">${h.sub}</span>` : ''}
-        </div>`
-      ).join('');
-      out.querySelectorAll('[data-idx]').forEach(el => {
-        el.addEventListener('click', () => {
-          const h = hits[parseInt(el.dataset.idx, 10)];
-          if (h.bounds) map.fitBounds(h.bounds, { maxZoom: 14 });
-          else if (h.latlng) { map.flyTo(h.latlng, 16); if (h.marker && h.marker.openPopup) setTimeout(() => h.marker.openPopup(), 250); }
-          out.style.display = 'none';
-          document.getElementById('gisSearchInput').value = h.name;
-        });
-      });
-    }
-    setTimeout(() => {
-      const input = document.getElementById('gisSearchInput');
-      if (input) input.addEventListener('input', (e) => gisSearch(e.target.value));
-      document.addEventListener('click', (e) => {
-        const r = document.getElementById('gisSearchResult');
-        const i = document.getElementById('gisSearchInput');
-        if (r && i && !r.contains(e.target) && e.target !== i) r.style.display = 'none';
-      });
-    }, 200);
-
-    // 調整圖層控制器的 CSS，讓它在用戶面板下方
-    setTimeout(() => {
-      const layerControl = document.querySelector('.leaflet-control-layers');
-      if (layerControl) {
-        layerControl.style.marginTop = '85px'; // 用戶面板高度 + 間距
-      }
-    }, 100);
-
-    const icon = L.divIcon({
-      className: "pump-marker",
-      html: '<div style="background:#2471a3;width:14px;height:14px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)"></div>',
-      iconSize: [14, 14],
-      iconAnchor: [7, 7],
-    });
-
-    // 雙北大漢溪流域邊界 (台北市+新北市)
-    const DAHAN_RIVER_BOUNDS = {
-      north: 25.12,  // 五股、蘆洲北邊
-      south: 24.95,  // 土城、樹林南邊
-      east: 121.55,  // 台北市邊界
-      west: 121.35   // 新莊、樹林西邊
-    };
-
-    // 雙北大漢溪抽水站的 API
-    const APIs = [
-      {
-        name: "新北市抽水站",
-        url: "https://data.ntpc.gov.tw/api/datasets/71cd1490-a2df-4198-bef1-318479775e8a/json?size=1000",
-        type: "ntpc"
-      },
-      {
-        name: "台北市水利設施",
-        url: "https://data.gov.tw/api/v1/rest/datastore/296203?format=json&limit=1000",
-        type: "taipei"
-      },
-      {
-        name: "水利署雙北抽水站",
-        url: "https://data.gov.tw/api/v1/rest/datastore/25768?format=json&limit=1000",
-        type: "general"
-      }
-    ];
-
-    // 檢查座標是否在大漢溪流域範圍內
-    function isInDahanRiverArea(lat, lng) {
-      return lat >= DAHAN_RIVER_BOUNDS.south && 
-             lat <= DAHAN_RIVER_BOUNDS.north && 
-             lng >= DAHAN_RIVER_BOUNDS.west && 
-             lng <= DAHAN_RIVER_BOUNDS.east;
-    }
-
-    // 檢查名稱是否與大漢溪相關
-    function isDahanRiverRelated(name, address = "") {
-      const keywords = ["大漢溪", "大溪", "龍潭", "平鎮", "中壢", "桃園", "八德", "龜山", "新莊", "板橋", "土城", "樹林", "三峽", "鶯歌"];
-      const fullText = (name + " " + address).toLowerCase();
-      return keywords.some(keyword => fullText.includes(keyword));
-    }
-
-    // 全域變數
-    let currentLayers = [];
-    let updateInterval;
+    // ---------- 全域狀態 ----------
+    let map, infoWindow, currentUser = null;
+    const pumpingMarkers = [];     // 抽水站 markers
+    const wlMarkers = [];          // 水位站 markers
+    let riverPolylines = [];       // 大漢溪河道（多條 LineString）
+    let districtPolygons = [];     // 行政區多邊形
+    let realtimeWaterLevels = {};  // { stationid: { waterlevel, datetime } }
     let lastUpdateTime = null;
-    let isUpdating = false;
+    let updateInterval = null;
 
-    // 更新狀態顯示
-    function updateStatus(message, isError = false, isSuccess = false) {
-      const statusElement = document.getElementById('updateStatus');
-      const indicator = document.getElementById('refreshIndicator');
-      
-      statusElement.textContent = message;
-      
-      if (isError) {
-        statusElement.style.color = '#dc3545';
-        indicator.style.background = '#dc3545';
-      } else if (isSuccess) {
-        statusElement.style.color = '#28a745';
-        indicator.style.background = '#28a745';
-      } else {
-        statusElement.style.color = '#666';
-        indicator.style.background = '#ffc107';
-      }
-    }
+    const TAIWAN_BOUNDS = { north: 25.5, south: 21.5, east: 122.5, west: 119.5 };
+    const DAHAN_RIVER_CENTER = { lat: 24.99, lng: 121.40 };
 
-    // 清除現有圖層
-    function clearLayers() {
-      currentLayers.forEach(layer => {
-        if (typeof pumpingStationsGroup !== 'undefined' && pumpingStationsGroup.hasLayer && pumpingStationsGroup.hasLayer(layer)) {
-          pumpingStationsGroup.removeLayer(layer);
-        } else if (map.hasLayer(layer)) {
-          map.removeLayer(layer);
-        }
-      });
-      currentLayers = [];
-    }
-
-    // 手動刷新功能
-    function manualRefresh() {
-      if (isUpdating) {
-        updateStatus('更新中，請稍候...', false, false);
-        return;
-      }
-      
-      updateStatus('手動更新中...', false, false);
-      clearLayers();
-      loadLocalData(); // 優先載入本地資料
-    }
-
-    // 定期更新功能
-    function startAutoUpdate() {
-      // 每 5 分鐘更新一次 (300000 毫秒)
-      const UPDATE_INTERVAL = 5 * 60 * 1000;
-      
-      updateInterval = setInterval(() => {
-        if (!isUpdating) {
-          updateStatus('自動更新中...', false, false);
-          clearLayers();
-          loadLocalData(); // 自動更新時也優先載入本地資料
-        }
-      }, UPDATE_INTERVAL);
-      
-      console.log('自動更新已啟動，每 5 分鐘更新一次');
-    }
-
-    // 停止自動更新
-    function stopAutoUpdate() {
-      if (updateInterval) {
-        clearInterval(updateInterval);
-        updateInterval = null;
-        console.log('自動更新已停止');
-      }
-    }
-
-    async function loadGovernmentData() {
-      if (isUpdating) {
-        console.log('更新進行中，跳過此次請求');
-        return;
-      }
-      
-      isUpdating = true;
-      let totalCount = 0;
-      let loadedAny = false;
-      const startTime = Date.now();
-
-      updateStatus('正在連接政府 API...', false, false);
-
-      for (const api of APIs) {
-        try {
-          console.log(`嘗試載入: ${api.name}`);
-          
-          const response = await fetch(api.url);
-          
-          if (!response.ok) {
-            console.warn(`API ${api.name} 回應錯誤: ${response.status}`);
-            continue;
-          }
-          
-          const data = await response.json();
-          console.log(`${api.name} 資料:`, data);
-          
-          let features = [];
-          
-          if (api.type === "tycg" && data.result && data.result.records) {
-            // 桃園市政府資料格式 - 只取抽水站相關設施
-            features = data.result.records
-              .filter(record => {
-                const name = record.name || record.facility_name || "";
-                const type = record.type || record.facility_type || "";
-                return name.includes("抽水") || type.includes("抽水") || name.includes("pumping");
-              })
-              .map(record => {
-                const lat = parseFloat(record.latitude || record.lat);
-                const lng = parseFloat(record.longitude || record.lng);
-                
-                if (lat && lng && isInDahanRiverArea(lat, lng)) {
-                  return {
-                    type: "Feature",
-                    geometry: {
-                      type: "Point",
-                      coordinates: [lng, lat]
-                    },
-                    properties: {
-                      id: record.id || record.facility_id || `PS${Math.random().toString(36).substr(2, 6)}`,
-                      name: record.name || record.facility_name || "抽水站",
-                      type: "抽水站",
-                      address: record.address || "",
-                      district: record.district || "",
-                      maintenance_status: record.maintenance_status || record.status || record.運轉狀態 || "正常",
-                      water_level: record.water_level || record.current_level || record.水位 || "待測",
-                      construction_year: record.construction_year || record.build_year || record.建造年份 || "未知",
-                      source: api.name
-                    }
-                  };
-                }
-                return null;
-              }).filter(Boolean);
-          } 
-          else if (api.type === "general" && data.result && data.result.records) {
-            // 一般政府開放資料格式 - 篩選大漢溪流域抽水站
-            features = data.result.records
-              .filter(record => {
-                const name = record.station_name || record.name || record.名稱 || "";
-                const type = record.type || record.類型 || "";
-                return name.includes("抽水") || type.includes("抽水") || isDahanRiverRelated(name);
-              })
-              .map(record => {
-                const lat = parseFloat(record.latitude || record.lat || record.緯度);
-                const lng = parseFloat(record.longitude || record.lng || record.lon || record.經度);
-                
-                if (lat && lng && !isNaN(lat) && !isNaN(lng) && isInDahanRiverArea(lat, lng)) {
-                  return {
-                    type: "Feature",
-                    geometry: {
-                      type: "Point",
-                      coordinates: [lng, lat]
-                    },
-                    properties: {
-                      id: record.station_id || record.id || record.編號 || `PS${Math.random().toString(36).substr(2, 6)}`,
-                      name: record.station_name || record.name || record.名稱 || "抽水站",
-                      type: "抽水站",
-                      address: record.address || record.地址 || "",
-                      maintenance_status: record.maintenance_status || record.status || record.運轉狀態 || "正常",
-                      water_level: record.water_level || record.current_level || record.水位 || "待測",
-                      construction_year: record.construction_year || record.build_year || record.建造年份 || "未知",
-                      source: api.name
-                    }
-                  };
-                }
-                return null;
-              }).filter(Boolean);
-          }
-          else if (api.type === "ntpc" && Array.isArray(data)) {
-            // 新北市政府資料格式
-            features = data
-              .filter(record => {
-                const name = record.name || record.facility_name || "";
-                const type = record.type || "";
-                return name.includes("抽水") || type.includes("抽水");
-              })
-              .map(record => {
-                const lat = parseFloat(record.latitude || record.lat);
-                const lng = parseFloat(record.longitude || record.lng);
-                
-                if (lat && lng && isInDahanRiverArea(lat, lng)) {
-                  return {
-                    type: "Feature",
-                    geometry: {
-                      type: "Point",
-                      coordinates: [lng, lat]
-                    },
-                    properties: {
-                      id: record.id || record.facility_id || `PS${Math.random().toString(36).substr(2, 6)}`,
-                      name: record.name || "抽水站",
-                      type: "抽水站",
-                      address: record.address || "",
-                      district: record.district || "",
-                      maintenance_status: record.maintenance_status || record.status || "正常",
-                      water_level: record.water_level || record.current_level || "待測",
-                      construction_year: record.construction_year || record.build_year || "未知",
-                      source: api.name
-                    }
-                  };
-                }
-                return null;
-              }).filter(Boolean);
-          }
-          else if (api.type === "taipei" && data.result && data.result.records) {
-            // 台北市政府資料格式
-            features = data.result.records
-              .filter(record => {
-                const name = record.name || record.facility_name || "";
-                const type = record.type || record.類型 || "";
-                return name.includes("抽水") || type.includes("抽水") || name.includes("水門");
-              })
-              .map(record => {
-                const lat = parseFloat(record.latitude || record.lat || record.緯度);
-                const lng = parseFloat(record.longitude || record.lng || record.經度);
-                
-                if (lat && lng && isInDahanRiverArea(lat, lng)) {
-                  return {
-                    type: "Feature",
-                    geometry: {
-                      type: "Point",
-                      coordinates: [lng, lat]
-                    },
-                    properties: {
-                      id: record.id || `TP${Math.random().toString(36).substr(2, 6)}`,
-                      name: record.name || "台北抽水站",
-                      type: "抽水站",
-                      address: record.address || record.地址 || "",
-                      district: "台北市",
-                      maintenance_status: record.status || "正常",
-                      water_level: record.water_level || "待測",
-                      construction_year: record.build_year || "未知",
-                      source: api.name
-                    }
-                  };
-                }
-                return null;
-              }).filter(Boolean);
-          }
-          else if (api.type === "iot" && data.value) {
-            // IoT 感測器資料格式
-            features = data.value.map(item => {
-              if (item.Thing && item.Thing.location && item.Thing.location.coordinates) {
-                const coords = item.Thing.location.coordinates;
-                return {
-                  type: "Feature",
-                  geometry: {
-                    type: "Point",
-                    coordinates: coords
-                  },
-                  properties: {
-                    name: item.Thing.name || "水利感測站",
-                    type: item.Thing.properties?.type || "感測站",
-                    description: item.Thing.description || "",
-                    source: api.name
-                  }
-                };
-              }
-              return null;
-            }).filter(Boolean);
-          }
-
-          if (features.length > 0) {
-            console.log(`${api.name} 成功載入 ${features.length} 筆資料`);
-
-            // 為每個 feature 補上最近水位站，使 popup 與本地路徑一致
-            features = features.map(f => {
-              const c = f.geometry.coordinates;
-              const np = { ...(f.properties || {}) };
-              if (np.year_ce && !np.construction_year) np.construction_year = np.year_ce;
-              np.nearest_wl = findNearestWaterStation(c[1], c[0]);
-              return { ...f, properties: np };
-            });
-
-            // 建立圖層
-            const layer = L.geoJSON({
-              type: "FeatureCollection",
-              features: features
-            }, {
-              pointToLayer: (_, latlng) => L.marker(latlng, { icon }),
-              onEachFeature: (feature, layer) => {
-                layer.bindPopup(() => buildStationPopupHtml(feature));
-              }
-            }).addTo(pumpingStationsGroup);
-            
-            // 記錄圖層以便後續清除
-            currentLayers.push(layer);
-            
-            totalCount += features.length;
-            loadedAny = true;
-            
-            // 調整地圖範圍，但限制在大漢溪流域 (只在第一次載入時調整)
-            if (features.length > 0 && currentLayers.length === 1) {
-              const bounds = layer.getBounds();
-              // 確保地圖範圍不超出大漢溪流域
-              const constrainedBounds = L.latLngBounds(
-                [Math.max(bounds.getSouth(), DAHAN_RIVER_BOUNDS.south), Math.max(bounds.getWest(), DAHAN_RIVER_BOUNDS.west)],
-                [Math.min(bounds.getNorth(), DAHAN_RIVER_BOUNDS.north), Math.min(bounds.getEast(), DAHAN_RIVER_BOUNDS.east)]
-              );
-              map.fitBounds(constrainedBounds.pad(0.05));
-            }
-          }
-          
-        } catch (error) {
-          console.error(`載入 ${api.name} 時發生錯誤:`, error);
-        }
-      }
-      
-      // 更新狀態和計數器
-      const endTime = Date.now();
-      const duration = ((endTime - startTime) / 1000).toFixed(1);
-      lastUpdateTime = endTime;
-      
-      document.getElementById("count").textContent = loadedAny ? totalCount : "載入失敗";
-      
-      if (loadedAny) {
-        updateStatus(`更新成功 (${duration}s)`, false, true);
-      } else {
-        updateStatus(`政府 API 載入失敗`, true, false);
-        console.log("所有政府 API 都無法載入，但已有本地資料");
-        // 不再顯示示範資料，因為已經有本地 GeoJSON 資料
-      }
-      
-      isUpdating = false;
-    }
-    
-    function showSampleData() {
-      // 完整的大漢溪流域抽水站資料
-      const sampleData = {
-        type: "FeatureCollection",
-        features: [
-          // 桃園市區域
-          {
-            type: "Feature",
-            geometry: { type: "Point", coordinates: [121.2167, 24.9537] },
-            properties: { 
-              id: "PS001", 
-              name: "龍潭抽水站", 
-              type: "抽水站", 
-              district: "桃園市龍潭區", 
-              maintenance_status: "正常", 
-              water_level: "2.3", 
-              construction_year: "2018", 
-              address: "桃園市龍潭區大漢溪堤防邊", 
-              source: "完整資料" 
-            }
-          },
-          {
-            type: "Feature", 
-            geometry: { type: "Point", coordinates: [121.3014, 24.9532] },
-            properties: { 
-              id: "PS002", 
-              name: "平鎮抽水站", 
-              type: "抽水站", 
-              district: "桃園市平鎮區", 
-              maintenance_status: "維修中", 
-              water_level: "1.8", 
-              construction_year: "2015", 
-              address: "桃園市平鎮區老街溪匯流處", 
-              source: "完整資料" 
-            }
-          },
-          {
-            type: "Feature",
-            geometry: { type: "Point", coordinates: [121.2951, 24.9889] },
-            properties: { 
-              id: "PS003", 
-              name: "中壢抽水站", 
-              type: "抽水站", 
-              district: "桃園市中壢區", 
-              maintenance_status: "正常", 
-              water_level: "2.1", 
-              construction_year: "2016", 
-              address: "桃園市中壢區老街溪沿岸", 
-              source: "完整資料" 
-            }
-          },
-          {
-            type: "Feature",
-            geometry: { type: "Point", coordinates: [121.3168, 25.0212] },
-            properties: { 
-              id: "PS004", 
-              name: "桃園抽水站", 
-              type: "抽水站", 
-              district: "桃園市桃園區", 
-              maintenance_status: "正常", 
-              water_level: "2.6", 
-              construction_year: "2014", 
-              address: "桃園市桃園區南崁溪匯流處", 
-              source: "完整資料" 
-            }
-          },
-          {
-            type: "Feature",
-            geometry: { type: "Point", coordinates: [121.3377, 25.0401] },
-            properties: { 
-              id: "PS005", 
-              name: "八德抽水站", 
-              type: "抽水站", 
-              district: "桃園市八德區", 
-              maintenance_status: "正常", 
-              water_level: "1.9", 
-              construction_year: "2019", 
-              address: "桃園市八德區茄苳溪沿岸", 
-              source: "完整資料" 
-            }
-          },
-          {
-            type: "Feature",
-            geometry: { type: "Point", coordinates: [121.3544, 25.0689] },
-            properties: { 
-              id: "PS006", 
-              name: "龜山抽水站", 
-              type: "抽水站", 
-              district: "桃園市龜山區", 
-              maintenance_status: "檢查中", 
-              water_level: "2.4", 
-              construction_year: "2017", 
-              address: "桃園市龜山區南崁溪上游", 
-              source: "完整資料" 
-            }
-          },
-
-          // 新北市區域
-          {
-            type: "Feature",
-            geometry: { type: "Point", coordinates: [121.4081, 25.0112] },
-            properties: { 
-              id: "PS007", 
-              name: "新莊抽水站", 
-              type: "抽水站", 
-              district: "新北市新莊區", 
-              maintenance_status: "正常", 
-              water_level: "3.1", 
-              construction_year: "2010", 
-              address: "新北市新莊區大漢溪右岸", 
-              source: "完整資料" 
-            }
-          },
-          {
-            type: "Feature",
-            geometry: { type: "Point", coordinates: [121.3644, 24.9511] },
-            properties: { 
-              id: "PS008", 
-              name: "鶯歌抽水站", 
-              type: "抽水站", 
-              district: "新北市鶯歌區", 
-              maintenance_status: "正常", 
-              water_level: "2.7", 
-              construction_year: "2020", 
-              address: "新北市鶯歌區大漢溪左岸", 
-              source: "完整資料" 
-            }
-          },
-          {
-            type: "Feature",
-            geometry: { type: "Point", coordinates: [121.3515, 24.9342] },
-            properties: { 
-              id: "PS009", 
-              name: "三峽抽水站", 
-              type: "抽水站", 
-              district: "新北市三峽區", 
-              maintenance_status: "檢查中", 
-              water_level: "1.5", 
-              construction_year: "2012", 
-              address: "新北市三峽區三峽河匯流口", 
-              source: "完整資料" 
-            }
-          },
-          {
-            type: "Feature",
-            geometry: { type: "Point", coordinates: [121.4567, 25.0234] },
-            properties: { 
-              id: "PS010", 
-              name: "板橋抽水站", 
-              type: "抽水站", 
-              district: "新北市板橋區", 
-              maintenance_status: "正常", 
-              water_level: "2.8", 
-              construction_year: "2011", 
-              address: "新北市板橋區大漢溪西岸", 
-              source: "完整資料" 
-            }
-          },
-          {
-            type: "Feature",
-            geometry: { type: "Point", coordinates: [121.4234, 24.9789] },
-            properties: { 
-              id: "PS011", 
-              name: "土城抽水站", 
-              type: "抽水站", 
-              district: "新北市土城區", 
-              maintenance_status: "正常", 
-              water_level: "2.2", 
-              construction_year: "2013", 
-              address: "新北市土城區大安圳沿岸", 
-              source: "完整資料" 
-            }
-          },
-          {
-            type: "Feature",
-            geometry: { type: "Point", coordinates: [121.3889, 24.9967] },
-            properties: { 
-              id: "PS012", 
-              name: "樹林抽水站", 
-              type: "抽水站", 
-              district: "新北市樹林區", 
-              maintenance_status: "維修中", 
-              water_level: "1.7", 
-              construction_year: "2009", 
-              address: "新北市樹林區大漢溪東岸", 
-              source: "完整資料" 
-            }
-          },
-
-          // 大漢溪主流沿線
-          {
-            type: "Feature",
-            geometry: { type: "Point", coordinates: [121.2789, 24.8756] },
-            properties: { 
-              id: "PS013", 
-              name: "大溪抽水站", 
-              type: "抽水站", 
-              district: "桃園市大溪區", 
-              maintenance_status: "正常", 
-              water_level: "2.0", 
-              construction_year: "2021", 
-              address: "桃園市大溪區大漢溪主流", 
-              source: "完整資料" 
-            }
-          },
-          {
-            type: "Feature",
-            geometry: { type: "Point", coordinates: [121.3321, 24.9123] },
-            properties: { 
-              id: "PS014", 
-              name: "山佳抽水站", 
-              type: "抽水站", 
-              district: "新北市樹林區", 
-              maintenance_status: "正常", 
-              water_level: "2.5", 
-              construction_year: "2018", 
-              address: "新北市樹林區山佳地區", 
-              source: "完整資料" 
-            }
-          },
-          {
-            type: "Feature",
-            geometry: { type: "Point", coordinates: [121.4123, 25.0456] },
-            properties: { 
-              id: "PS015", 
-              name: "泰山抽水站", 
-              type: "抽水站", 
-              district: "新北市泰山區", 
-              maintenance_status: "檢查中", 
-              water_level: "1.9", 
-              construction_year: "2016", 
-              address: "新北市泰山區貴子坑溪匯流處", 
-              source: "完整資料" 
-            }
-          },
-
-          // 支流沿線抽水站
-          {
-            type: "Feature",
-            geometry: { type: "Point", coordinates: [121.2456, 24.9234] },
-            properties: { 
-              id: "PS016", 
-              name: "石門抽水站", 
-              type: "抽水站", 
-              district: "桃園市龍潭區", 
-              maintenance_status: "正常", 
-              water_level: "3.2", 
-              construction_year: "2007", 
-              address: "桃園市龍潭區石門水庫下游", 
-              source: "完整資料" 
-            }
-          },
-          {
-            type: "Feature",
-            geometry: { type: "Point", coordinates: [121.3678, 25.0789] },
-            properties: { 
-              id: "PS017", 
-              name: "林口抽水站", 
-              type: "抽水站", 
-              district: "新北市林口區", 
-              maintenance_status: "正常", 
-              water_level: "2.3", 
-              construction_year: "2019", 
-              address: "新北市林口區南崁溪上游", 
-              source: "完整資料" 
-            }
-          },
-          {
-            type: "Feature",
-            geometry: { type: "Point", coordinates: [121.4456, 24.9456] },
-            properties: { 
-              id: "PS018", 
-              name: "中和抽水站", 
-              type: "抽水站", 
-              district: "新北市中和區", 
-              maintenance_status: "正常", 
-              water_level: "2.1", 
-              construction_year: "2015", 
-              address: "新北市中和區瓦磘溝沿岸", 
-              source: "完整資料" 
-            }
-          }
-        ]
-      };
-      
-      const layer = L.geoJSON(sampleData, {
-        pointToLayer: (_, latlng) => L.marker(latlng, { icon }),
-        onEachFeature: (feature, layer) => {
-          const p = feature.properties;
-          layer.bindPopup(`
-            <div style="min-width: 250px;">
-              <h3 style="margin: 0 0 8px 0; color: #1a5276; font-size: 1.1rem;">${p.name}</h3>
-              
-              <div style="margin-bottom: 6px;">
-                <strong>抽水站 ID:</strong> <code style="background: #f0f0f0; padding: 2px 4px; border-radius: 3px;">${p.id}</code>
-              </div>
-              
-              <div style="margin-bottom: 6px;">
-                <strong>維修狀態:</strong> 
-                <span style="color: ${p.maintenance_status === '正常' ? '#28a745' : p.maintenance_status === '維修中' ? '#dc3545' : '#ffc107'};">
-                  ●
-                </span>
-                ${p.maintenance_status}
-              </div>
-              
-              <div style="margin-bottom: 6px;">
-                <strong>水位高度:</strong> ${p.water_level}${typeof p.water_level === 'number' || p.water_level.match(/^\d/) ? ' 公尺' : ''}
-              </div>
-              
-              <div style="margin-bottom: 6px;">
-                <strong>建造年份:</strong> ${p.construction_year}
-              </div>
-              
-              ${p.district ? `<div style="margin-bottom: 6px;"><strong>行政區:</strong> ${p.district}</div>` : ''}
-              ${p.address ? `<div style="margin-bottom: 6px;"><strong>地址:</strong> ${p.address}</div>` : ''}
-              
-              <hr style="margin: 8px 0; border: none; border-top: 1px solid #eee;">
-              
-              <div style="font-size: 0.85rem; color: #666;">
-                <div>資料來源: ${p.source}</div>
-                <div>更新時間: ${lastUpdateTime ? new Date(lastUpdateTime).toLocaleString('zh-TW') : '載入中'}</div>
-              </div>
-            </div>
-          `);
-        }
-      }).addTo(pumpingStationsGroup);
-      
-      // 記錄圖層
-      currentLayers.push(layer);
-      
-      map.fitBounds(layer.getBounds().pad(0.1));
-      document.getElementById("count").textContent = sampleData.features.length;
-      document.getElementById("source").textContent = "大漢溪流域完整資料";
-      
-      lastUpdateTime = Date.now();
-      isUpdating = false;
-    }
-
-    // 計算兩點間距離 (公尺)
-    function calculateDistance(lat1, lon1, lat2, lon2) {
-      const R = 6371e3; // 地球半徑 (公尺)
-      const φ1 = lat1 * Math.PI/180;
-      const φ2 = lat2 * Math.PI/180;
-      const Δφ = (lat2-lat1) * Math.PI/180;
-      const Δλ = (lon2-lon1) * Math.PI/180;
-
-      const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-                Math.cos(φ1) * Math.cos(φ2) *
-                Math.sin(Δλ/2) * Math.sin(Δλ/2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-
-      return R * c;
-    }
-
-    // 生成抽水站名稱
-    function generateStationName(props, index) {
-      const district = props.district || "";
-      const village = props.village || "";
-      
-      // 根據行政區和村里生成名稱
-      if (village && village !== district.replace("新北市", "").replace("桃園市", "").replace("臺北市", "")) {
-        return `${village}抽水站`;
-      } else if (district.includes("新莊區")) {
-        return `新莊第${index}抽水站`;
-      } else if (district.includes("板橋區")) {
-        return `板橋第${index}抽水站`;
-      } else if (district.includes("三重區")) {
-        return `三重第${index}抽水站`;
-      } else if (district.includes("土城區")) {
-        return `土城第${index}抽水站`;
-      } else if (district.includes("樹林區")) {
-        return `樹林第${index}抽水站`;
-      } else if (district.includes("三峽區")) {
-        return `三峽第${index}抽水站`;
-      } else {
-        return `大漢溪第${index}抽水站`;
-      }
-    }
-
-    // 生成地址（僅當 GeoJSON 中沒有真實地址時 fallback）
-    function generateAddress(props) {
-      const district = props.district || "";
-      const village = props.village || "";
-      
-      if (village && village !== district) {
-        return `${district}${village}大漢溪沿岸`;
-      } else {
-        return `${district}大漢溪堤防`;
-      }
-    }
-
-    // ============================================================
-    // 大漢溪即時水位（資料來源：經濟部水利署 opendata）
-    // ------------------------------------------------------------
-    // 8 個現存水位站清單（座標已由 TWD97 轉成 WGS84）。
-    // 每個抽水站會綁定最近的水位站，popup 開啟時讀取即時水位。
-    // ============================================================
+    // ---------- 水利署即時水位設定 ----------
     const WATER_LEVEL_STATIONS = [
       { stationid: "1140H001", name: "玉峰(馬利哥灣)", lat: 24.656435, lng: 121.298120, address: "新竹縣尖石鄉玉峰村" },
-      { stationid: "1140H043", name: "高義", lat: 24.714366, lng: 121.364322, address: "桃園市復興區高義里" },
-      { stationid: "1140H054", name: "霞雲", lat: 24.768025, lng: 121.362343, address: "桃園市復興區羅浮里" },
-      { stationid: "1140H076", name: "石門(後池)", lat: 24.822952, lng: 121.253027, address: "桃園市龍潭區大坪里" },
-      { stationid: "1140H105", name: "城林橋", lat: 24.979353, lng: 121.430520, address: "新北市土城區城林橋" },
-      { stationid: "1140H067", name: "三鶯橋", lat: 24.944756, lng: 121.353383, address: "新北市鶯歌區南靖里" },
-      { stationid: "1140H111", name: "新海大橋(即時)", lat: 25.033318, lng: 121.454806, address: "新北市板橋區環河路" },
-      { stationid: "1140H118", name: "柑園橋(即時)", lat: 24.985300, lng: 121.381900, address: "新北市樹林區佳園路二段" },
+      { stationid: "1140H043", name: "高義",          lat: 24.714366, lng: 121.364322, address: "桃園市復興區高義里" },
+      { stationid: "1140H054", name: "霞雲",          lat: 24.768025, lng: 121.362343, address: "桃園市復興區羅浮里" },
+      { stationid: "1140H076", name: "石門(後池)",     lat: 24.822952, lng: 121.253027, address: "桃園市龍潭區大坪里" },
+      { stationid: "1140H105", name: "城林橋",        lat: 24.979353, lng: 121.430520, address: "新北市土城區城林橋" },
+      { stationid: "1140H067", name: "三鶯橋",        lat: 24.944756, lng: 121.353383, address: "新北市鶯歌區南靖里" },
+      { stationid: "1140H111", name: "新海大橋(即時)",  lat: 25.033318, lng: 121.454806, address: "新北市板橋區環河路" },
+      { stationid: "1140H118", name: "柑園橋(即時)",   lat: 24.985300, lng: 121.381900, address: "新北市樹林區佳園路二段" },
     ];
-
     const WL_REALTIME_API = "https://opendata.wra.gov.tw/api/v2/73c4c3de-4045-4765-abeb-89f9f9cd5ff0?page=1&size=1000";
-    const WL_REFRESH_INTERVAL_MS = 5 * 60 * 1000; // 5 分鐘
-    // 即時水位快取：{ stationid: { waterlevel, datetime } }
-    let realtimeWaterLevels = {};
+    const WL_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
 
+    // ============================================================
+    // Google Maps 主初始化（由 API <script callback=initMap> 觸發）
+    // ============================================================
+    function initMap() {
+      if (!checkAuth()) return;
+
+      map = new google.maps.Map(document.getElementById("map"), {
+        center: DAHAN_RIVER_CENTER,
+        zoom: 12,
+        minZoom: 7,
+        maxZoom: 20,
+        mapTypeId: "roadmap",
+        mapTypeControl: false,        // 用我們自己的 select
+        fullscreenControl: false,     // 用我們自己的 button
+        streetViewControl: true,
+        scaleControl: true,           // 比例尺（GIS 工具）
+        clickableIcons: false,
+        restriction: { latLngBounds: TAIWAN_BOUNDS, strictBounds: false },
+        styles: [{ featureType: "poi.business", stylers: [{ visibility: "off" }] }],
+      });
+
+      infoWindow = new google.maps.InfoWindow({ maxWidth: 320 });
+
+      registerOsmBasemap();
+      attachCoordTracker();
+      attachToolbar();
+      document.getElementById("gisTools").style.display = "flex";
+
+      loadAllLayers();
+      loadRealtimeWaterLevels();
+      setInterval(loadRealtimeWaterLevels, WL_REFRESH_INTERVAL_MS);
+
+      startAutoUpdate();
+
+      setTimeout(hideLoadingOverlay, 350);
+    }
+
+    // 暴露給 Google Maps callback
+    window.initMap = initMap;
+
+    // ============================================================
+    // 1. Digital basemaps：註冊 OSM 為自訂底圖
+    // ============================================================
+    function registerOsmBasemap() {
+      const osmType = new google.maps.ImageMapType({
+        name: "OpenStreetMap",
+        getTileUrl: (coord, zoom) => {
+          const n = 1 << zoom;
+          const x = ((coord.x % n) + n) % n;
+          if (zoom < 0 || zoom > 19) return null;
+          const s = ["a", "b", "c"][Math.floor(Math.random() * 3)];
+          return `https://${s}.tile.openstreetmap.org/${zoom}/${x}/${coord.y}.png`;
+        },
+        tileSize: new google.maps.Size(256, 256),
+        maxZoom: 19,
+        minZoom: 0,
+      });
+      map.mapTypes.set("osm", osmType);
+    }
+
+    // ============================================================
+    // 2. Operational layers：4 個來源全部載入
+    // ============================================================
+    async function loadAllLayers() {
+      updateStatus("載入抽水站…", false, false);
+      try {
+        await Promise.all([
+          loadPumpingStations(),
+          loadWaterLevelStations(),
+          loadRiver(),
+          loadDistricts(),
+        ]);
+        document.getElementById("source").textContent = "data/pumping-stations.geojson + WRA + OSM";
+        updateStatus("資料載入完成", false, true);
+      } catch (e) {
+        console.error(e);
+        updateStatus("資料載入失敗: " + e.message, true, false);
+      }
+      lastUpdateTime = Date.now();
+    }
+
+    async function loadPumpingStations() {
+      const res = await fetch("data/pumping-stations.geojson", { cache: "no-store" });
+      if (!res.ok) throw new Error("pumping-stations.geojson HTTP " + res.status);
+      const gj = await res.json();
+      const feats = (gj.features || []).map((f, i) => {
+        const p = f.properties || {};
+        if (p.id == null) p.id = i + 1;
+        if (!p.construction_year && p.year_ce) p.construction_year = p.year_ce;
+        p.nearest_wl = findNearestWaterStation(f.geometry.coordinates[1], f.geometry.coordinates[0]);
+        return f;
+      });
+      clearMarkers(pumpingMarkers);
+      const bounds = new google.maps.LatLngBounds();
+      feats.forEach((feat) => {
+        const [lng, lat] = feat.geometry.coordinates;
+        const marker = new google.maps.Marker({
+          map,
+          position: { lat, lng },
+          icon: pumpingStationIcon(),
+          title: feat.properties.name,
+        });
+        marker._feature = feat;
+        marker._kind = "pumping";
+        marker.addListener("click", () => {
+          infoWindow.setContent(buildStationPopupHtml(feat));
+          infoWindow.open({ map, anchor: marker });
+        });
+        pumpingMarkers.push(marker);
+        bounds.extend({ lat, lng });
+      });
+      if (feats.length) map.fitBounds(bounds);
+      document.getElementById("count").textContent = feats.length;
+    }
+
+    async function loadWaterLevelStations() {
+      const res = await fetch("data/water-level-stations.geojson", { cache: "no-store" });
+      if (!res.ok) throw new Error("water-level-stations.geojson HTTP " + res.status);
+      const gj = await res.json();
+      clearMarkers(wlMarkers);
+      (gj.features || []).forEach((feat) => {
+        const [lng, lat] = feat.geometry.coordinates;
+        const active = (feat.properties || {}).status === "現存";
+        const marker = new google.maps.Marker({
+          map,
+          position: { lat, lng },
+          icon: waterStationIcon(active),
+          title: feat.properties.name,
+          zIndex: 50,
+        });
+        marker._feature = feat;
+        marker._kind = "wl";
+        marker.addListener("click", () => {
+          infoWindow.setContent(buildWaterLevelPopupHtml(feat));
+          infoWindow.open({ map, anchor: marker });
+        });
+        wlMarkers.push(marker);
+      });
+    }
+
+    async function loadRiver() {
+      const res = await fetch("data/dahan-river.geojson", { cache: "no-store" });
+      if (!res.ok) throw new Error("dahan-river.geojson HTTP " + res.status);
+      const gj = await res.json();
+      clearOverlays(riverPolylines);
+      (gj.features || []).forEach((feat) => {
+        const coords = (feat.geometry.coordinates || []).map(([lng, lat]) => ({ lat, lng }));
+        if (coords.length < 2) return;
+        const pl = new google.maps.Polyline({
+          map,
+          path: coords,
+          strokeColor: "#0b8fe6",
+          strokeOpacity: 0.85,
+          strokeWeight: 4,
+          clickable: false,
+          zIndex: 30,
+        });
+        riverPolylines.push(pl);
+      });
+    }
+
+    async function loadDistricts() {
+      const res = await fetch("data/districts.geojson", { cache: "no-store" });
+      if (!res.ok) throw new Error("districts.geojson HTTP " + res.status);
+      const gj = await res.json();
+      clearOverlays(districtPolygons);
+      (gj.features || []).forEach((feat) => {
+        const rings = (feat.geometry.coordinates || []);
+        if (!rings.length) return;
+        const paths = rings.map((ring) => ring.map(([lng, lat]) => ({ lat, lng })));
+        const poly = new google.maps.Polygon({
+          map,
+          paths,
+          strokeColor: "#1a5276",
+          strokeOpacity: 0.7,
+          strokeWeight: 1.5,
+          fillColor: "#1a5276",
+          fillOpacity: 0.06,
+          clickable: true,
+          zIndex: 10,
+        });
+        poly._feature = feat;
+        poly.addListener("mouseover", () => poly.setOptions({ fillOpacity: 0.18, strokeWeight: 2.2 }));
+        poly.addListener("mouseout",  () => poly.setOptions({ fillOpacity: 0.06, strokeWeight: 1.5 }));
+        poly.addListener("click", (ev) => {
+          infoWindow.setContent(`
+            <div style="min-width:200px;">
+              <h3 style="margin:0 0 6px 0;color:#1a5276;font-size:1rem;">🗾 ${feat.properties.name}</h3>
+              <div style="font-size:0.8rem;color:#666;">${feat.properties.display_name || ""}</div>
+              <div style="font-size:0.78rem;color:#888;margin-top:4px;">資料來源：${feat.properties.source}</div>
+            </div>
+          `);
+          infoWindow.setPosition(ev.latLng);
+          infoWindow.open(map);
+        });
+        districtPolygons.push(poly);
+      });
+    }
+
+    // ---------- Marker 樣式 ----------
+    function pumpingStationIcon() {
+      return {
+        path: google.maps.SymbolPath.CIRCLE,
+        scale: 8,
+        fillColor: "#e74c3c",
+        fillOpacity: 0.95,
+        strokeColor: "#ffffff",
+        strokeWeight: 2,
+      };
+    }
+    function waterStationIcon(active) {
+      return {
+        path: "M -6 0 a 6 6 0 1 0 12 0 a 6 6 0 1 0 -12 0",
+        scale: 1,
+        fillColor: active ? "#27ae60" : "#0b5394",
+        fillOpacity: 0.9,
+        strokeColor: "#fff",
+        strokeWeight: 2,
+      };
+    }
+
+    function clearMarkers(arr) {
+      arr.forEach((m) => m.setMap(null));
+      arr.length = 0;
+    }
+    function clearOverlays(arr) {
+      arr.forEach((o) => o.setMap(null));
+      arr.length = 0;
+    }
+
+    // ============================================================
+    // 即時水位 + 最近水位站
+    // ============================================================
     async function loadRealtimeWaterLevels() {
       try {
-        const res = await fetch(WL_REALTIME_API, { cache: "no-store" });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const arr = await res.json();
-        const wanted = new Set(WATER_LEVEL_STATIONS.map(s => s.stationid));
+        const r = await fetch(WL_REALTIME_API, { cache: "no-store" });
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        const arr = await r.json();
+        const wanted = new Set(WATER_LEVEL_STATIONS.map((s) => s.stationid));
         const next = {};
-        for (const r of arr) {
-          if (wanted.has(r.stationid)) {
-            next[r.stationid] = {
-              waterlevel: r.waterlevel,
-              datetime: r.datetime,
-            };
+        for (const row of arr) {
+          if (wanted.has(row.stationid)) {
+            next[row.stationid] = { waterlevel: row.waterlevel, datetime: row.recordtime };
           }
         }
         realtimeWaterLevels = next;
         console.log(`[水位] 已更新 ${Object.keys(next).length}/${WATER_LEVEL_STATIONS.length} 站`);
-      } catch (err) {
-        console.warn("[水位] 即時資料載入失敗:", err);
+      } catch (e) {
+        console.warn("[水位] 取得即時水位失敗:", e);
       }
     }
 
-    // 找最近水位站
     function findNearestWaterStation(lat, lng) {
       let best = null;
-      let bestDist = Infinity;
+      let bestD = Infinity;
       for (const s of WATER_LEVEL_STATIONS) {
-        const d = calculateDistance(lat, lng, s.lat, s.lng);
-        if (d < bestDist) {
-          bestDist = d;
-          best = s;
-        }
+        const d = haversineM(lat, lng, s.lat, s.lng);
+        if (d < bestD) { bestD = d; best = s; }
       }
-      return best ? { ...best, distance_m: bestDist } : null;
+      if (!best) return null;
+      return { stationid: best.stationid, name: best.name, distance_m: bestD };
+    }
+    function haversineM(lat1, lon1, lat2, lon2) {
+      const R = 6371000;
+      const φ1 = (lat1 * Math.PI) / 180, φ2 = (lat2 * Math.PI) / 180;
+      const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+      const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+      const a = Math.sin(Δφ/2)**2 + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ/2)**2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
 
-    // 將 feature 渲染成 popup HTML（會在每次打開 popup 時呼叫，因此可顯示最新即時水位）
+    // ============================================================
+    // InfoWindow popup builders
+    // ============================================================
     function buildStationPopupHtml(feature) {
-      const p = feature.properties;
-      const yearText = p.construction_year
+      const p = feature.properties || {};
+      const yearText = (p.year_ce || p.construction_year)
         ? (p.year_ce_range && p.year_ce_range[0] !== p.year_ce_range[1]
             ? `${p.year_ce_range[0]}–${p.year_ce_range[1]} 年（西元）`
-            : `${p.construction_year} 年（西元）`)
-        : '—（資料源未提供）';
-      const pumpTypeText = p.pump_type ? p.pump_type : '—（資料源未提供）';
-      const districtText = p.district || '';
-      const villageText = p.village || '';
-      const plusCodeRow = p.plus_code
-        ? `<div>Plus Code: <code>${p.plus_code}</code></div>`
-        : '';
+            : `${p.year_ce || p.construction_year} 年（西元）`)
+        : "—（資料源未提供）";
+      const pumpTypeText = p.pump_type || "—（資料源未提供）";
 
-      // 即時水位（讀取目前快取，每次打開 popup 取最新值）
-      let waterRow = '';
+      let waterRow = "";
       const wl = p.nearest_wl;
       if (wl) {
         const rt = realtimeWaterLevels[wl.stationid];
@@ -1393,1547 +572,377 @@
           ? `${(wl.distance_m / 1000).toFixed(1)} 公里`
           : `${Math.round(wl.distance_m)} 公尺`;
         let valueHtml;
-        if (rt && rt.waterlevel !== '' && rt.waterlevel != null) {
-          const t = (rt.datetime || '').replace('T', ' ').slice(0, 16);
+        if (rt && rt.waterlevel !== "" && rt.waterlevel != null) {
+          const t = (rt.datetime || "").replace("T", " ").slice(0, 16);
           valueHtml = `<span style="color:#0b5394;font-weight:600;">${parseFloat(rt.waterlevel).toFixed(2)} m</span>
-                       <span style="color:#888; font-size:0.8rem;"> @ ${t}</span>`;
+                       <span style="color:#888;font-size:0.8rem;"> @ ${t}</span>`;
         } else {
-          valueHtml = `<span style="color:#888;">載入中…</span>`;
+          valueHtml = '<span style="color:#888;">載入中…</span>';
         }
         waterRow = `
-          <div style="margin-bottom: 6px;">
-            <strong>鄰近河川水位:</strong> ${valueHtml}
-          </div>
-          <div style="font-size: 0.8rem; color: #666; margin-bottom: 6px;">
+          <div style="margin-bottom:6px;"><strong>鄰近河川水位:</strong> ${valueHtml}</div>
+          <div style="font-size:0.8rem;color:#666;margin-bottom:6px;">
             水位站：${wl.name}（${wl.stationid}）· 距離 ${distText}
           </div>
         `;
       }
 
       return `
-        <div style="min-width: 260px;">
-          <h3 style="margin: 0 0 8px 0; color: #1a5276; font-size: 1.1rem;">${p.name}</h3>
-
-          <div style="margin-bottom: 6px;">
-            <strong>抽水站 ID:</strong> <code style="background: #f0f0f0; padding: 2px 4px; border-radius: 3px;">${p.id}</code>
+        <div style="min-width:260px;">
+          <h3 style="margin:0 0 8px 0;color:#1a5276;font-size:1.05rem;">🏢 ${p.name || "抽水站"}</h3>
+          <div style="margin-bottom:6px;"><strong>抽水站 ID:</strong>
+            <code style="background:#f0f0f0;padding:2px 4px;border-radius:3px;">${p.id ?? "—"}</code>
           </div>
-
-          <div style="margin-bottom: 6px;">
-            <strong>竣工年份:</strong> ${yearText}
-          </div>
-
-          <div style="margin-bottom: 6px;">
-            <strong>抽水站類型:</strong> ${pumpTypeText}
-          </div>
-
-          <div style="margin-bottom: 6px;"><strong>地址:</strong> ${p.address || '—'}</div>
-          ${districtText ? `<div style="margin-bottom: 6px;"><strong>行政區:</strong> ${districtText}</div>` : ''}
-          ${villageText ? `<div style="margin-bottom: 6px;"><strong>村里:</strong> ${villageText}</div>` : ''}
-          <div style="margin-bottom: 6px;"><strong>所屬河川:</strong> ${p.river || '大漢溪'}</div>
-
-          <hr style="margin: 8px 0; border: none; border-top: 1px solid #eee;">
-
+          <div style="margin-bottom:6px;"><strong>竣工年份:</strong> ${yearText}</div>
+          <div style="margin-bottom:6px;"><strong>抽水站類型:</strong> ${pumpTypeText}</div>
+          <div style="margin-bottom:6px;"><strong>地址:</strong> ${p.address || "—"}</div>
+          <div style="margin-bottom:6px;"><strong>所屬河川:</strong> ${p.river || "大漢溪"}</div>
+          <hr style="margin:8px 0;border:none;border-top:1px solid #eee;">
           ${waterRow}
-
-          <hr style="margin: 8px 0; border: none; border-top: 1px solid #eee;">
-
-          <div style="font-size: 0.85rem; color: #666;">
-            ${plusCodeRow}
+          <hr style="margin:8px 0;border:none;border-top:1px solid #eee;">
+          <div style="font-size:0.78rem;color:#666;">
             <div>座標: ${feature.geometry.coordinates[1].toFixed(5)}, ${feature.geometry.coordinates[0].toFixed(5)}</div>
-            <div>資料來源: ${p.source || '—'}</div>
-            <div>更新時間: ${lastUpdateTime ? new Date(lastUpdateTime).toLocaleString('zh-TW') : '載入中'}</div>
+            <div>資料來源: ${p.source || "—"}</div>
+            <div>更新時間: ${lastUpdateTime ? new Date(lastUpdateTime).toLocaleString("zh-TW") : "載入中"}</div>
           </div>
         </div>
       `;
     }
 
-    // 顯示 GeoJSON 資料
-    function displayGeoJSONData(geojson) {
-      const layer = L.geoJSON(geojson, {
-        pointToLayer: (_, latlng) => L.marker(latlng, { icon }),
-        onEachFeature: (feature, layer) => {
-          // popup 內容用函式包起來：每次打開都會重新取最新即時水位
-          layer.bindPopup(() => buildStationPopupHtml(feature));
-        }
-      }).addTo(pumpingStationsGroup);
-      
-      // 記錄圖層
-      currentLayers.push(layer);
-      
-      // 調整地圖範圍
-      if (geojson.features.length > 0) {
-        const bounds = layer.getBounds();
-        const constrainedBounds = L.latLngBounds(
-          [Math.max(bounds.getSouth(), DAHAN_RIVER_BOUNDS.south), Math.max(bounds.getWest(), DAHAN_RIVER_BOUNDS.west)],
-          [Math.min(bounds.getNorth(), DAHAN_RIVER_BOUNDS.north), Math.min(bounds.getEast(), DAHAN_RIVER_BOUNDS.east)]
-        );
-        map.fitBounds(constrainedBounds.pad(0.05));
+    function buildWaterLevelPopupHtml(feature) {
+      const p = feature.properties || {};
+      const rt = realtimeWaterLevels[p.stationid];
+      let valueHtml = `<span style="color:#888;">${p.status === "現存" ? "載入中…" : "已廢站，無即時資料"}</span>`;
+      if (rt && rt.waterlevel !== "" && rt.waterlevel != null) {
+        const t = (rt.datetime || "").replace("T", " ").slice(0, 16);
+        valueHtml = `<span style="color:#0b5394;font-weight:600;">${parseFloat(rt.waterlevel).toFixed(2)} m</span>
+                     <span style="color:#888;font-size:0.8rem;"> @ ${t}</span>`;
       }
+      return `
+        <div style="min-width:240px;">
+          <h3 style="margin:0 0 6px 0;color:#0b5394;font-size:1rem;">💧 ${p.name}</h3>
+          <div style="margin-bottom:4px;"><strong>站號:</strong> <code>${p.stationid}</code></div>
+          <div style="margin-bottom:4px;"><strong>所屬河川:</strong> ${p.river}</div>
+          <div style="margin-bottom:4px;"><strong>狀態:</strong> ${p.status || "—"}</div>
+          <div style="margin-bottom:4px;"><strong>位置:</strong> ${p.address || "—"}</div>
+          <hr style="margin:6px 0;border:none;border-top:1px solid #eee;">
+          <div><strong>即時水位:</strong> ${valueHtml}</div>
+          <div style="font-size:0.78rem;color:#666;margin-top:4px;">資料來源：${p.source || "WRA"}</div>
+        </div>
+      `;
     }
 
-    // 處理本地 GeoJSON 資料
-    function processLocalGeoJSON(geojson) {
-      updateStatus("正在處理本地資料...", false, false);
-      
-      // 先檢查所有資料的分布
-      console.log(`原始資料總數: ${geojson.features.length}`);
-      
-      // 檢查哪些資料在範圍內
-      geojson.features.forEach((feature, index) => {
-        const coords = feature.geometry.coordinates;
-        const lat = coords[1];
-        const lng = coords[0];
-        const inRange = isInDahanRiverArea(lat, lng);
-        console.log(`抽水站 ${index + 1}: (${lat.toFixed(4)}, ${lng.toFixed(4)}) ${feature.properties.district} ${feature.properties.village} - 在範圍內: ${inRange}`);
+    // ============================================================
+    // 3. Tasks & Tools 工具列邏輯
+    // ============================================================
+    function attachToolbar() {
+      // 底圖切換
+      document.getElementById("basemapSelect").addEventListener("change", (e) => {
+        map.setMapTypeId(e.target.value);
       });
-      
-      // 過濾和清理資料 - 放寬條件
-      const filteredFeatures = geojson.features
-        .filter(feature => {
-          const coords = feature.geometry.coordinates;
-          const lat = coords[1];
-          const lng = coords[0];
-          
-          // 雙北大漢溪流域範圍
-          const expandedBounds = {
-            north: 25.12,  // 五股、蘆洲北邊
-            south: 24.95,  // 土城、樹林南邊
-            east: 121.55,  // 台北市邊界
-            west: 121.35   // 新莊、樹林西邊
-          };
-          
-          const inExpandedRange = lat >= expandedBounds.south && 
-                                  lat <= expandedBounds.north && 
-                                  lng >= expandedBounds.west && 
-                                  lng <= expandedBounds.east;
-          
-          if (!inExpandedRange) {
-            console.log(`過濾掉範圍外的: ${feature.properties.name} (${lat}, ${lng}) - ${feature.properties.district}`);
-            return false;
-          }
-          
-          // 只過濾掉明顯不相關的地區 (減少過濾條件)
-          const district = feature.properties.district || "";
-          const village = feature.properties.village || "";
-          
-          if (district.includes("桃園") || 
-              district.includes("汐止區") || 
-              district.includes("文山區") || 
-              district.includes("內湖區") ||
-              district.includes("南港區") ||
-              village.includes("公車站") ||
-              village.includes("捷運站")) {
-            console.log(`過濾掉不相關的: ${feature.properties.name} - ${district} ${village}`);
-            return false;
-          }
-          
-          return true;
-        })
-        // 移除重複位置 - 放寬距離條件
-        .filter((feature, index, array) => {
-          const coords1 = feature.geometry.coordinates;
-          
-          for (let i = 0; i < index; i++) {
-            const coords2 = array[i].geometry.coordinates;
-            const distance = calculateDistance(coords1[1], coords1[0], coords2[1], coords2[0]);
-            
-            if (distance < 20) { // 改為 20 公尺內視為重複 (原本 50 公尺)
-              console.log(`移除重複位置: ${feature.properties.name} 與 ${array[i].properties.name} 距離 ${distance.toFixed(1)}m`);
-              return false;
-            }
-          }
-          return true;
-        })
-        // 增強資料內容（優先保留 GeoJSON 中的真實欄位，缺漏才補生成值）
-        .map((feature, index) => {
-          const enhanced = { ...feature };
-          const orig = feature.properties || {};
-          const realName = (orig.name && !/^抽水站\s*\d+$/.test(orig.name)) ? orig.name : null;
-          const realAddress = orig.address && orig.address.startsWith('新北市') ? orig.address : null;
-          // 為每個抽水站尋找最近的水利署水位站
-          const coords = feature.geometry.coordinates;
-          const nearest = findNearestWaterStation(coords[1], coords[0]);
-          enhanced.properties = {
-            ...orig,
-            id: `DH${String(index + 1).padStart(3, '0')}`,
-            name: realName || generateStationName(orig, index + 1),
-            address: realAddress || generateAddress(orig),
-            // 西元年（年份來自 NTPC 開放資料；legacy 站無資料時為 null）
-            construction_year: (orig.year_ce ?? null),
-            year_ce_range: orig.year_ce_range ?? null,
-            pump_type: orig.pump_type ?? null,
-            nearest_wl: nearest, // { stationid, name, lat, lng, address, distance_m }
-            source: orig.source || "實地調查資料"
-          };
-          return enhanced;
-        });
 
-      console.log(`清理後剩餘 ${filteredFeatures.length} 個抽水站`);
+      // 圖層 toggle
+      const toggle = (els, checked) => els.forEach((m) => m.setMap(checked ? map : null));
+      document.getElementById("layerPumping").addEventListener("change", (e) => toggle(pumpingMarkers, e.target.checked));
+      document.getElementById("layerWL").addEventListener("change",       (e) => toggle(wlMarkers,        e.target.checked));
+      document.getElementById("layerRiver").addEventListener("change",    (e) => toggle(riverPolylines,   e.target.checked));
+      document.getElementById("layerDistricts").addEventListener("change",(e) => toggle(districtPolygons, e.target.checked));
 
-      // 建立地圖圖層
-      const cleanedGeoJSON = {
-        type: "FeatureCollection",
-        features: filteredFeatures
+      // 我的位置
+      let locateMarker = null, locateCircle = null;
+      document.getElementById("btnLocate").addEventListener("click", () => {
+        if (!navigator.geolocation) { alert("瀏覽器不支援地理定位"); return; }
+        navigator.geolocation.getCurrentPosition((pos) => {
+          const p = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          if (locateMarker) locateMarker.setMap(null);
+          if (locateCircle) locateCircle.setMap(null);
+          locateMarker = new google.maps.Marker({
+            map, position: p, title: "我的位置",
+            icon: { path: google.maps.SymbolPath.CIRCLE, scale: 7, fillColor: "#4285f4", fillOpacity: 1, strokeColor: "#fff", strokeWeight: 2 },
+          });
+          locateCircle = new google.maps.Circle({
+            map, center: p, radius: pos.coords.accuracy || 30,
+            strokeColor: "#4285f4", strokeOpacity: 0.5, strokeWeight: 1,
+            fillColor: "#4285f4", fillOpacity: 0.12,
+          });
+          map.panTo(p);
+          map.setZoom(15);
+        }, (err) => alert("無法取得位置：" + err.message), { enableHighAccuracy: true, timeout: 8000 });
+      });
+
+      // 量測（距離）
+      const measureBtn = document.getElementById("btnMeasure");
+      const measureReadout = document.getElementById("measureReadout");
+      let measureOn = false;
+      let measurePts = [];
+      let measureLine = null;
+      let measureMarkers = [];
+
+      const clearMeasure = () => {
+        if (measureLine) { measureLine.setMap(null); measureLine = null; }
+        measureMarkers.forEach((m) => m.setMap(null));
+        measureMarkers = [];
+        measurePts = [];
+        measureReadout.style.display = "none";
       };
 
-      displayGeoJSONData(cleanedGeoJSON);
-      
-      // 更新計數和狀態
-      document.getElementById("count").textContent = filteredFeatures.length;
-      document.getElementById("source").textContent = "大漢溪流域實地資料";
-      lastUpdateTime = Date.now();
-      updateStatus(`資料處理完成 (${filteredFeatures.length} 個抽水站)`, false, true);
+      measureBtn.addEventListener("click", () => {
+        measureOn = !measureOn;
+        measureBtn.classList.toggle("active", measureOn);
+        if (measureOn) {
+          measureReadout.textContent = "📏 距離量測中：點擊地圖加點，雙擊結束";
+          measureReadout.style.display = "block";
+          map.setOptions({ draggableCursor: "crosshair" });
+        } else {
+          clearMeasure();
+          map.setOptions({ draggableCursor: null });
+        }
+      });
+
+      map.addListener("click", (ev) => {
+        if (!measureOn) return;
+        measurePts.push(ev.latLng);
+        measureMarkers.push(new google.maps.Marker({
+          map, position: ev.latLng,
+          icon: { path: google.maps.SymbolPath.CIRCLE, scale: 4, fillColor: "#e74c3c", fillOpacity: 1, strokeColor: "#fff", strokeWeight: 1 },
+        }));
+        if (measureLine) measureLine.setMap(null);
+        measureLine = new google.maps.Polyline({
+          map, path: measurePts, strokeColor: "#e74c3c", strokeOpacity: 0.9, strokeWeight: 3,
+        });
+        let totalM = 0;
+        for (let i = 1; i < measurePts.length; i++) {
+          totalM += google.maps.geometry.spherical.computeDistanceBetween(measurePts[i - 1], measurePts[i]);
+        }
+        const txt = totalM >= 1000 ? `${(totalM / 1000).toFixed(3)} 公里` : `${Math.round(totalM)} 公尺`;
+        measureReadout.textContent = `📏 累計距離：${txt}（${measurePts.length} 點；雙擊結束）`;
+      });
+      map.addListener("dblclick", () => {
+        if (!measureOn) return;
+        measureOn = false;
+        measureBtn.classList.remove("active");
+        map.setOptions({ draggableCursor: null });
+      });
+
+      // 全螢幕
+      document.getElementById("btnFullscreen").addEventListener("click", () => {
+        const el = document.getElementById("map");
+        if (document.fullscreenElement) document.exitFullscreen();
+        else el.requestFullscreen?.();
+      });
+
+      // 列印 / 匯出 PDF
+      document.getElementById("btnPrint").addEventListener("click", () => window.print());
+
+      // 屬性搜尋
+      const input = document.getElementById("gisSearchInput");
+      const out = document.getElementById("gisSearchResult");
+      input.addEventListener("input", (e) => gisSearch(e.target.value, out));
+      document.addEventListener("click", (e) => {
+        if (!out.contains(e.target) && e.target !== input) out.style.display = "none";
+      });
     }
 
-    // 內嵌的 GeoJSON 資料 (由 scripts/build_geojson.py 產生，請勿手動編輯)
-    const EMBEDDED_GEOJSON = {
-        "type": "FeatureCollection",
-        "features": [
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [
-                        121.4701312,
-                        25.0357016
-                    ]
-                },
-                "properties": {
-                    "name": "華江抽水站",
-                    "address": "新北市板橋區長江路2段311巷18號之1",
-                    "river": "大漢溪",
-                    "pump_type": "豎軸式",
-                    "year_ce": 1997,
-                    "year_ce_range": null,
-                    "source": "NTPC open data",
-                    "geocode_quality": "osm_named",
-                    "id": 1,
-                    "label": "華江抽水站"
-                }
-            },
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [
-                        121.4555218,
-                        25.0284731
-                    ]
-                },
-                "properties": {
-                    "name": "新海抽水站",
-                    "address": "新北市板橋區中正路511號",
-                    "river": "大漢溪",
-                    "pump_type": "豎軸式",
-                    "year_ce": 1997,
-                    "year_ce_range": null,
-                    "source": "NTPC open data",
-                    "geocode_quality": "osm_named",
-                    "id": 2,
-                    "label": "新海抽水站"
-                }
-            },
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [
-                        121.4477691,
-                        25.020583
-                    ]
-                },
-                "properties": {
-                    "name": "湳仔溝抽水站 / 湳仔溝二抽水站",
-                    "address": "新北市板橋區環河西路5段500號",
-                    "river": "大漢溪",
-                    "pump_type": "豎軸式",
-                    "year_ce": 1995,
-                    "year_ce_range": [
-                        1995,
-                        2006
-                    ],
-                    "source": "NTPC open data",
-                    "geocode_quality": "osm_named",
-                    "id": 3,
-                    "label": "湳仔溝抽水站 / 湳仔溝二抽水站"
-                }
-            },
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [
-                        121.4391,
-                        24.9818
-                    ]
-                },
-                "properties": {
-                    "name": "土城抽水站含臨時站",
-                    "address": "新北市土城區擺接堡路301號",
-                    "river": "大漢溪",
-                    "pump_type": "豎軸式及沉水式",
-                    "year_ce": 1996,
-                    "year_ce_range": null,
-                    "source": "NTPC open data",
-                    "geocode_quality": "approximate",
-                    "id": 4,
-                    "label": "土城抽水站含臨時站"
-                }
-            },
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [
-                        121.4284131,
-                        24.9802862
-                    ]
-                },
-                "properties": {
-                    "name": "沙崙抽水站",
-                    "address": "新北市板橋區溪城路90-2號",
-                    "river": "大漢溪",
-                    "pump_type": "豎軸式",
-                    "year_ce": 2006,
-                    "year_ce_range": null,
-                    "source": "NTPC open data",
-                    "geocode_quality": "osm_named",
-                    "id": 5,
-                    "label": "沙崙抽水站"
-                }
-            },
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [
-                        121.4350082,
-                        25.0014598
-                    ]
-                },
-                "properties": {
-                    "name": "西盛抽水站",
-                    "address": "新北市新莊區環漢路3段530號",
-                    "river": "大漢溪",
-                    "pump_type": "豎軸式",
-                    "year_ce": 1996,
-                    "year_ce_range": null,
-                    "source": "NTPC open data",
-                    "geocode_quality": "osm_named",
-                    "id": 6,
-                    "label": "西盛抽水站"
-                }
-            },
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [
-                        121.457,
-                        25.0394
-                    ]
-                },
-                "properties": {
-                    "name": "塔寮坑抽水站",
-                    "address": "新北市新莊區環漢路630號",
-                    "river": "大漢溪",
-                    "pump_type": "豎軸式",
-                    "year_ce": 1997,
-                    "year_ce_range": null,
-                    "source": "NTPC open data",
-                    "geocode_quality": "approximate",
-                    "id": 7,
-                    "label": "塔寮坑抽水站"
-                }
-            },
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [
-                        121.4498,
-                        25.0316
-                    ]
-                },
-                "properties": {
-                    "name": "塔寮坑二抽水站",
-                    "address": "新北市新莊區環漢路2段535號",
-                    "river": "大漢溪",
-                    "pump_type": "豎軸式",
-                    "year_ce": 2016,
-                    "year_ce_range": null,
-                    "source": "NTPC open data",
-                    "geocode_quality": "approximate",
-                    "id": 8,
-                    "label": "塔寮坑二抽水站"
-                }
-            },
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [
-                        121.4510473,
-                        25.0327127
-                    ]
-                },
-                "properties": {
-                    "name": "公館溝抽水站",
-                    "address": "新北市新莊區環漢路2段385號",
-                    "river": "大漢溪",
-                    "pump_type": "豎軸式",
-                    "year_ce": 2006,
-                    "year_ce_range": null,
-                    "source": "NTPC open data",
-                    "geocode_quality": "osm_named",
-                    "id": 9,
-                    "label": "公館溝抽水站"
-                }
-            },
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [
-                        121.4477691,
-                        25.020583
-                    ]
-                },
-                "properties": {
-                    "name": "新莊抽水站",
-                    "address": "新北市新莊區環漢路2段142號",
-                    "river": "大漢溪",
-                    "pump_type": "豎軸式",
-                    "year_ce": 1997,
-                    "year_ce_range": null,
-                    "source": "NTPC open data",
-                    "geocode_quality": "osm_named",
-                    "id": 10,
-                    "label": "新莊抽水站"
-                }
-            },
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [
-                        121.4705964,
-                        25.0428182
-                    ]
-                },
-                "properties": {
-                    "name": "重新抽水站",
-                    "address": "新北市三重區中興南街82號",
-                    "river": "大漢溪",
-                    "pump_type": "豎軸式",
-                    "year_ce": 2004,
-                    "year_ce_range": null,
-                    "source": "NTPC open data",
-                    "geocode_quality": "osm_named",
-                    "id": 11,
-                    "label": "重新抽水站"
-                }
-            },
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [
-                        121.4604375,
-                        25.0378125
-                    ]
-                },
-                "properties": {
-                    "name": "文明里 抽水站(暫名)",
-                    "address": "新北市新莊區文明里環漢路二段142號",
-                    "river": "大漢溪",
-                    "pump_type": null,
-                    "year_ce": null,
-                    "year_ce_range": null,
-                    "source": "legacy plus_code",
-                    "geocode_quality": "plus_code",
-                    "plus_code": "2FQ6+45",
-                    "village": "文明里",
-                    "district": "新北市新莊區",
-                    "id": 12,
-                    "label": "文明里 抽水站(暫名)"
-                }
-            },
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [
-                        121.4428125,
-                        25.025062499999997
-                    ]
-                },
-                "properties": {
-                    "name": "瓊林里 抽水站(暫名)",
-                    "address": "新北市新莊區瓊林里環漢路二段630號",
-                    "river": "大漢溪",
-                    "pump_type": null,
-                    "year_ce": null,
-                    "year_ce_range": null,
-                    "source": "legacy plus_code",
-                    "geocode_quality": "plus_code",
-                    "plus_code": "2CGV+24",
-                    "village": "瓊林里",
-                    "district": "新北市新莊區",
-                    "id": 13,
-                    "label": "瓊林里 抽水站(暫名)"
-                }
-            },
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [
-                        121.4460625,
-                        25.0281875
-                    ]
-                },
-                "properties": {
-                    "name": "新莊區 抽水站(暫名)",
-                    "address": "新北市新莊區瓊林里環漢路二段535號",
-                    "river": "大漢溪",
-                    "pump_type": null,
-                    "year_ce": null,
-                    "year_ce_range": null,
-                    "source": "legacy plus_code",
-                    "geocode_quality": "plus_code",
-                    "plus_code": "2CHW+7C",
-                    "village": "新莊區",
-                    "district": "新北市",
-                    "id": 14,
-                    "label": "新莊區 抽水站(暫名)"
-                }
-            },
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [
-                        121.4306875,
-                        25.0249375
-                    ]
-                },
-                "properties": {
-                    "name": "新莊區 抽水站(暫名)",
-                    "address": "新北市新莊區建安里建國二路81-1",
-                    "river": "大漢溪",
-                    "pump_type": null,
-                    "year_ce": null,
-                    "year_ce_range": null,
-                    "source": "legacy plus_code",
-                    "geocode_quality": "plus_code",
-                    "plus_code": "2CFJ+X7",
-                    "village": "新莊區",
-                    "district": "新北市",
-                    "id": 15,
-                    "label": "新莊區 抽水站(暫名)"
-                }
-            },
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [
-                        121.4613125,
-                        25.0383125
-                    ]
-                },
-                "properties": {
-                    "name": "文明里 抽水站(暫名)",
-                    "address": "新北市新莊區文明里環漢路二段",
-                    "river": "大漢溪",
-                    "pump_type": null,
-                    "year_ce": null,
-                    "year_ce_range": null,
-                    "source": "legacy plus_code",
-                    "geocode_quality": "plus_code",
-                    "plus_code": "2FQ6+8G",
-                    "village": "文明里",
-                    "district": "新北市新莊區",
-                    "id": 16,
-                    "label": "文明里 抽水站(暫名)"
-                }
-            },
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [
-                        121.48468749999999,
-                        25.0238125
-                    ]
-                },
-                "properties": {
-                    "name": "振義里 抽水站(暫名)",
-                    "address": "新北市板橋區振義里萬安路20巷10弄16號",
-                    "river": "大漢溪",
-                    "pump_type": null,
-                    "year_ce": null,
-                    "year_ce_range": null,
-                    "source": "legacy plus_code",
-                    "geocode_quality": "plus_code",
-                    "plus_code": "2FFM+GV",
-                    "village": "振義里",
-                    "district": "新北市板橋區",
-                    "id": 17,
-                    "label": "振義里 抽水站(暫名)"
-                }
-            },
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [
-                        121.4608125,
-                        25.053062500000003
-                    ]
-                },
-                "properties": {
-                    "name": "頭前里 抽水站(暫名)",
-                    "address": "新北市新莊區頭前里福美街12號",
-                    "river": "大漢溪",
-                    "pump_type": null,
-                    "year_ce": null,
-                    "year_ce_range": null,
-                    "source": "legacy plus_code",
-                    "geocode_quality": "plus_code",
-                    "plus_code": "3F36+68",
-                    "village": "頭前里",
-                    "district": "新北市新莊區",
-                    "id": 18,
-                    "label": "頭前里 抽水站(暫名)"
-                }
-            },
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [
-                        121.4839375,
-                        25.023937500000002
-                    ]
-                },
-                "properties": {
-                    "name": "振義里 抽水站(暫名)",
-                    "address": "新北市板橋區振義里萬安街",
-                    "river": "大漢溪",
-                    "pump_type": null,
-                    "year_ce": null,
-                    "year_ce_range": null,
-                    "source": "legacy plus_code",
-                    "geocode_quality": "plus_code",
-                    "plus_code": "2FFM+HH",
-                    "village": "振義里",
-                    "district": "新北市板橋區",
-                    "id": 19,
-                    "label": "振義里 抽水站(暫名)"
-                }
-            },
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [
-                        121.4808125,
-                        25.0368125
-                    ]
-                },
-                "properties": {
-                    "name": "柏翠里 抽水站(暫名)",
-                    "address": "新北市板橋區柏翠里環河西路四段",
-                    "river": "大漢溪",
-                    "pump_type": null,
-                    "year_ce": null,
-                    "year_ce_range": null,
-                    "source": "legacy plus_code",
-                    "geocode_quality": "plus_code",
-                    "plus_code": "2FPJ+P8",
-                    "village": "柏翠里",
-                    "district": "新北市板橋區",
-                    "id": 20,
-                    "label": "柏翠里 抽水站(暫名)"
-                }
-            },
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [
-                        121.4396875,
-                        25.056312499999997
-                    ]
-                },
-                "properties": {
-                    "name": "中原里 抽水站(暫名)",
-                    "address": "新北市新莊區中原里10M-1",
-                    "river": "大漢溪",
-                    "pump_type": null,
-                    "year_ce": null,
-                    "year_ce_range": null,
-                    "source": "legacy plus_code",
-                    "geocode_quality": "plus_code",
-                    "plus_code": "3C4Q+GV",
-                    "village": "中原里",
-                    "district": "新北市新莊區",
-                    "id": 21,
-                    "label": "中原里 抽水站(暫名)"
-                }
-            },
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [
-                        121.4503125,
-                        25.059312499999997
-                    ]
-                },
-                "properties": {
-                    "name": "中原里 抽水站(暫名)",
-                    "address": "新北市新莊區中隆里中央路182號",
-                    "river": "大漢溪",
-                    "pump_type": null,
-                    "year_ce": null,
-                    "year_ce_range": null,
-                    "source": "legacy plus_code",
-                    "geocode_quality": "plus_code",
-                    "plus_code": "3F52+P4",
-                    "village": "中原里",
-                    "district": "新北市新莊區",
-                    "id": 22,
-                    "label": "中原里 抽水站(暫名)"
-                }
-            },
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [
-                        121.4411875,
-                        25.0276875
-                    ]
-                },
-                "properties": {
-                    "name": "新莊區 抽水站(暫名)",
-                    "address": "新北市新莊區國泰里新樹路85巷11-1",
-                    "river": "大漢溪",
-                    "pump_type": null,
-                    "year_ce": null,
-                    "year_ce_range": null,
-                    "source": "legacy plus_code",
-                    "geocode_quality": "plus_code",
-                    "plus_code": "2CHR+3F",
-                    "village": "新莊區",
-                    "district": "新北市",
-                    "id": 23,
-                    "label": "新莊區 抽水站(暫名)"
-                }
-            },
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [
-                        121.4455625,
-                        25.069312500000002
-                    ]
-                },
-                "properties": {
-                    "name": "楓樹里 抽水站(暫名)",
-                    "address": "新北市五股區興珍里五工一路136號",
-                    "river": "大漢溪",
-                    "pump_type": null,
-                    "year_ce": null,
-                    "year_ce_range": null,
-                    "source": "legacy plus_code",
-                    "geocode_quality": "plus_code",
-                    "plus_code": "3C9W+P6",
-                    "village": "楓樹里",
-                    "district": "新北市泰山區",
-                    "id": 24,
-                    "label": "楓樹里 抽水站(暫名)"
-                }
-            },
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [
-                        121.4413125,
-                        25.022062499999997
-                    ]
-                },
-                "properties": {
-                    "name": "瓊林里 抽水站(暫名)",
-                    "address": "新北市新莊區瓊林里環漢路三段",
-                    "river": "大漢溪",
-                    "pump_type": null,
-                    "year_ce": null,
-                    "year_ce_range": null,
-                    "source": "legacy plus_code",
-                    "geocode_quality": "plus_code",
-                    "plus_code": "2CCR+RG",
-                    "village": "瓊林里",
-                    "district": "新北市新莊區",
-                    "id": 25,
-                    "label": "瓊林里 抽水站(暫名)"
-                }
-            },
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [
-                        121.4861875,
-                        25.0180625
-                    ]
-                },
-                "properties": {
-                    "name": "板橋區 抽水站(暫名)",
-                    "address": "新北市板橋區光復里光復街172巷16號",
-                    "river": "大漢溪",
-                    "pump_type": null,
-                    "year_ce": null,
-                    "year_ce_range": null,
-                    "source": "legacy plus_code",
-                    "geocode_quality": "plus_code",
-                    "plus_code": "2F9P+6F",
-                    "village": "板橋區",
-                    "district": "新北市",
-                    "id": 26,
-                    "label": "板橋區 抽水站(暫名)"
-                }
-            },
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [
-                        121.4579375,
-                        25.0584375
-                    ]
-                },
-                "properties": {
-                    "name": "昌平里 抽水站(暫名)",
-                    "address": "新北市新莊區昌平里福壽街431號",
-                    "river": "大漢溪",
-                    "pump_type": null,
-                    "year_ce": null,
-                    "year_ce_range": null,
-                    "source": "legacy plus_code",
-                    "geocode_quality": "plus_code",
-                    "plus_code": "3F55+95",
-                    "village": "昌平里",
-                    "district": "新北市新莊區",
-                    "id": 27,
-                    "label": "昌平里 抽水站(暫名)"
-                }
-            },
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [
-                        121.4673125,
-                        25.064437499999997
-                    ]
-                },
-                "properties": {
-                    "name": "三重區 抽水站(暫名)",
-                    "address": "新北市三重區頂崁里疏洪西路",
-                    "river": "大漢溪",
-                    "pump_type": null,
-                    "year_ce": null,
-                    "year_ce_range": null,
-                    "source": "legacy plus_code",
-                    "geocode_quality": "plus_code",
-                    "plus_code": "3F78+QW",
-                    "village": "三重區",
-                    "district": "新北市",
-                    "id": 28,
-                    "label": "三重區 抽水站(暫名)"
-                }
-            },
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [
-                        121.4350625,
-                        25.0276875
-                    ]
-                },
-                "properties": {
-                    "name": "建安里 抽水站(暫名)",
-                    "address": "新北市新莊區建安里新樹路85巷11之1號",
-                    "river": "大漢溪",
-                    "pump_type": null,
-                    "year_ce": null,
-                    "year_ce_range": null,
-                    "source": "legacy plus_code",
-                    "geocode_quality": "plus_code",
-                    "plus_code": "2CHP+32",
-                    "village": "建安里",
-                    "district": "新北市新莊區",
-                    "id": 29,
-                    "label": "建安里 抽水站(暫名)"
-                }
-            },
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [
-                        121.4440625,
-                        25.0690625
-                    ]
-                },
-                "properties": {
-                    "name": "楓樹里 抽水站(暫名)",
-                    "address": "新北市泰山區楓樹里新五路二段2巷",
-                    "river": "大漢溪",
-                    "pump_type": null,
-                    "year_ce": null,
-                    "year_ce_range": null,
-                    "source": "legacy plus_code",
-                    "geocode_quality": "plus_code",
-                    "plus_code": "3C9V+JJ",
-                    "village": "楓樹里",
-                    "district": "新北市泰山區",
-                    "id": 30,
-                    "label": "楓樹里 抽水站(暫名)"
-                }
-            },
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [
-                        121.4649375,
-                        25.0651875
-                    ]
-                },
-                "properties": {
-                    "name": "福基里 抽水站(暫名)",
-                    "address": "新北市新莊區福基里化成路557號",
-                    "river": "大漢溪",
-                    "pump_type": null,
-                    "year_ce": null,
-                    "year_ce_range": null,
-                    "source": "legacy plus_code",
-                    "geocode_quality": "plus_code",
-                    "plus_code": "3F87+3X",
-                    "village": "福基里",
-                    "district": "新北市新莊區",
-                    "id": 31,
-                    "label": "福基里 抽水站(暫名)"
-                }
-            },
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [
-                        121.5004375,
-                        25.057187499999998
-                    ]
-                },
-                "properties": {
-                    "name": "同慶里 抽水站(暫名)",
-                    "address": "新北市三重區同慶里",
-                    "river": "大漢溪",
-                    "pump_type": null,
-                    "year_ce": null,
-                    "year_ce_range": null,
-                    "source": "legacy plus_code",
-                    "geocode_quality": "plus_code",
-                    "plus_code": "3G42+V5",
-                    "village": "同慶里",
-                    "district": "新北市三重區",
-                    "id": 32,
-                    "label": "同慶里 抽水站(暫名)"
-                }
-            },
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [
-                        121.4476875,
-                        25.0835625
-                    ]
-                },
-                "properties": {
-                    "name": "五股區 抽水站(暫名)",
-                    "address": "新北市五股區更寮里五股二交流道",
-                    "river": "大漢溪",
-                    "pump_type": null,
-                    "year_ce": null,
-                    "year_ce_range": null,
-                    "source": "legacy plus_code",
-                    "geocode_quality": "plus_code",
-                    "plus_code": "3CMX+C3",
-                    "village": "五股區",
-                    "district": "新北市",
-                    "id": 33,
-                    "label": "五股區 抽水站(暫名)"
-                }
-            },
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [
-                        121.4863125,
-                        25.017812499999998
-                    ]
-                },
-                "properties": {
-                    "name": "光復里 抽水站(暫名)",
-                    "address": "新北市板橋區光復里環河西路四段55號",
-                    "river": "大漢溪",
-                    "pump_type": null,
-                    "year_ce": null,
-                    "year_ce_range": null,
-                    "source": "legacy plus_code",
-                    "geocode_quality": "plus_code",
-                    "plus_code": "2F9P+4G",
-                    "village": "光復里",
-                    "district": "新北市板橋區",
-                    "id": 34,
-                    "label": "光復里 抽水站(暫名)"
-                }
-            },
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [
-                        121.4989375,
-                        25.0084375
-                    ]
-                },
-                "properties": {
-                    "name": "中和區 抽水站(暫名)",
-                    "address": "新北市永和區保順里環河西路二段251號",
-                    "river": "大漢溪",
-                    "pump_type": null,
-                    "year_ce": null,
-                    "year_ce_range": null,
-                    "source": "legacy plus_code",
-                    "geocode_quality": "plus_code",
-                    "plus_code": "2F5X+9H",
-                    "village": "中和區",
-                    "district": "新北市",
-                    "id": 35,
-                    "label": "中和區 抽水站(暫名)"
-                }
-            },
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [
-                        121.3436875,
-                        24.929812499999997
-                    ]
-                },
-                "properties": {
-                    "name": "鳶山里 抽水站(暫名)",
-                    "address": "新北市三峽區鳶山里中山路576號",
-                    "river": "大漢溪",
-                    "pump_type": null,
-                    "year_ce": null,
-                    "year_ce_range": null,
-                    "source": "legacy plus_code",
-                    "geocode_quality": "plus_code",
-                    "plus_code": "W8HV+WF",
-                    "village": "鳶山里",
-                    "district": "新北市三峽區",
-                    "id": 36,
-                    "label": "鳶山里 抽水站(暫名)"
-                }
-            },
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [
-                        121.4298125,
-                        25.027562500000002
-                    ]
-                },
-                "properties": {
-                    "name": "建福里 抽水站(暫名)",
-                    "address": "新北市新莊區建福里後港一路139之1號",
-                    "river": "大漢溪",
-                    "pump_type": null,
-                    "year_ce": null,
-                    "year_ce_range": null,
-                    "source": "legacy plus_code",
-                    "geocode_quality": "plus_code",
-                    "plus_code": "2CHH+2W",
-                    "village": "建福里",
-                    "district": "新北市新莊區",
-                    "id": 37,
-                    "label": "建福里 抽水站(暫名)"
-                }
-            },
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [
-                        121.5046875,
-                        25.0681875
-                    ]
-                },
-                "properties": {
-                    "name": "三重區 抽水站(暫名)",
-                    "address": "新北市三重區環河北路",
-                    "river": "大漢溪",
-                    "pump_type": null,
-                    "year_ce": null,
-                    "year_ce_range": null,
-                    "source": "legacy plus_code",
-                    "geocode_quality": "plus_code",
-                    "plus_code": "3G93+7V",
-                    "village": "三重區",
-                    "district": "新北市",
-                    "id": 38,
-                    "label": "三重區 抽水站(暫名)"
-                }
-            },
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [
-                        121.4751875,
-                        25.065687500000003
-                    ]
-                },
-                "properties": {
-                    "name": "二重里 抽水站(暫名)",
-                    "address": "新北市三重區二重里大有街1-62",
-                    "river": "大漢溪",
-                    "pump_type": null,
-                    "year_ce": null,
-                    "year_ce_range": null,
-                    "source": "legacy plus_code",
-                    "geocode_quality": "plus_code",
-                    "plus_code": "3F8G+73",
-                    "village": "二重里",
-                    "district": "新北市三重區",
-                    "id": 39,
-                    "label": "二重里 抽水站(暫名)"
-                }
-            },
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [
-                        121.5046875,
-                        25.067812500000002
-                    ]
-                },
-                "properties": {
-                    "name": "三重區 抽水站(暫名)",
-                    "address": "新北市三重區環河北路",
-                    "river": "大漢溪",
-                    "pump_type": null,
-                    "year_ce": null,
-                    "year_ce_range": null,
-                    "source": "legacy plus_code",
-                    "geocode_quality": "plus_code",
-                    "plus_code": "3G93+4V",
-                    "village": "三重區",
-                    "district": "新北市",
-                    "id": 40,
-                    "label": "三重區 抽水站(暫名)"
-                }
-            },
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [
-                        121.5011875,
-                        25.0793125
-                    ]
-                },
-                "properties": {
-                    "name": "五常里 抽水站(暫名)",
-                    "address": "新北市三重區環河北路二段",
-                    "river": "大漢溪",
-                    "pump_type": null,
-                    "year_ce": null,
-                    "year_ce_range": null,
-                    "source": "legacy plus_code",
-                    "geocode_quality": "plus_code",
-                    "plus_code": "3GH2+PF",
-                    "village": "五常里",
-                    "district": "新北市三重區",
-                    "id": 41,
-                    "label": "五常里 抽水站(暫名)"
-                }
-            },
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [
-                        121.48231249999999,
-                        25.0508125
-                    ]
-                },
-                "properties": {
-                    "name": "德厚里 抽水站(暫名)",
-                    "address": "新北市三重區頭前重新橋觀光市集",
-                    "river": "大漢溪",
-                    "pump_type": null,
-                    "year_ce": null,
-                    "year_ce_range": null,
-                    "source": "legacy plus_code",
-                    "geocode_quality": "plus_code",
-                    "plus_code": "3F2J+8W",
-                    "village": "德厚里",
-                    "district": "新北市三重區",
-                    "id": 42,
-                    "label": "德厚里 抽水站(暫名)"
-                }
-            },
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [
-                        121.42581249999999,
-                        24.979187500000002
-                    ]
-                },
-                "properties": {
-                    "name": "彭福里 抽水站(暫名)",
-                    "address": "新北市樹林區彭興里水源街",
-                    "river": "大漢溪",
-                    "pump_type": null,
-                    "year_ce": null,
-                    "year_ce_range": null,
-                    "source": "legacy plus_code",
-                    "geocode_quality": "plus_code",
-                    "plus_code": "XCHG+M8",
-                    "village": "彭福里",
-                    "district": "新北市樹林區",
-                    "id": 43,
-                    "label": "彭福里 抽水站(暫名)"
-                }
-            },
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [
-                        121.4466875,
-                        25.029562499999997
-                    ]
-                },
-                "properties": {
-                    "name": "泰豐里 抽水站(暫名)",
-                    "address": "新北市新莊區泰豐里豐年街59號",
-                    "river": "大漢溪",
-                    "pump_type": null,
-                    "year_ce": null,
-                    "year_ce_range": null,
-                    "source": "legacy plus_code",
-                    "geocode_quality": "plus_code",
-                    "plus_code": "2CHW+RM",
-                    "village": "泰豐里",
-                    "district": "新北市新莊區",
-                    "id": 44,
-                    "label": "泰豐里 抽水站(暫名)"
-                }
-            },
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [
-                        121.4581875,
-                        25.0844375
-                    ]
-                },
-                "properties": {
-                    "name": "蘆洲區 抽水站(暫名)",
-                    "address": "新北市蘆洲區永康里長安街287巷1號",
-                    "river": "大漢溪",
-                    "pump_type": null,
-                    "year_ce": null,
-                    "year_ce_range": null,
-                    "source": "legacy plus_code",
-                    "geocode_quality": "plus_code",
-                    "plus_code": "3FM5+Q7",
-                    "village": "蘆洲區",
-                    "district": "新北市",
-                    "id": 45,
-                    "label": "蘆洲區 抽水站(暫名)"
-                }
-            },
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [
-                        121.4683125,
-                        25.0763125
-                    ]
-                },
-                "properties": {
-                    "name": "蘆洲區 抽水站(暫名)",
-                    "address": "新北市五股區興珍里四維路",
-                    "river": "大漢溪",
-                    "pump_type": null,
-                    "year_ce": null,
-                    "year_ce_range": null,
-                    "source": "legacy plus_code",
-                    "geocode_quality": "plus_code",
-                    "plus_code": "3FG9+G8",
-                    "village": "蘆洲區",
-                    "district": "新北市",
-                    "id": 46,
-                    "label": "蘆洲區 抽水站(暫名)"
-                }
-            }
-        ]
-    };
+    function attachCoordTracker() {
+      const box = document.getElementById("coordBox");
+      map.addListener("mousemove", (ev) => {
+        box.textContent = `緯度 ${ev.latLng.lat().toFixed(5)} / 經度 ${ev.latLng.lng().toFixed(5)}`;
+      });
+    }
 
-    // 載入內嵌資料
-    function loadLocalData() {
-      updateStatus("載入內嵌資料...", false, false);
-      
-      try {
-        console.log("使用內嵌 GeoJSON 資料");
-        processLocalGeoJSON(EMBEDDED_GEOJSON);
-      } catch (err) {
-        console.error("處理內嵌資料失敗:", err);
-        updateStatus("內嵌資料處理失敗，嘗試政府 API...", true, false);
-        loadGovernmentData();
+    function gisSearch(q, outEl) {
+      q = (q || "").trim().toLowerCase();
+      if (!q) { outEl.style.display = "none"; outEl.innerHTML = ""; return; }
+      const hits = [];
+      pumpingMarkers.forEach((m) => {
+        const p = (m._feature.properties) || {};
+        const text = `${p.name || ""} ${p.address || ""}`.toLowerCase();
+        if (text.includes(q)) hits.push({ kind: "抽水站", name: p.name, sub: p.address || "", marker: m });
+      });
+      wlMarkers.forEach((m) => {
+        const p = (m._feature.properties) || {};
+        const text = `${p.name || ""} ${p.address || ""} ${p.stationid || ""}`.toLowerCase();
+        if (text.includes(q)) hits.push({ kind: "水位站", name: p.name, sub: p.address || "", marker: m });
+      });
+      districtPolygons.forEach((poly) => {
+        const p = (poly._feature.properties) || {};
+        if ((p.name || "").toLowerCase().includes(q)) {
+          const b = new google.maps.LatLngBounds();
+          poly.getPaths().forEach((path) => path.forEach((pt) => b.extend(pt)));
+          hits.push({ kind: "行政區", name: p.name, sub: "", bounds: b });
+        }
+      });
+      outEl.style.display = "block";
+      if (!hits.length) {
+        outEl.innerHTML = '<div class="hit" style="color:#888;">查無結果</div>';
+        return;
+      }
+      outEl.innerHTML = hits.slice(0, 30).map((h, i) =>
+        `<div class="hit" data-i="${i}">
+          <span class="hit-kind">${h.kind}</span>
+          <strong>${h.name}</strong>${h.sub ? `<br><span style="color:#666;font-size:11px;">${h.sub}</span>` : ""}
+        </div>`
+      ).join("");
+      outEl.querySelectorAll(".hit[data-i]").forEach((el) => {
+        el.addEventListener("click", () => {
+          const h = hits[parseInt(el.dataset.i, 10)];
+          if (h.bounds) map.fitBounds(h.bounds);
+          else if (h.marker) {
+            map.panTo(h.marker.getPosition());
+            map.setZoom(16);
+            google.maps.event.trigger(h.marker, "click");
+          }
+          outEl.style.display = "none";
+          document.getElementById("gisSearchInput").value = h.name;
+        });
+      });
+    }
+
+    // ============================================================
+    // Refresh / status / loading
+    // ============================================================
+    function updateStatus(message, isError = false, isSuccess = false) {
+      const statusEl = document.getElementById("updateStatus");
+      const indicator = document.getElementById("refreshIndicator");
+      if (statusEl) statusEl.textContent = message;
+      if (indicator) {
+        if (isError)        indicator.style.background = "#dc3545";
+        else if (isSuccess) indicator.style.background = "#28a745";
+        else                indicator.style.background = "#ffc107";
       }
     }
 
-    // 用戶登入驗證和權限管理
-    let currentUser = null;
+    function manualRefresh() {
+      updateStatus("手動更新中…", false, false);
+      loadAllLayers();
+      loadRealtimeWaterLevels();
+    }
 
+    function startAutoUpdate() {
+      if (updateInterval) clearInterval(updateInterval);
+      updateInterval = setInterval(() => loadAllLayers(), 30 * 60 * 1000);
+    }
+    window.addEventListener("beforeunload", () => updateInterval && clearInterval(updateInterval));
+
+    function hideLoadingOverlay() {
+      const overlay = document.getElementById("loadingOverlay");
+      const mapEl = document.getElementById("map");
+      if (!overlay) return;
+      overlay.style.opacity = "0";
+      mapEl.classList.add("loaded");
+      setTimeout(() => (overlay.style.display = "none"), 180);
+    }
+
+    // ============================================================
+    // 用戶 / 權限
+    // ============================================================
     function checkAuth() {
-      const userData = localStorage.getItem('currentUser');
-      if (!userData) {
-        // 未登入，跳轉到登入頁面
-        window.location.href = 'login.html';
-        return false;
-      }
-      
+      const userData = localStorage.getItem("currentUser");
+      if (!userData) { window.location.href = "login.html"; return false; }
       try {
         currentUser = JSON.parse(userData);
         updateUserInterface();
         return true;
-      } catch (error) {
-        console.error('用戶資料解析失敗:', error);
-        localStorage.removeItem('currentUser');
-        window.location.href = 'login.html';
+      } catch (err) {
+        console.error("用戶資料解析失敗:", err);
+        localStorage.removeItem("currentUser");
+        window.location.href = "login.html";
         return false;
       }
     }
-
     function updateUserInterface() {
       if (!currentUser) return;
-      
-      // 更新用戶資訊顯示
-      document.getElementById('userName').textContent = currentUser.name;
-      document.getElementById('userRole').textContent = getRoleText(currentUser.role);
-      
-      // 根據權限顯示功能
-      if (currentUser.permissions.includes('manage')) {
-        document.getElementById('adminControls').style.display = 'block';
+      document.getElementById("userName").textContent = currentUser.name;
+      document.getElementById("userRole").textContent = getRoleText(currentUser.role);
+      if (currentUser.permissions && currentUser.permissions.includes("manage")) {
+        document.getElementById("adminControls").style.display = "block";
       }
-      
-      console.log(`歡迎，${currentUser.name} (${getRoleText(currentUser.role)})`);
     }
-
     function getRoleText(role) {
-      const roleMap = {
-        'administrator': '系統管理員',
-        'operator': '系統操作員',
-        'viewer': '資料查看員',
-        'citizen': '註冊民眾'
-      };
-      return roleMap[role] || '一般用戶';
+      return { administrator: "系統管理員", operator: "系統操作員", viewer: "資料查看員", citizen: "註冊民眾" }[role] || "一般用戶";
     }
-
     function logout() {
-      if (confirm('確定要登出系統嗎？')) {
-        localStorage.removeItem('currentUser');
-        window.location.href = 'login.html';
+      if (confirm("確定要登出系統嗎？")) {
+        localStorage.removeItem("currentUser");
+        window.location.href = "login.html";
       }
     }
 
-    function exportData() {
-      if (!currentUser || !currentUser.permissions.includes('export')) {
-        alert('您沒有資料匯出權限');
-        return;
-      }
-      
-      // 實作抽水站資料匯出功能
-      const timestamp = new Date().toISOString().slice(0, 19).replace(/[:.]/g, '-');
-      const filename = `pumping_stations_${timestamp}.json`;
-      
-      const dataToExport = {
-        exportTime: new Date().toISOString(),
-        exportUser: currentUser.name,
-        totalStations: document.getElementById('count').textContent,
-        data: EMBEDDED_GEOJSON
-      };
-      
-      const blob = new Blob([JSON.stringify(dataToExport, null, 2)], {
-        type: 'application/json'
-      });
-      
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      a.click();
-      URL.revokeObjectURL(url);
-      
-      alert('抽水站資料匯出完成！');
+    // ============================================================
+    // 匯出 / 管理
+    // ============================================================
+    async function exportData() {
+      if (!currentUser || !currentUser.permissions.includes("export")) { alert("您沒有資料匯出權限"); return; }
+      try {
+        const res = await fetch("data/pumping-stations.geojson", { cache: "no-store" });
+        const gj = await res.json();
+        const timestamp = new Date().toISOString().slice(0, 19).replace(/[:.]/g, "-");
+        const payload = {
+          exportTime: new Date().toISOString(),
+          exportUser: currentUser.name,
+          totalStations: (gj.features || []).length,
+          data: gj,
+        };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `pumping_stations_${timestamp}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        alert("抽水站資料匯出完成！");
+      } catch (e) { alert("匯出失敗：" + e.message); }
     }
-
     async function exportUsers() {
-      if (!currentUser || !currentUser.permissions.includes('export')) {
-        alert('您沒有用戶資料匯出權限');
-        return;
-      }
-
+      if (!currentUser || !currentUser.permissions.includes("export")) { alert("您沒有用戶資料匯出權限"); return; }
       try {
         await window.userManager.loadUsers();
         const userData = window.userManager.exportRegisteredUsers();
-        
-        if (!userData) {
-          alert('沒有可匯出的用戶資料');
-          return;
-        }
-
-        const timestamp = new Date().toISOString().slice(0, 19).replace(/[:.]/g, '-');
-        const filename = `registered_users_${timestamp}.json`;
-        
-        const blob = new Blob([userData], {
-          type: 'application/json'
-        });
-        
+        if (!userData) { alert("沒有可匯出的用戶資料"); return; }
+        const timestamp = new Date().toISOString().slice(0, 19).replace(/[:.]/g, "-");
+        const blob = new Blob([userData], { type: "application/json" });
         const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
+        const a = document.createElement("a");
         a.href = url;
-        a.download = filename;
+        a.download = `registered_users_${timestamp}.json`;
         a.click();
         URL.revokeObjectURL(url);
-        
-        alert('用戶資料匯出完成！');
-      } catch (error) {
-        alert('匯出用戶資料時發生錯誤：' + error.message);
-      }
+        alert("用戶資料匯出完成！");
+      } catch (e) { alert("匯出失敗：" + e.message); }
     }
-
     async function showUserStats() {
-      if (!currentUser || !currentUser.permissions.includes('manage')) {
-        alert('您沒有查看用戶統計的權限');
-        return;
-      }
-
+      if (!currentUser || !currentUser.permissions.includes("manage")) { alert("您沒有查看用戶統計的權限"); return; }
       try {
         await window.userManager.loadUsers();
-        const stats = window.userManager.getUserStats();
-        
-        if (!stats) {
-          alert('無法取得用戶統計資料');
-          return;
-        }
-
-        const message = `
-📊 用戶統計資料
-
-👥 總用戶數: ${stats.totalUsers}
-🔧 系統用戶: ${stats.totalSystemUsers}
-📝 註冊用戶: ${stats.totalRegisteredUsers}
-✅ 活躍用戶: ${stats.activeUsers}
-
-📅 最後更新: ${new Date(stats.lastUpdated).toLocaleString('zh-TW')}
-        `;
-        
-        alert(message);
-      } catch (error) {
-        alert('取得用戶統計時發生錯誤：' + error.message);
-      }
+        const s = window.userManager.getUserStats();
+        if (!s) { alert("無法取得用戶統計資料"); return; }
+        alert(`📊 用戶統計\n\n👥 總用戶數: ${s.totalUsers}\n🔧 系統用戶: ${s.totalSystemUsers}\n📝 註冊用戶: ${s.totalRegisteredUsers}\n✅ 活躍用戶: ${s.activeUsers}\n\n📅 最後更新: ${new Date(s.lastUpdated).toLocaleString("zh-TW")}`);
+      } catch (e) { alert("取得用戶統計時發生錯誤：" + e.message); }
     }
-
     function openAdminPanel() {
-      if (!currentUser || !currentUser.permissions.includes('manage')) {
-        alert('您沒有管理面板存取權限');
-        return;
-      }
-
-      // 在新分頁開啟管理面板
-      window.open('admin-panel.html', '_blank');
+      if (!currentUser || !currentUser.permissions.includes("manage")) { alert("您沒有管理面板存取權限"); return; }
+      window.open("admin-panel.html", "_blank");
     }
 
-    // 頁面載入時啟動
-    document.addEventListener('DOMContentLoaded', async function() {
-      // 先檢查登入狀態
-      if (!checkAuth()) {
-        return; // 未登入會自動跳轉
+    // ============================================================
+    // Google Maps script loader（從 localStorage 讀 key 比較友善；
+    // 若沒設定就回退到內嵌占位字串，提示使用者）
+    // ============================================================
+    (function loadGoogleMapsScript() {
+      const key = localStorage.getItem("GOOGLE_MAPS_API_KEY") || "YOUR_GOOGLE_MAPS_API_KEY";
+      if (key === "YOUR_GOOGLE_MAPS_API_KEY") {
+        console.warn("[GMaps] 尚未設定 API key。請執行：localStorage.setItem('GOOGLE_MAPS_API_KEY','你的_key')，再重新整理。");
       }
-
-      // 初始化用戶管理器
-      try {
-        await window.userManager.loadUsers();
-        console.log('用戶管理器初始化完成');
-      } catch (error) {
-        console.warn('用戶管理器初始化失敗，使用備援方案:', error);
-      }
-      
-      // 優先載入本地 GeoJSON 資料
-      loadLocalData();
-      
-      // 啟動自動更新 (但會以本地資料為主)
-      startAutoUpdate();
-
-      // 載入水利署即時水位（非阻塞），並設定 5 分鐘更新一次
-      loadRealtimeWaterLevels();
-      setInterval(loadRealtimeWaterLevels, WL_REFRESH_INTERVAL_MS);
-      
-      // 隱藏載入畫面（極短時間，僅作淡出過渡）
-      setTimeout(() => {
-        const loadingOverlay = document.getElementById('loadingOverlay');
-        const mapElement = document.getElementById('map');
-        
-        loadingOverlay.style.opacity = '0';
-        mapElement.classList.add('loaded');
-        
-        setTimeout(() => {
-          loadingOverlay.style.display = 'none';
-        }, 180);
-      }, 350);
-
-      console.log('🌊 大漢溪抽水站智慧管理系統已載入');
-    });
-
-    // 頁面卸載時清理
-    window.addEventListener('beforeunload', function() {
-      stopAutoUpdate();
-    });
+      const s = document.createElement("script");
+      s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&libraries=geometry,places&language=zh-TW&region=TW&callback=initMap`;
+      s.async = true;
+      s.defer = true;
+      s.onerror = () => {
+        document.getElementById("updateStatus").textContent = "Google Maps 載入失敗，請檢查 API key";
+        hideLoadingOverlay();
+      };
+      document.head.appendChild(s);
+    })();
   </script>
 </body>
 </html>
