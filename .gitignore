@@ -2,5 +2,6 @@
 __pycache__/
 .DS_Store
 
-# 本機 API key / 秘密設定（請勿提交）
+# 環境變數 / API key / 秘密設定（請勿提交）
+.env
 js/config.local.js

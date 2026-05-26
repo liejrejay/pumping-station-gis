@@ -469,8 +469,8 @@
 
   <script src="js/userManager.js"></script>
   <script src="js/mobileOptimization.js"></script>
-  <!-- 本機 API key（js/config.local.js 不會被 commit；若不存在會 404 但不影響其他邏輯） -->
-  <script src="js/config.local.js" onerror="console.warn('[config] js/config.local.js 不存在，請依 js/config.local.example.js 建立')"></script>
+  <!-- 由 server.js 從環境變數產生（key 不入 repo；.env 已 gitignore） -->
+  <script src="/api/config.js"></script>
 
   <script>
     // ============================================================
@@ -1213,7 +1213,7 @@
       const key = _resolveApiKey();
       if (!key) {
         const el = document.getElementById("updateStatus");
-        const msg = "未設定 Google Maps API key：請建立 js/config.local.js（複製自 js/config.local.example.js）後填入 key";
+        const msg = "未設定 Google Maps API key：請在專案根目錄建立 .env（複製自 .env.example）後重啟 server";
         console.error("[GMaps]", msg);
         if (el) el.textContent = msg;
         hideLoadingOverlay();

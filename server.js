@@ -1,7 +1,22 @@
 const express = require('express');
 const fs = require('fs').promises;
+const fsSync = require('fs');
 const path = require('path');
 const cors = require('cors');
+
+// --- 讀 .env（不引入 dotenv 依賴；行格式 KEY=VALUE）---
+try {
+    const envPath = path.join(__dirname, '.env');
+    const text = fsSync.readFileSync(envPath, 'utf8');
+    for (const raw of text.split(/\r?\n/)) {
+        const line = raw.trim();
+        if (!line || line.startsWith('#')) continue;
+        const m = line.match(/^([A-Z_][A-Z0-9_]*)\s*=\s*(.*)$/);
+        if (m && process.env[m[1]] === undefined) {
+            process.env[m[1]] = m[2].replace(/^['"]|['"]$/g, '');
+        }
+    }
+} catch (_) { /* .env 不存在沒關係 */ }
 
 const app = express();
 const PORT = 3000;
@@ -221,6 +236,14 @@ app.get('/api/users/export', async (req, res) => {
     } catch (error) {
         res.status(500).json({ error: '匯出失敗' });
     }
+});
+
+// 提供前端執行期設定（key 從環境變數讀，不入 repo）
+app.get('/api/config.js', (req, res) => {
+    res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-store');
+    const key = process.env.GOOGLE_MAPS_API_KEY || '';
+    res.send(`window.GOOGLE_MAPS_API_KEY = ${JSON.stringify(key)};\n`);
 });
 
 // 健康檢查
