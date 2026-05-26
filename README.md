@@ -3,7 +3,15 @@
 [![Deploy to GitHub Pages](https://github.com/liejrejay/GIS/actions/workflows/deploy.yml/badge.svg)](https://github.com/liejrejay/GIS/actions/workflows/deploy.yml)
 
 ## 🌐 線上訪問
-**網站網址：** https://liejrejay.github.io/GIS/
+**網站網址：** https://liejrejay.github.io/pumping-station-gis/
+
+## 👥 組員快速登入
+- **管理員**: `admin` / `admin123`
+- **操作員**: `operator` / `op123`  
+- **查看員**: `viewer` / `view123`
+- **示範用戶**: `demo_user` / `demo123`
+
+詳細說明請參考 [組員使用指南](TEAM-GUIDE.md)
 
 ## ✨ 系統功能
 - 🗺️ 互動式抽水站地圖
