@@ -389,7 +389,7 @@
       <!-- 屬性查詢 -->
       <section class="section">
         <h2>屬性查詢</h2>
-        <input type="search" class="search-input" id="gisSearchInput" placeholder="🔎 搜尋抽水站 / 行政區 / 水位站" />
+        <input type="search" class="search-input" id="gisSearchInput" placeholder="🔎 搜尋抽水站 / 水位站 / 親水廊道" />
         <div id="gisSearchResult" class="gis-search-result"></div>
       </section>
 
@@ -423,7 +423,6 @@
           <label><input type="checkbox" id="layerPumping"   checked> <span class="layer-swatch" style="background:#e74c3c"></span> 🏢 抽水站</label>
           <label><input type="checkbox" id="layerWL"        checked> <span class="layer-swatch" style="background:#2980b9"></span> 💧 水位站</label>
           <label><input type="checkbox" id="layerRiver"     checked> <span class="layer-swatch" style="background:#0b8fe6"></span> 🌊 大漢溪河道</label>
-          <label><input type="checkbox" id="layerDistricts" checked> <span class="layer-swatch" style="background:#8e44ad"></span> 🗾 沿岸行政區</label>
           <label><input type="checkbox" id="layerWaterfront"> <span class="layer-swatch" style="background:#27ae60"></span> 🌿 親水廊道</label>
         </div>
       </section>
@@ -465,7 +464,6 @@
     <div class="legend-row"><span class="swatch" style="background:#95a5a6"></span>水位站（已廢）</div>
     <div class="legend-row"><span class="swatch" style="background:#27ae60"></span>親水廊道</div>
     <div class="legend-row"><span class="swatch-line" style="background:#0b8fe6"></span>大漢溪河道</div>
-    <div class="legend-row"><span class="swatch-poly" style="--c:#8e44ad"></span>沿岸行政區</div>
   </div>
 
   <script src="js/userManager.js"></script>
@@ -475,9 +473,9 @@
     // ============================================================
     // Google Maps Web GIS：四大組成
     //   1. Digital basemaps：Google roadmap/satellite/hybrid/terrain + OSM
-    //   2. Operational layers：抽水站 / 水位站 / 大漢溪河道 / 沿岸行政區
+    //   2. Operational layers：抽水站 / 水位站 / 大漢溪河道 / 親水廊道
     //   3. Tasks & tools：搜尋、量測、定位、座標、列印、全螢幕、圖層切換
-    //   4. Geodatabase：data/*.geojson（pumping/water-level/river/districts）
+    //   4. Geodatabase：data/*.geojson（pumping/water-level/river；districts 保留檔案備用）
     // ============================================================
 
     // ---------- 全域狀態 ----------
@@ -486,7 +484,6 @@
     const wlMarkers = [];          // 水位站 markers
     const waterfrontMarkers = [];  // 親水廊道 markers（預設關閉）
     let riverPolylines = [];       // 大漢溪河道（多條 LineString）
-    let districtPolygons = [];     // 行政區多邊形
     let realtimeWaterLevels = {};  // { stationid: { waterlevel, datetime } }
     let lastUpdateTime = null;
     let updateInterval = null;
@@ -588,7 +585,6 @@
           loadPumpingStations(),
           loadWaterLevelStations(),
           loadRiver(),
-          loadDistricts(),
         ]);
         loadWaterfront();
         document.getElementById("source").textContent = "data/pumping-stations.geojson + WRA + OSM";
@@ -720,44 +716,6 @@
       });
     }
 
-    async function loadDistricts() {
-      const res = await fetch("data/districts.geojson", { cache: "no-store" });
-      if (!res.ok) throw new Error("districts.geojson HTTP " + res.status);
-      const gj = await res.json();
-      clearOverlays(districtPolygons);
-      (gj.features || []).forEach((feat) => {
-        const rings = (feat.geometry.coordinates || []);
-        if (!rings.length) return;
-        const paths = rings.map((ring) => ring.map(([lng, lat]) => ({ lat, lng })));
-        const poly = new google.maps.Polygon({
-          map,
-          paths,
-          strokeColor: COLORS.district,
-          strokeOpacity: 0.75,
-          strokeWeight: 1.5,
-          fillColor: COLORS.district,
-          fillOpacity: 0.06,
-          clickable: true,
-          zIndex: 10,
-        });
-        poly._feature = feat;
-        poly.addListener("mouseover", () => poly.setOptions({ fillOpacity: 0.18, strokeWeight: 2.2 }));
-        poly.addListener("mouseout",  () => poly.setOptions({ fillOpacity: 0.06, strokeWeight: 1.5 }));
-        poly.addListener("click", (ev) => {
-          infoWindow.setContent(`
-            <div style="min-width:200px;">
-              <h3 style="margin:0 0 6px 0;color:#1a5276;font-size:1rem;">🗾 ${feat.properties.name}</h3>
-              <div style="font-size:0.8rem;color:#666;">${feat.properties.display_name || ""}</div>
-              <div style="font-size:0.78rem;color:#888;margin-top:4px;">資料來源：${feat.properties.source}</div>
-            </div>
-          `);
-          infoWindow.setPosition(ev.latLng);
-          infoWindow.open(map);
-        });
-        districtPolygons.push(poly);
-      });
-    }
-
     // ---------- Marker 樣式 ----------
     // 配色策略：抽水站=紅、水位站=藍（水的顏色）、廢站=灰、親水廊道=綠
     const COLORS = {
@@ -766,7 +724,6 @@
       waterInactive: "#95a5a6",   // ⚪ 水位站（已廢）
       waterfront: "#27ae60",      // 🟢 親水廊道
       river: "#0b8fe6",           // 大漢溪河道線色
-      district: "#8e44ad",        // 行政區邊界
     };
 
     function pumpingStationIcon() {
@@ -934,7 +891,6 @@
       document.getElementById("layerPumping").addEventListener("change",   (e) => toggle(pumpingMarkers,    e.target.checked));
       document.getElementById("layerWL").addEventListener("change",        (e) => toggle(wlMarkers,         e.target.checked));
       document.getElementById("layerRiver").addEventListener("change",     (e) => toggle(riverPolylines,    e.target.checked));
-      document.getElementById("layerDistricts").addEventListener("change", (e) => toggle(districtPolygons,  e.target.checked));
       document.getElementById("layerWaterfront").addEventListener("change",(e) => toggle(waterfrontMarkers, e.target.checked));
 
       // 我的位置
@@ -1066,14 +1022,6 @@
         const p = (m._feature.properties) || {};
         const text = `${p.name || ""} ${p.address || ""}`.toLowerCase();
         if (text.includes(q)) hits.push({ kind: "親水廊道", name: p.name, sub: p.address || "", marker: m });
-      });
-      districtPolygons.forEach((poly) => {
-        const p = (poly._feature.properties) || {};
-        if ((p.name || "").toLowerCase().includes(q)) {
-          const b = new google.maps.LatLngBounds();
-          poly.getPaths().forEach((path) => path.forEach((pt) => b.extend(pt)));
-          hits.push({ kind: "行政區", name: p.name, sub: "", bounds: b });
-        }
       });
       outEl.style.display = "block";
       if (!hits.length) {
