@@ -999,15 +999,25 @@
       return arr.map((n, i) => String.fromCharCode(n ^ _s[i % _s.length])).join("");
     }
 
+    // 捕捉 Google Maps 自家的鑑權失敗（key 無效 / referer 不對 / billing 未開）
+    window.gm_authFailure = function () {
+      const el = document.getElementById("updateStatus");
+      const msg = "Google Maps 鑑權失敗：請確認 (1) Maps JavaScript API 已啟用 (2) 已開 billing (3) referer 限制涵蓋目前網址";
+      console.error("[GMaps]", msg);
+      if (el) el.textContent = msg;
+      hideLoadingOverlay();
+    };
+
     (function loadGoogleMapsScript() {
       const key = _resolveApiKey();
       const s = document.createElement("script");
-      s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&libraries=geometry,places&language=zh-TW&region=TW&callback=initMap`;
+      // 只載我們真的用到的 geometry library（量測用）；places 沒用到先拿掉
+      s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&libraries=geometry&language=zh-TW&region=TW&callback=initMap&v=weekly`;
       s.async = true;
       s.defer = true;
       s.onerror = () => {
         const el = document.getElementById("updateStatus");
-        if (el) el.textContent = "Google Maps 載入失敗，請檢查 API key";
+        if (el) el.textContent = "Google Maps script 無法下載，請檢查網路 / API key";
         hideLoadingOverlay();
       };
       document.head.appendChild(s);
