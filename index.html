@@ -236,6 +236,7 @@
       <label><input type="checkbox" id="layerWL"        checked> 💧 水位站</label>
       <label><input type="checkbox" id="layerRiver"     checked> 🌊 大漢溪河道</label>
       <label><input type="checkbox" id="layerDistricts" checked> 🗾 沿岸行政區</label>
+      <label><input type="checkbox" id="layerWaterfront"> 🌿 親水廊道</label>
     </div>
   </div>
 
@@ -258,11 +259,21 @@
     let map, infoWindow, currentUser = null;
     const pumpingMarkers = [];     // 抽水站 markers
     const wlMarkers = [];          // 水位站 markers
+    const waterfrontMarkers = [];  // 親水廊道 markers（預設關閉）
     let riverPolylines = [];       // 大漢溪河道（多條 LineString）
     let districtPolygons = [];     // 行政區多邊形
     let realtimeWaterLevels = {};  // { stationid: { waterlevel, datetime } }
     let lastUpdateTime = null;
     let updateInterval = null;
+
+    // 親水廊道（沿大漢溪流域 5 處親水園區 / 步道）
+    const WATERFRONT_FEATURES = [
+      { name: "大漢溪山豬湖生態親水園區", lat: 24.8876875, lng: 121.2863125, plus_code: "8QW3W833+GC", address: "桃園市大溪區" },
+      { name: "大嵙崁親水園區",          lat: 24.9044375, lng: 121.2941875, plus_code: "8QW3W8F8+VV", address: "桃園市大溪區瑞興里" },
+      { name: "中庄調整池",              lat: 24.8941875, lng: 121.2891875, plus_code: "8QW3W874+H6", address: "桃園市大溪區" },
+      { name: "中港大排親水步道",        lat: 25.0454375, lng: 121.4508125, plus_code: "8QW32FX3+86", address: "新北市新莊區自信里" },
+      { name: "大鶯綠野景觀自行車道",    lat: 24.9104375, lng: 121.2921875, plus_code: "8QW3W8HC+3X", address: "桃園市大溪區" },
+    ];
 
     const TAIWAN_BOUNDS = { north: 25.5, south: 21.5, east: 122.5, west: 119.5 };
     const DAHAN_RIVER_CENTER = { lat: 24.99, lng: 121.40 };
@@ -353,6 +364,7 @@
           loadRiver(),
           loadDistricts(),
         ]);
+        loadWaterfront();
         document.getElementById("source").textContent = "data/pumping-stations.geojson + WRA + OSM";
         updateStatus("資料載入完成", false, true);
       } catch (e) {
@@ -360,6 +372,46 @@
         updateStatus("資料載入失敗: " + e.message, true, false);
       }
       lastUpdateTime = Date.now();
+    }
+
+    function loadWaterfront() {
+      clearMarkers(waterfrontMarkers);
+      const show = document.getElementById("layerWaterfront")?.checked;
+      WATERFRONT_FEATURES.forEach((f) => {
+        const marker = new google.maps.Marker({
+          map: show ? map : null,
+          position: { lat: f.lat, lng: f.lng },
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 10,
+            fillColor: "#27ae60",
+            fillOpacity: 0.95,
+            strokeColor: "#ffffff",
+            strokeWeight: 3,
+          },
+          title: f.name,
+          zIndex: 40,
+        });
+        marker._feature = { properties: f, geometry: { coordinates: [f.lng, f.lat] } };
+        marker._kind = "waterfront";
+        marker.addListener("click", () => {
+          infoWindow.setContent(`
+            <div style="min-width:240px;">
+              <h3 style="margin:0 0 8px 0;color:#1e8449;font-size:1.05rem;">🌿 ${f.name}</h3>
+              <div style="margin-bottom:6px;"><strong>地址:</strong> ${f.address}</div>
+              <div style="margin-bottom:6px;"><strong>Plus Code:</strong> <code>${f.plus_code}</code></div>
+              <hr style="margin:8px 0;border:none;border-top:1px solid #eee;">
+              <div style="font-size:0.78rem;color:#666;">
+                <div>座標: ${f.lat.toFixed(5)}, ${f.lng.toFixed(5)}</div>
+                <div>類型: 親水園區／水利景點</div>
+              </div>
+            </div>
+          `);
+          infoWindow.open({ map, anchor: marker });
+        });
+        waterfrontMarkers.push(marker);
+      });
+      console.log(`[親水廊道] 已載入 ${waterfrontMarkers.length} 處`);
     }
 
     async function loadPumpingStations() {
@@ -643,10 +695,11 @@
 
       // 圖層 toggle
       const toggle = (els, checked) => els.forEach((m) => m.setMap(checked ? map : null));
-      document.getElementById("layerPumping").addEventListener("change", (e) => toggle(pumpingMarkers, e.target.checked));
-      document.getElementById("layerWL").addEventListener("change",       (e) => toggle(wlMarkers,        e.target.checked));
-      document.getElementById("layerRiver").addEventListener("change",    (e) => toggle(riverPolylines,   e.target.checked));
-      document.getElementById("layerDistricts").addEventListener("change",(e) => toggle(districtPolygons, e.target.checked));
+      document.getElementById("layerPumping").addEventListener("change",   (e) => toggle(pumpingMarkers,    e.target.checked));
+      document.getElementById("layerWL").addEventListener("change",        (e) => toggle(wlMarkers,         e.target.checked));
+      document.getElementById("layerRiver").addEventListener("change",     (e) => toggle(riverPolylines,    e.target.checked));
+      document.getElementById("layerDistricts").addEventListener("change", (e) => toggle(districtPolygons,  e.target.checked));
+      document.getElementById("layerWaterfront").addEventListener("change",(e) => toggle(waterfrontMarkers, e.target.checked));
 
       // 我的位置
       let locateMarker = null, locateCircle = null;
@@ -763,6 +816,11 @@
         const p = (m._feature.properties) || {};
         const text = `${p.name || ""} ${p.address || ""} ${p.stationid || ""}`.toLowerCase();
         if (text.includes(q)) hits.push({ kind: "水位站", name: p.name, sub: p.address || "", marker: m });
+      });
+      waterfrontMarkers.forEach((m) => {
+        const p = (m._feature.properties) || {};
+        const text = `${p.name || ""} ${p.address || ""}`.toLowerCase();
+        if (text.includes(q)) hits.push({ kind: "親水廊道", name: p.name, sub: p.address || "", marker: m });
       });
       districtPolygons.forEach((poly) => {
         const p = (poly._feature.properties) || {};

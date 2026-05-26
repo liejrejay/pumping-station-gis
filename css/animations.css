@@ -120,9 +120,29 @@
     opacity: 1;
 }
 
-/* 抽水站標記動畫 */
-.pump-marker {
+/* Leaflet divIcon 外框：不可加 transform 動畫，否則會蓋掉 Leaflet 的定位 */
+.leaflet-div-icon.pump-marker,
+.leaflet-div-icon.waterfront-marker {
+    background: transparent !important;
+    border: none !important;
+}
+
+/* 標記圓點（動畫套在內層，避免位移錯亂） */
+.marker-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
     animation: markerBounce 0.6s ease-out;
+}
+
+.marker-dot--waterfront {
+    width: 22px;
+    height: 22px;
+    background: #27ae60;
+    border-width: 3px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
 }
 
 @keyframes markerBounce {
