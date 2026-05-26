@@ -469,6 +469,8 @@
 
   <script src="js/userManager.js"></script>
   <script src="js/mobileOptimization.js"></script>
+  <!-- 本機 API key（js/config.local.js 不會被 commit；若不存在會 404 但不影響其他邏輯） -->
+  <script src="js/config.local.js" onerror="console.warn('[config] js/config.local.js 不存在，請依 js/config.local.example.js 建立')"></script>
 
   <script>
     // ============================================================
@@ -1185,19 +1187,17 @@
 
     // ============================================================
     // Google Maps script loader
-    //   - 預設讀 localStorage('GOOGLE_MAPS_API_KEY')
-    //   - 沒有就回退到內嵌的混淆 key（XOR + 拆段，僅為避免明碼暴露在 repo）
-    //   - 真正的安全請到 Cloud Console 為這把 key 設 referer 限制
+    //   key 來源優先序：
+    //     1. window.GOOGLE_MAPS_API_KEY  （由 js/config.local.js 設，未提交至 repo）
+    //     2. localStorage('GOOGLE_MAPS_API_KEY')
+    //   兩者都沒有 → 顯示提示，不載入地圖
     // ============================================================
     function _resolveApiKey() {
+      const fromFile = (typeof window !== "undefined") ? window.GOOGLE_MAPS_API_KEY : null;
+      if (fromFile && fromFile !== "YOUR_GOOGLE_MAPS_API_KEY") return fromFile;
       const fromStorage = localStorage.getItem("GOOGLE_MAPS_API_KEY");
       if (fromStorage && fromStorage !== "YOUR_GOOGLE_MAPS_API_KEY") return fromStorage;
-      // 拆 2 段的 XOR 字節，後半段為反向；不直接搜尋得到 key 字串
-      const _s = [100, 97, 104, 97, 110, 82, 105, 118, 101, 114, 71, 73, 83, 50, 48, 50, 54];
-      const _a = [37, 40, 18, 0, 61, 43, 40, 33, 19, 21, 40, 2, 27, 11, 82, 5, 69, 2, 40, 55];
-      const _b = [5, 39, 81, 48, 19, 2, 67, 116, 31, 52, 44, 51, 67, 48, 66, 46, 31, 23, 87];
-      const arr = _a.concat(_b.slice().reverse());
-      return arr.map((n, i) => String.fromCharCode(n ^ _s[i % _s.length])).join("");
+      return null;
     }
 
     // 捕捉 Google Maps 自家的鑑權失敗（key 無效 / referer 不對 / billing 未開）
@@ -1211,8 +1211,15 @@
 
     (function loadGoogleMapsScript() {
       const key = _resolveApiKey();
+      if (!key) {
+        const el = document.getElementById("updateStatus");
+        const msg = "未設定 Google Maps API key：請建立 js/config.local.js（複製自 js/config.local.example.js）後填入 key";
+        console.error("[GMaps]", msg);
+        if (el) el.textContent = msg;
+        hideLoadingOverlay();
+        return;
+      }
       const s = document.createElement("script");
-      // 只載我們真的用到的 geometry library（量測用）；places 沒用到先拿掉
       s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&libraries=geometry&language=zh-TW&region=TW&callback=initMap&v=weekly`;
       s.async = true;
       s.defer = true;

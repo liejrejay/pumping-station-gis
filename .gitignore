@@ -1,3 +1,6 @@
 .venv/
 __pycache__/
 .DS_Store
+
+# 本機 API key / 秘密設定（請勿提交）
+js/config.local.js
