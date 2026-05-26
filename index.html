@@ -143,6 +143,54 @@
       display: none;
     }
 
+    /* ----------- legend ----------- */
+    .legend {
+      position: absolute;
+      right: 12px;
+      bottom: 28px;
+      z-index: 1000;
+      background: rgba(255, 255, 255, 0.96);
+      border-radius: 8px;
+      padding: 10px 12px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+      font-size: 12px;
+      min-width: 150px;
+    }
+    .legend .legend-title {
+      font-weight: 600;
+      color: #1a5276;
+      margin-bottom: 6px;
+      padding-bottom: 5px;
+      border-bottom: 1px solid #e5e5e5;
+    }
+    .legend .legend-row {
+      display: flex; align-items: center; gap: 8px; margin: 4px 0; color: #333;
+    }
+    .legend .swatch {
+      width: 14px; height: 14px; border-radius: 50%;
+      border: 2px solid #fff;
+      box-shadow: 0 0 0 1px rgba(0,0,0,.15);
+      flex-shrink: 0;
+    }
+    .legend .swatch-line {
+      width: 18px; height: 4px; border-radius: 2px; flex-shrink: 0;
+    }
+    .legend .swatch-poly {
+      width: 14px; height: 12px;
+      border: 1.5px solid var(--c);
+      background: var(--c);
+      background-clip: padding-box;
+      opacity: 1;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .legend .swatch-poly::before {
+      content: ""; position: absolute; inset: 0; background: var(--c); opacity: 0.15;
+    }
+    @media screen and (max-width: 767px) {
+      .legend { right: 8px; bottom: 36px; font-size: 11px; min-width: 130px; }
+    }
+
     .gm-style .gm-style-iw-c { padding: 8px 10px !important; }
     .gm-style .gm-style-iw-d { overflow: auto !important; }
 
@@ -242,6 +290,17 @@
 
   <div class="coord-box" id="coordBox">緯度 — / 經度 —</div>
   <div class="measure-readout" id="measureReadout"></div>
+
+  <!-- 圖例 -->
+  <div class="legend" id="legend">
+    <div class="legend-title">圖例</div>
+    <div class="legend-row"><span class="swatch" style="background:#e74c3c"></span>抽水站</div>
+    <div class="legend-row"><span class="swatch" style="background:#2980b9"></span>水位站（現存）</div>
+    <div class="legend-row"><span class="swatch" style="background:#95a5a6"></span>水位站（已廢）</div>
+    <div class="legend-row"><span class="swatch" style="background:#27ae60"></span>親水廊道</div>
+    <div class="legend-row"><span class="swatch-line" style="background:#0b8fe6"></span>大漢溪河道</div>
+    <div class="legend-row"><span class="swatch-poly" style="--c:#8e44ad"></span>沿岸行政區</div>
+  </div>
 
   <script src="js/userManager.js"></script>
   <script src="js/mobileOptimization.js"></script>
@@ -383,8 +442,8 @@
           position: { lat: f.lat, lng: f.lng },
           icon: {
             path: google.maps.SymbolPath.CIRCLE,
-            scale: 10,
-            fillColor: "#27ae60",
+            scale: 9,
+            fillColor: COLORS.waterfront,
             fillOpacity: 0.95,
             strokeColor: "#ffffff",
             strokeWeight: 3,
@@ -484,7 +543,7 @@
         const pl = new google.maps.Polyline({
           map,
           path: coords,
-          strokeColor: "#0b8fe6",
+          strokeColor: COLORS.river,
           strokeOpacity: 0.85,
           strokeWeight: 4,
           clickable: false,
@@ -506,10 +565,10 @@
         const poly = new google.maps.Polygon({
           map,
           paths,
-          strokeColor: "#1a5276",
-          strokeOpacity: 0.7,
+          strokeColor: COLORS.district,
+          strokeOpacity: 0.75,
           strokeWeight: 1.5,
-          fillColor: "#1a5276",
+          fillColor: COLORS.district,
           fillOpacity: 0.06,
           clickable: true,
           zIndex: 10,
@@ -533,11 +592,21 @@
     }
 
     // ---------- Marker 樣式 ----------
+    // 配色策略：抽水站=紅、水位站=藍（水的顏色）、廢站=灰、親水廊道=綠
+    const COLORS = {
+      pumping: "#e74c3c",         // 🔴 抽水站
+      waterActive: "#2980b9",     // 🔵 水位站（現存）
+      waterInactive: "#95a5a6",   // ⚪ 水位站（已廢）
+      waterfront: "#27ae60",      // 🟢 親水廊道
+      river: "#0b8fe6",           // 大漢溪河道線色
+      district: "#8e44ad",        // 行政區邊界
+    };
+
     function pumpingStationIcon() {
       return {
         path: google.maps.SymbolPath.CIRCLE,
         scale: 8,
-        fillColor: "#e74c3c",
+        fillColor: COLORS.pumping,
         fillOpacity: 0.95,
         strokeColor: "#ffffff",
         strokeWeight: 2,
@@ -545,11 +614,11 @@
     }
     function waterStationIcon(active) {
       return {
-        path: "M -6 0 a 6 6 0 1 0 12 0 a 6 6 0 1 0 -12 0",
-        scale: 1,
-        fillColor: active ? "#27ae60" : "#0b5394",
-        fillOpacity: 0.9,
-        strokeColor: "#fff",
+        path: google.maps.SymbolPath.CIRCLE,
+        scale: 7,
+        fillColor: active ? COLORS.waterActive : COLORS.waterInactive,
+        fillOpacity: 0.95,
+        strokeColor: "#ffffff",
         strokeWeight: 2,
       };
     }
