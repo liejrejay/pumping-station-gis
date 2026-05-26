@@ -526,14 +526,29 @@
     // ============================================================
 
     function initMapOriginal() {
-      if (!checkAuth()) return;
+      console.log("=== initMapOriginal 開始執行 ===");
+      console.log("checkAuth 狀態:", checkAuth());
+      
+      if (!checkAuth()) {
+        console.log("❌ 使用者未通過驗證，停止地圖初始化");
+        return;
+      }
 
       try {
+        console.log("檢查 Google Maps API 可用性...");
+        console.log("typeof google:", typeof google);
+        console.log("google.maps:", typeof google?.maps);
+        
         if (typeof google === 'undefined' || !google.maps) {
           throw new Error("Google Maps API 未載入");
         }
         
-        console.log("[GMaps] 初始化 Google Maps");
+        console.log("[GMaps] ✅ Google Maps API 可用，開始初始化地圖");
+        console.log("[GMaps] 地圖容器 ID: map");
+        
+        const mapElement = document.getElementById("map");
+        console.log("[GMaps] 地圖容器元素:", mapElement);
+        console.log("[GMaps] 容器尺寸:", mapElement?.offsetWidth, "x", mapElement?.offsetHeight);
         map = new google.maps.Map(document.getElementById("map"), {
         center: DAHAN_RIVER_CENTER,
         zoom: 12,
@@ -1258,17 +1273,35 @@
     };
 
     (function loadGoogleMapsScript() {
+      // 即時診斷資訊
+      console.log("=== Google Maps 載入診斷開始 ===");
+      console.log("當前時間:", new Date().toLocaleString());
+      console.log("網域:", window.location.hostname);
+      console.log("協定:", window.location.protocol);
+      console.log("完整 URL:", window.location.href);
+      
       const key = _resolveApiKey();
       if (!key) {
         const el = document.getElementById("updateStatus");
-        const msg = "API Key 載入失敗，請重新整理頁面";
+        const msg = "❌ API Key 載入失敗";
         console.error("[GMaps]", msg);
-        if (el) el.textContent = msg;
+        console.error("請檢查 js/config.encrypted.js 檔案");
+        if (el) {
+          el.innerHTML = `
+            ${msg}<br>
+            <small style="color: #e74c3c;">請按 F12 查看 Console 了解詳情</small><br>
+            <button onclick="window.open('diagnostic.html', '_blank')" style="margin-top:10px;padding:8px 16px;background:#007bff;color:white;border:none;border-radius:4px;cursor:pointer;">
+              開啟診斷工具
+            </button>
+          `;
+        }
         hideLoadingOverlay();
         return;
       }
       
-      console.log("[GMaps] 載入 Google Maps API, Key:", key.substring(0, 20) + "...");
+      console.log("[GMaps] ✅ API Key 已取得:", key.substring(0, 20) + "...");
+      console.log("[GMaps] Key 長度:", key.length);
+      console.log("[GMaps] 開始載入 Google Maps JavaScript API...");
       
         // 設定載入超時檢測
         const timeoutId = setTimeout(() => {
@@ -1286,11 +1319,14 @@
           // 不自動重新載入，顯示錯誤資訊
         }, 10000); // 10秒超時
       
-      // 載入成功時清除超時
-      window.initMap = function() {
-        clearTimeout(timeoutId);
-        initMapOriginal();
-      };
+        // 載入成功時清除超時
+        window.initMap = function() {
+          clearTimeout(timeoutId);
+          console.log("[GMaps] ✅ Google Maps API 腳本載入成功");
+          console.log("[GMaps] google 物件:", typeof google);
+          console.log("[GMaps] google.maps 物件:", typeof google?.maps);
+          initMapOriginal();
+        };
       
       const s = document.createElement("script");
       s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&libraries=geometry&language=zh-TW&region=TW&callback=initMap&v=weekly`;
