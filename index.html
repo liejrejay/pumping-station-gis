@@ -469,11 +469,12 @@
 
   <script src="js/userManager.js"></script>
   <script src="js/mobileOptimization.js"></script>
-  <!-- 載入加密的 API Key 配置 (自動提供給組員) -->
-  <script src="js/config.encrypted.js"></script>
-  
-  <!-- 本機開發 API key (可選，會覆蓋加密版本) -->
-  <script src="js/config.local.js" onerror="console.warn('[config] 使用預設加密 API Key')"></script>
+  <!-- 內嵌 API Key 配置 -->
+  <script>
+    // 直接設定 Google Maps API Key
+    window.GOOGLE_MAPS_API_KEY = 'AIzaSyAWvgoKH9b7sfI_6yMG4U1teg-Dq4wQ9Fk';
+    console.log('[Config] ✅ API Key 已載入');
+  </script>
 
   <script>
     // ============================================================
@@ -1129,18 +1130,31 @@
     // 用戶 / 權限
     // ============================================================
     function checkAuth() {
+      // 簡化版本：直接允許訪問，不需要登入
       const userData = localStorage.getItem("currentUser");
-      if (!userData) { window.location.href = "login.html"; return false; }
-      try {
-        currentUser = JSON.parse(userData);
-        updateUserInterface();
-        return true;
-      } catch (err) {
-        console.error("用戶資料解析失敗:", err);
-        localStorage.removeItem("currentUser");
-        window.location.href = "login.html";
-        return false;
+      if (userData) {
+        try {
+          currentUser = JSON.parse(userData);
+          updateUserInterface();
+        } catch (err) {
+          console.log("用戶資料解析失敗，使用預設使用者");
+          // 設定預設使用者
+          currentUser = {
+            username: "guest",
+            role: "viewer",
+            displayName: "訪客使用者"
+          };
+        }
+      } else {
+        // 設定預設使用者
+        currentUser = {
+          username: "guest",
+          role: "viewer", 
+          displayName: "訪客使用者"
+        };
       }
+      updateUserInterface();
+      return true;
     }
     function updateUserInterface() {
       if (!currentUser) return;
@@ -1224,21 +1238,22 @@
     //   兩者都沒有 → 顯示提示，不載入地圖
     // ============================================================
     function _resolveApiKey() {
-      // 1. 從本地配置檔案 (開發環境)
-      const fromFile = (typeof window !== "undefined") ? window.GOOGLE_MAPS_API_KEY : null;
-      if (fromFile && fromFile !== "YOUR_GOOGLE_MAPS_API_KEY") return fromFile;
+      // 直接返回內嵌的 API Key
+      if (window.GOOGLE_MAPS_API_KEY) {
+        return window.GOOGLE_MAPS_API_KEY;
+      }
       
-      // 2. 從 localStorage (用戶手動設定)
+      // 備用：從 localStorage 
       const fromStorage = localStorage.getItem("GOOGLE_MAPS_API_KEY");
-      if (fromStorage && fromStorage !== "YOUR_GOOGLE_MAPS_API_KEY") return fromStorage;
+      if (fromStorage) return fromStorage;
       
-      // 3. 從 URL 參數 (臨時使用)
+      // 最後備用：從 URL 參數
       const urlParams = new URLSearchParams(window.location.search);
       const fromUrl = urlParams.get('api_key');
       if (fromUrl) return fromUrl;
       
-      // 4. 提示用戶輸入
-      return promptForApiKey();
+      console.error("❌ 找不到 Google Maps API Key");
+      return null;
     }
 
     function promptForApiKey() {
