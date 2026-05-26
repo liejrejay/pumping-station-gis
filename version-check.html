@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🔍 版本檢查工具</title>
+  <style>
+    body { 
+      font-family: "Microsoft JhengHei", Arial, sans-serif; 
+      margin: 0; 
+      padding: 20px; 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+    .container { 
+      max-width: 800px; 
+      margin: 0 auto; 
+      background: white; 
+      padding: 30px; 
+      border-radius: 15px; 
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+    .status { 
+      padding: 15px; 
+      margin: 15px 0; 
+      border-radius: 10px; 
+      font-weight: 500;
+    }
+    .success { background: #d4edda; color: #155724; }
+    .error { background: #f8d7da; color: #721c24; }
+    .info { background: #d1ecf1; color: #0c5460; }
+    .warning { background: #fff3cd; color: #856404; }
+    
+    .btn { 
+      padding: 12px 24px; 
+      margin: 10px 5px;
+      background: #007bff; 
+      color: white; 
+      border: none; 
+      border-radius: 8px; 
+      cursor: pointer; 
+      font-size: 16px;
+    }
+    .btn:hover { background: #0056b3; }
+    
+    pre { 
+      background: #2d3748; 
+      color: #e2e8f0; 
+      padding: 15px; 
+      border-radius: 8px; 
+      overflow-x: auto;
+    }
+    
+    .version-info {
+      background: #f8f9fa;
+      border: 2px solid #dee2e6;
+      padding: 20px;
+      border-radius: 10px;
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔍 GIS 系統版本檢查</h1>
+    
+    <div class="info status">
+      這個工具幫你檢查當前載入的版本，確認是否為最新修復版本。
+    </div>
+    
+    <div class="version-info">
+      <h3>📅 最新版本資訊</h3>
+      <p><strong>版本時間：</strong> 2026年5月26日 18:08</p>
+      <p><strong>版本標識：</strong> v1.2.0-fixed</p>
+      <p><strong>修復內容：</strong></p>
+      <ul>
+        <li>✅ 移除登入依賴</li>
+        <li>✅ 修復 initMap 錯誤</li>
+        <li>✅ 內嵌 API Key</li>
+        <li>✅ 移除 404 檔案載入</li>
+      </ul>
+    </div>
+    
+    <h2>🧪 版本檢測</h2>
+    <button class="btn" onclick="checkMainIndex()">檢查主頁面版本</button>
+    <button class="btn" onclick="checkCacheStatus()">檢查快取狀態</button>
+    <button class="btn" onclick="forceRefresh()">強制刷新</button>
+    
+    <h2>📊 檢測結果</h2>
+    <pre id="results">點擊上方按鈕開始檢測...\n</pre>
+    
+    <h2>🔧 快速解決方案</h2>
+    <div class="warning status">
+      <h4>如果檢測到舊版本：</h4>
+      <ol>
+        <li><strong>清除快取：</strong> 按 Ctrl+Shift+R 強制重新整理</li>
+        <li><strong>無痕模式：</strong> 按 Ctrl+Shift+N 開啟無痕視窗測試</li>
+        <li><strong>等待部署：</strong> GitHub Pages 可能需要 10-15 分鐘完成部署</li>
+        <li><strong>使用備用：</strong> 測試緊急版本確認 API 正常</li>
+      </ol>
+    </div>
+    
+    <h2>🚀 測試連結</h2>
+    <div style="text-align: center; margin: 20px 0;">
+      <button class="btn" onclick="openMainSite()">🗺️ 主頁面</button>
+      <button class="btn" onclick="openEmergency()">🚨 緊急版本</button>
+      <button class="btn" onclick="openDiagnostic()">🔍 診斷工具</button>
+    </div>
+  </div>
+
+  <script>
+    let output = '';
+    
+    function addResult(message) {
+      const timestamp = new Date().toLocaleTimeString();
+      output += `[${timestamp}] ${message}\n`;
+      document.getElementById('results').textContent = output;
+    }
+    
+    async function checkMainIndex() {
+      addResult('🔍 正在檢查主頁面版本...');
+      
+      try {
+        const response = await fetch('index.html?t=' + Date.now(), { 
+          cache: 'no-cache',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache'
+          }
+        });
+        
+        const content = await response.text();
+        
+        // 檢查版本標識
+        if (content.includes('window.GOOGLE_MAPS_API_KEY = \'AIzaSyAWvgoKH9b7sfI_6yMG4U1teg-Dq4wQ9Fk\'')) {
+          addResult('✅ 檢測到最新版本！API Key 已內嵌');
+        } else {
+          addResult('❌ 檢測到舊版本，API Key 未內嵌');
+        }
+        
+        if (content.includes('// initMap 將在載入 Google Maps 時動態定義')) {
+          addResult('✅ initMap 錯誤已修復');
+        } else {
+          addResult('❌ initMap 錯誤未修復');
+        }
+        
+        if (content.includes('config.local.js')) {
+          addResult('⚠️ 仍包含 config.local.js 載入（可能造成 404）');
+        } else {
+          addResult('✅ 已移除 config.local.js 依賴');
+        }
+        
+        // 檢查檔案大小
+        addResult(`📄 檔案大小: ${(content.length / 1024).toFixed(1)} KB`);
+        addResult(`🕐 Last-Modified: ${response.headers.get('last-modified') || '未知'}`);
+        
+      } catch (error) {
+        addResult('❌ 檢查失敗: ' + error.message);
+      }
+    }
+    
+    async function checkCacheStatus() {
+      addResult('🗄️ 檢查快取狀態...');
+      
+      // 檢查瀏覽器資訊
+      addResult(`🌐 瀏覽器: ${navigator.userAgent.substring(0, 50)}...`);
+      addResult(`📍 當前網域: ${window.location.hostname}`);
+      addResult(`🔗 當前協定: ${window.location.protocol}`);
+      
+      // 檢查快取 API
+      if ('caches' in window) {
+        try {
+          const cacheNames = await caches.keys();
+          addResult(`💾 快取數量: ${cacheNames.length}`);
+          if (cacheNames.length > 0) {
+            addResult('⚠️ 發現快取，可能影響載入新版本');
+          }
+        } catch (e) {
+          addResult('ℹ️ 無法檢查快取狀態');
+        }
+      }
+      
+      // 檢查 localStorage
+      const keys = Object.keys(localStorage);
+      addResult(`🗃️ localStorage 項目: ${keys.length}`);
+    }
+    
+    function forceRefresh() {
+      addResult('🔄 執行強制重新整理...');
+      setTimeout(() => {
+        window.location.reload(true);
+      }, 1000);
+    }
+    
+    function openMainSite() {
+      window.open('index.html?t=' + Date.now(), '_blank');
+    }
+    
+    function openEmergency() {
+      window.open('index-emergency.html?t=' + Date.now(), '_blank');
+    }
+    
+    function openDiagnostic() {
+      window.open('test-no-api.html?t=' + Date.now(), '_blank');
+    }
+    
+    // 自動執行初始檢查
+    window.addEventListener('load', function() {
+      addResult('🏁 版本檢查工具已載入');
+      addResult('📅 檢查時間: ' + new Date().toLocaleString());
+      setTimeout(checkMainIndex, 1000);
+    });
+  </script>
+</body>
+</html>
