@@ -4,6 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
     <title>用戶管理面板</title>
+    <!-- 早期權限檢查：在頁面 render 前就攔截，避免內容外洩 -->
+    <script>
+      (function () {
+        var allowed = false;
+        try {
+          var u = JSON.parse(localStorage.getItem('currentUser') || '{}');
+          allowed = !!(u && Array.isArray(u.permissions) && u.permissions.includes('manage'));
+        } catch (e) { allowed = false; }
+        if (!allowed) {
+          // 直接替換頁面內容並轉向，避免任何結構外露
+          document.documentElement.style.display = 'none';
+          alert('您沒有管理面板存取權限');
+          location.replace('index.html');
+        }
+      })();
+    </script>
     <link rel="stylesheet" href="css/responsive.css">
     <style>
         * {
