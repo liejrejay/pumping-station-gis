@@ -1,74 +1,51 @@
 name: Deploy to GitHub Pages
 
+# 推送到 main 時建置 dist，並部署到 gh-pages 分支（內含 runtime-config.js）
+# Pages 設定請選：Deploy from a branch → gh-pages → / (root)
+
 on:
   push:
     branches: [ main, master ]
-  workflow_dispatch:  # 設好 Secret 後可手動重新部署
+  workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 concurrency:
-  group: "pages"
-  cancel-in-progress: false
+  group: pages-deploy
+  cancel-in-progress: true
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-      
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        
-    - name: Install dependencies
-      run: |
-        if [ -f package.json ]; then
-          npm install
-        fi
-        
-    - name: Create production build
-      env:
-        GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
-      run: |
-        mkdir -p dist/js
-        
-        cp *.html dist/ 2>/dev/null || true
-        cp -r css dist/ 2>/dev/null || true
-        cp -r js dist/ 2>/dev/null || true
-        cp -r data dist/ 2>/dev/null || true
-        
-        # 從 GitHub Secret 注入 runtime-config（不入 git，公開站地圖必備）
-        if [ -z "$GOOGLE_MAPS_API_KEY" ]; then
-          echo "::error::未設定 GOOGLE_MAPS_API_KEY。請到 Settings → Secrets and variables → Actions 新增後再部署。"
-          exit 1
-        fi
-        node -e "const k=process.env.GOOGLE_MAPS_API_KEY; require('fs').writeFileSync('dist/js/runtime-config.js', 'window.GOOGLE_MAPS_API_KEY = '+JSON.stringify(k)+';\\n');"
-        echo "✅ runtime-config.js 已產生（長度 ${#GOOGLE_MAPS_API_KEY}）"
-        
-        echo "" > dist/.nojekyll
-        echo "/* /index.html 200" > dist/_redirects
-
-    - name: Setup Pages
-      uses: actions/configure-pages@v3
-      
-    - name: Upload artifact
-      uses: actions/upload-pages-artifact@v2
-      with:
-        path: './dist'
-
   deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
-    needs: build
     steps:
-    - name: Deploy to GitHub Pages
-      id: deployment
-      uses: actions/deploy-pages@v2
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create production build
+        env:
+          GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
+        run: |
+          mkdir -p dist/js
+
+          cp *.html dist/ 2>/dev/null || true
+          cp -r css dist/ 2>/dev/null || true
+          cp -r js dist/ 2>/dev/null || true
+          cp -r data dist/ 2>/dev/null || true
+
+          if [ -z "$GOOGLE_MAPS_API_KEY" ]; then
+            echo "::error::未設定 GOOGLE_MAPS_API_KEY。請到 Settings → Secrets and variables → Actions 新增後再部署。"
+            exit 1
+          fi
+          node -e "const k=process.env.GOOGLE_MAPS_API_KEY; require('fs').writeFileSync('dist/js/runtime-config.js', 'window.GOOGLE_MAPS_API_KEY = '+JSON.stringify(k)+';\\n');"
+          echo "✅ runtime-config.js 已產生"
+
+          echo "" > dist/.nojekyll
+
+      - name: Deploy to gh-pages branch
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: dist
+          branch: gh-pages
+          clean: true
+          single-commit: true
