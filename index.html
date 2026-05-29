@@ -107,8 +107,11 @@
     }
     .stat-card .label { font-size: 0.68rem; color: #6c7a89; }
     .stat-card .value { font-size: 1.15rem; font-weight: 700; color: #1a5276; margin-top: 1px; }
-    .stat-card.alt { border-left-color: #16a085; }
-    .stat-card.alt .value { color: #16a085; font-size: 0.72rem; line-height: 1.2; padding-top: 5px; }
+    .stat-card .stat-sub { font-size: 0.65rem; color: #6c7a89; margin-top: 3px; line-height: 1.25; }
+    .stat-card.wl { border-left-color: #2980b9; }
+    .stat-card.wl .value { color: #2471a3; }
+    .stat-card.waterfront { border-left-color: #27ae60; }
+    .stat-card.waterfront .value { color: #1e8449; }
 
     .status-row {
       display: flex; align-items: center; gap: 8px;
@@ -372,11 +375,17 @@
         <div class="stat-grid">
           <div class="stat-card">
             <div class="label">🏢 抽水站</div>
-            <div class="value"><span id="count">—</span></div>
+            <div class="value" id="countPumping">—</div>
           </div>
-          <div class="stat-card alt">
-            <div class="label">📦 資料來源</div>
-            <div class="value" id="source">data/*.geojson</div>
+          <div class="stat-card wl">
+            <div class="label">💧 水位站</div>
+            <div class="value" id="countWl">—</div>
+            <div class="stat-sub" id="countWlDetail">現存 — · 已廢 —</div>
+          </div>
+          <div class="stat-card waterfront" style="grid-column: 1 / -1;">
+            <div class="label">🌿 親水廊道</div>
+            <div class="value" id="countWaterfront">—</div>
+            <div class="stat-sub" id="countWaterfrontDetail">園區 — · 河濱道 — 段</div>
           </div>
         </div>
         <div class="status-row">
@@ -619,7 +628,6 @@
           loadRiver(),
         ]);
         await loadWaterfront();
-        document.getElementById("source").textContent = "data/*.geojson + WRA + OSM";
         updateStatus("資料載入完成", false, true);
       } catch (e) {
         console.error(e);
@@ -713,7 +721,17 @@
         console.warn("[親水廊道] 線段 GeoJSON 載入失敗:", e.message);
       }
 
-      console.log(`[親水廊道] 園區 ${WATERFRONT_FEATURES.length} 處、河濱道線段 ${pathCount} 段`);
+      let pathKm = 0;
+      waterfrontPolylines.forEach((pl) => {
+        const lm = pl._feature?.properties?.length_m;
+        if (lm) pathKm += lm;
+      });
+      const parks = WATERFRONT_FEATURES.length;
+      document.getElementById("countWaterfront").textContent = `${parks} 園區 · ${pathCount} 段`;
+      document.getElementById("countWaterfrontDetail").textContent =
+        pathKm > 0 ? `河濱自行車道約 ${(pathKm / 1000).toFixed(1)} 公里` : "河濱道線段";
+
+      console.log(`[親水廊道] 園區 ${parks} 處、河濱道線段 ${pathCount} 段`);
     }
 
     async function loadPumpingStations() {
@@ -747,7 +765,7 @@
         bounds.extend({ lat, lng });
       });
       if (feats.length) map.fitBounds(bounds);
-      document.getElementById("count").textContent = feats.length;
+      document.getElementById("countPumping").textContent = feats.length;
     }
 
     async function loadWaterLevelStations() {
@@ -775,6 +793,10 @@
         });
         (active ? wlActiveMarkers : wlInactiveMarkers).push(marker);
       });
+      const wlActive = wlActiveMarkers.length;
+      const wlInactive = wlInactiveMarkers.length;
+      document.getElementById("countWl").textContent = wlActive + wlInactive;
+      document.getElementById("countWlDetail").textContent = `現存 ${wlActive} · 已廢 ${wlInactive}`;
     }
 
     async function loadRiver() {
