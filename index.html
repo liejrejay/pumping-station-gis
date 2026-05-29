@@ -1151,7 +1151,7 @@
     }
     function updateUserInterface() {
       if (!currentUser) return;
-      document.getElementById("userName").textContent = currentUser.name;
+      document.getElementById("userName").textContent = currentUser.name || currentUser.displayName || "訪客";
       document.getElementById("userRole").textContent = getRoleText(currentUser.role);
       if (currentUser.permissions && currentUser.permissions.includes("manage")) {
         document.getElementById("adminControls").style.display = "block";
@@ -1247,7 +1247,7 @@
     }
 
     async function resolveApiKey() {
-      // 本機：Express 從 process.env 讀 .env
+      // 1) 本機 node server：/api/config（.env → process.env）
       try {
         const res = await fetch("/api/config", { cache: "no-store" });
         if (res.ok) {
@@ -1258,19 +1258,29 @@
           }
         }
       } catch (e) {
-        console.warn("[Config] /api/config 無法連線（請用 node server.js 開啟）", e.message);
+        console.warn("[Config] /api/config 無法連線:", e.message);
       }
 
-      // GitHub Pages：部署時注入的 runtime-config.js
+      // 2) 本機備援：js/runtime-config.js（npm start 會從 .env 產生）
+      //    或 GitHub Pages 部署時由 Secret 產生
       if (!window.GOOGLE_MAPS_API_KEY) {
         try {
           await loadScriptOnce("js/runtime-config.js");
-        } catch (_) { /* 檔案不存在 */ }
+        } catch (_) { /* 404：公開站可能尚未設定 GitHub Secret */ }
       }
-      if (window.GOOGLE_MAPS_API_KEY && window.GOOGLE_MAPS_API_KEY !== "YOUR_GOOGLE_MAPS_API_KEY_HERE") {
+      if (window.GOOGLE_MAPS_API_KEY && window.GOOGLE_MAPS_API_KEY.length > 10) {
         console.log("[Config] ✅ 已從 js/runtime-config.js 取得 key");
         return window.GOOGLE_MAPS_API_KEY;
       }
+
+      // 3) 本機備援：/api/config.js（與 server 相同來源）
+      try {
+        await loadScriptOnce("/api/config.js");
+        if (window.GOOGLE_MAPS_API_KEY && window.GOOGLE_MAPS_API_KEY.length > 10) {
+          console.log("[Config] ✅ 已從 /api/config.js 取得 key");
+          return window.GOOGLE_MAPS_API_KEY;
+        }
+      } catch (_) {}
 
       const fromStorage = localStorage.getItem("GOOGLE_MAPS_API_KEY");
       if (fromStorage) return fromStorage;
@@ -1306,15 +1316,20 @@
       const key = await resolveApiKey();
       if (!key) {
         const el = document.getElementById("updateStatus");
-        const msg = "未設定 Google Maps API key";
+        const onGithub = /github\.io$/i.test(window.location.hostname);
+        const msg = onGithub
+          ? "公開網站尚未注入 API key（請設定 GitHub Secret）"
+          : "未設定 Google Maps API key";
         console.error("[GMaps]", msg);
         if (el) {
-          el.innerHTML = `
-            ${msg}<br>
-            <small style="color:#e74c3c;">本機：建立 .env（見 .env.example）後執行 <code>node server.js</code></small><br>
-            <small>不要用 file:// 直接開 HTML</small><br>
-            <small>GitHub Pages：在 repo Secrets 設定 <code>GOOGLE_MAPS_API_KEY</code></small>
-          `;
+          el.innerHTML = onGithub
+            ? `${msg}<br>
+               <small style="color:#e74c3c;">GitHub → Settings → Secrets → Actions</small><br>
+               <small>新增 <code>GOOGLE_MAPS_API_KEY</code> 後重新 push / 等 Actions 跑完</small>`
+            : `${msg}<br>
+               <small style="color:#e74c3c;">1. <code>cp .env.example .env</code> 並填入 key</small><br>
+               <small>2. <code>npm start</code> 或 <code>node server.js</code></small><br>
+               <small>3. 開 <code>http://localhost:3000</code>（勿用 file://）</small>`;
         }
         hideLoadingOverlay();
         return;

@@ -4,8 +4,9 @@
   "description": "雙北大漢溪抽水站管理系統",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js",
+    "start": "node scripts/write-runtime-config.js && node server.js",
+    "dev": "node scripts/write-runtime-config.js && nodemon server.js",
+    "config:local": "node scripts/write-runtime-config.js",
     "install-deps": "npm install express cors",
     "build": "npm run build:clean && npm run build:copy && npm run build:config",
     "build:clean": "rm -rf dist || rmdir /s dist",
