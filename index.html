@@ -464,7 +464,7 @@
     <div class="legend-row"><span class="swatch" style="background:#2980b9"></span>水位站（現存）</div>
     <div class="legend-row"><span class="swatch" style="background:#95a5a6"></span>水位站（已廢）</div>
     <div class="legend-row"><span class="swatch" style="background:#27ae60"></span>親水園區</div>
-    <div class="legend-row"><span class="swatch" style="background:#52be80;width:10px;height:10px"></span>親水自行車道出入口</div>
+    <div class="legend-row"><span class="swatch-line" style="background:#27ae60"></span>親水廊道（河濱自行車道）</div>
     <div class="legend-row"><span class="swatch-line" style="background:#0b8fe6"></span>大漢溪河道</div>
   </div>
 
@@ -485,7 +485,8 @@
     const pumpingMarkers = [];        // 抽水站 markers
     const wlActiveMarkers = [];       // 水位站（現存）
     const wlInactiveMarkers = [];     // 水位站（已廢，預設關閉）
-    const waterfrontMarkers = [];     // 親水廊道 markers（預設關閉）
+    const waterfrontMarkers = [];     // 親水園區（點）
+    const waterfrontPolylines = [];   // 親水廊道（線，沿大漢溪河濱自行車道）
     let riverPolylines = [];       // 大漢溪河道（多條 LineString）
     let realtimeWaterLevels = {};  // { stationid: { waterlevel, datetime } }
     let lastUpdateTime = null;
@@ -629,6 +630,7 @@
 
     async function loadWaterfront() {
       clearMarkers(waterfrontMarkers);
+      clearOverlays(waterfrontPolylines);
       const show = document.getElementById("layerWaterfront")?.checked;
 
       WATERFRONT_FEATURES.forEach((f) => {
@@ -668,53 +670,50 @@
         waterfrontMarkers.push(marker);
       });
 
-      let bikeCount = 0;
+      let pathCount = 0;
       try {
-        const res = await fetch("data/dahan-waterfront-bike.geojson", { cache: "no-store" });
+        const res = await fetch("data/dahan-waterfront-paths.geojson", { cache: "no-store" });
         if (!res.ok) throw new Error("HTTP " + res.status);
         const gj = await res.json();
         (gj.features || []).forEach((feat) => {
-          const [lng, lat] = feat.geometry.coordinates;
+          const coords = (feat.geometry.coordinates || []).map(([lng, lat]) => ({ lat, lng }));
+          if (coords.length < 2) return;
           const p = feat.properties || {};
-          const title = p.name || "大漢溪自行車道";
-          const marker = new google.maps.Marker({
+          const pl = new google.maps.Polyline({
             map: show ? map : null,
-            position: { lat, lng },
-            icon: {
-              path: google.maps.SymbolPath.CIRCLE,
-              scale: 5,
-              fillColor: "#52be80",
-              fillOpacity: 0.9,
-              strokeColor: "#ffffff",
-              strokeWeight: 2,
-            },
-            title,
-            zIndex: 35,
+            path: coords,
+            strokeColor: COLORS.waterfront,
+            strokeOpacity: 0.92,
+            strokeWeight: 5,
+            clickable: true,
+            zIndex: 38,
           });
-          marker._feature = feat;
-          marker._kind = "waterfront";
-          marker.addListener("click", () => {
+          pl._feature = feat;
+          pl._kind = "waterfront-path";
+          pl.addListener("click", (ev) => {
+            const lenKm = p.length_m ? `${(p.length_m / 1000).toFixed(1)} 公里` : "—";
             infoWindow.setContent(`
-              <div style="min-width:220px;">
-                <h3 style="margin:0 0 8px 0;color:#1e8449;font-size:1rem;">🚴 ${title}</h3>
-                <div style="margin-bottom:4px;"><strong>河域:</strong> ${p.location || "大漢溪"}</div>
-                <div style="margin-bottom:4px;"><strong>位置:</strong> ${p.position || "—"}</div>
+              <div style="min-width:240px;">
+                <h3 style="margin:0 0 8px 0;color:#1e8449;font-size:1.05rem;">🌿 ${p.name || "大漢溪親水廊道"}</h3>
+                <div style="margin-bottom:4px;"><strong>河川:</strong> ${p.river || "大漢溪"}</div>
+                <div style="margin-bottom:4px;"><strong>路段長度:</strong> ${lenKm}</div>
                 <div style="font-size:0.78rem;color:#666;margin-top:6px;">
-                  類型: ${p.category || "親水自行車道"}<br>
-                  座標: ${lat.toFixed(5)}, ${lng.toFixed(5)}
+                  ${p.category || "親水廊道"}<br>
+                  ${p.source || ""}
                 </div>
               </div>
             `);
-            infoWindow.open({ map, anchor: marker });
+            infoWindow.setPosition(ev.latLng);
+            infoWindow.open(map);
           });
-          waterfrontMarkers.push(marker);
-          bikeCount += 1;
+          waterfrontPolylines.push(pl);
+          pathCount += 1;
         });
       } catch (e) {
-        console.warn("[親水廊道] 自行車道 GeoJSON 載入失敗:", e.message);
+        console.warn("[親水廊道] 線段 GeoJSON 載入失敗:", e.message);
       }
 
-      console.log(`[親水廊道] 園區 ${WATERFRONT_FEATURES.length} 處、自行車道出入口 ${bikeCount} 處`);
+      console.log(`[親水廊道] 園區 ${WATERFRONT_FEATURES.length} 處、河濱道線段 ${pathCount} 段`);
     }
 
     async function loadPumpingStations() {
@@ -975,7 +974,11 @@
       document.getElementById("layerWlActive").addEventListener("change",   (e) => toggle(wlActiveMarkers,   e.target.checked));
       document.getElementById("layerWlInactive").addEventListener("change", (e) => toggle(wlInactiveMarkers, e.target.checked));
       document.getElementById("layerRiver").addEventListener("change",      (e) => toggle(riverPolylines,    e.target.checked));
-      document.getElementById("layerWaterfront").addEventListener("change", (e) => toggle(waterfrontMarkers, e.target.checked));
+      document.getElementById("layerWaterfront").addEventListener("change", (e) => {
+        const on = e.target.checked;
+        toggle(waterfrontMarkers, on);
+        toggle(waterfrontPolylines, on);
+      });
 
       // 我的位置
       let locateMarker = null, locateCircle = null;
@@ -1107,11 +1110,17 @@
       });
       waterfrontMarkers.forEach((m) => {
         const p = (m._feature.properties) || {};
-        const text = `${p.name || ""} ${p.address || ""} ${p.location || ""} ${p.position || ""}`.toLowerCase();
+        const text = `${p.name || ""} ${p.address || ""}`.toLowerCase();
+        if (text.includes(q)) hits.push({ kind: "親水園區", name: p.name, sub: p.address || "", marker: m });
+      });
+      waterfrontPolylines.forEach((pl) => {
+        const p = (pl._feature.properties) || {};
+        const text = `${p.name || ""} ${p.river || ""} ${p.category || ""}`.toLowerCase();
         if (text.includes(q)) {
-          const kind = p.layer === "bike_access" ? "親水自行車道" : "親水廊道";
-          const sub = p.address || p.location || p.position || "";
-          hits.push({ kind, name: p.name, sub, marker: m });
+          const path = pl.getPath();
+          const bounds = new google.maps.LatLngBounds();
+          path.forEach((ll) => bounds.extend(ll));
+          hits.push({ kind: "親水廊道", name: p.name || "大漢溪親水廊道", sub: p.river || "大漢溪", bounds });
         }
       });
       outEl.style.display = "block";
