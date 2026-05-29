@@ -2,6 +2,19 @@
 __pycache__/
 .DS_Store
 
+# CI 建置輸出（由 Actions 部署到 gh-pages，勿 commit）
+dist/
+
+# macOS / 編輯器產生的重複檔（例如 index 2.html）
+* 2.html
+* 2.css
+* 2.js
+* 2.py
+* 2.json
+* 2.bat
+node_modules/**/* 2
+node_modules/**/* 2/
+
 # API key / 本機設定（勿提交）
 .env
 js/config.local.js

@@ -40,7 +40,16 @@ node server.js
 |------|--------|
 | `GOOGLE_MAPS_API_KEY` | 與本機 `.env` **相同的那把** key |
 
-push 到 `main` 後，Actions 會自動部署；公開網址的地圖會用這把 key。
+push 到 `main` 後，Actions 會建置並推送到 **`gh-pages` 分支**。
+
+**GitHub → Settings → Pages**（僅需設定一次）：
+
+| 項目 | 設定 |
+|------|------|
+| Source | Deploy from a branch |
+| Branch | **`gh-pages`** / **`/ (root)`** |
+
+公開網址的地圖會用 Secret 注入的 key（不入 git）。
 
 ### Google Cloud Console（負責人設定一次）
 

@@ -59,10 +59,12 @@
 - 無法使用後端功能 (Node.js)
 
 **步驟：**
-1. 前往 GitHub 專案 Settings
-2. 找到 Pages 設定
-3. 選擇 Source: GitHub Actions
-4. 使用提供的 `.github/workflows/deploy.yml`
+1. **Settings → Secrets → Actions** 新增 `GOOGLE_MAPS_API_KEY`（與本機 `.env` 同一把 key）
+2. push 到 `main`，等待 **Deploy to GitHub Pages** workflow 成功
+3. **Settings → Pages**：Source 選 **Deploy from a branch** → 分支 **`gh-pages`** → **`/ (root)`**
+4. 公開網址：`https://liejrejay.github.io/pumping-station-gis/`
+
+Workflow 見 `.github/workflows/deploy.yml`（建置 `dist/` 並部署到 `gh-pages`，含 `js/runtime-config.js`）。
 
 ## 🔧 部署前準備
 
