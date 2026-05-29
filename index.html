@@ -463,7 +463,8 @@
     <div class="legend-row"><span class="swatch" style="background:#e74c3c"></span>抽水站</div>
     <div class="legend-row"><span class="swatch" style="background:#2980b9"></span>水位站（現存）</div>
     <div class="legend-row"><span class="swatch" style="background:#95a5a6"></span>水位站（已廢）</div>
-    <div class="legend-row"><span class="swatch" style="background:#27ae60"></span>親水廊道</div>
+    <div class="legend-row"><span class="swatch" style="background:#27ae60"></span>親水園區</div>
+    <div class="legend-row"><span class="swatch" style="background:#52be80;width:10px;height:10px"></span>親水自行車道出入口</div>
     <div class="legend-row"><span class="swatch-line" style="background:#0b8fe6"></span>大漢溪河道</div>
   </div>
 
@@ -497,6 +498,7 @@
       { name: "中庄調整池",              lat: 24.8941875, lng: 121.2891875, plus_code: "8QW3W874+H6", address: "桃園市大溪區" },
       { name: "中港大排親水步道",        lat: 25.0454375, lng: 121.4508125, plus_code: "8QW32FX3+86", address: "新北市新莊區自信里" },
       { name: "大鶯綠野景觀自行車道",    lat: 24.9104375, lng: 121.2921875, plus_code: "8QW3W8HC+3X", address: "桃園市大溪區" },
+      { name: "二重疏洪親水公園",        lat: 25.067, lng: 121.47, plus_code: "", address: "新北市二重（河濱）", note: "河濱親水公園／YouBike" },
     ];
 
     const TAIWAN_BOUNDS = { north: 25.5, south: 21.5, east: 122.5, west: 119.5 };
@@ -615,8 +617,8 @@
           loadWaterLevelStations(),
           loadRiver(),
         ]);
-        loadWaterfront();
-        document.getElementById("source").textContent = "data/pumping-stations.geojson + WRA + OSM";
+        await loadWaterfront();
+        document.getElementById("source").textContent = "data/*.geojson + WRA + OSM";
         updateStatus("資料載入完成", false, true);
       } catch (e) {
         console.error(e);
@@ -625,9 +627,10 @@
       lastUpdateTime = Date.now();
     }
 
-    function loadWaterfront() {
+    async function loadWaterfront() {
       clearMarkers(waterfrontMarkers);
       const show = document.getElementById("layerWaterfront")?.checked;
+
       WATERFRONT_FEATURES.forEach((f) => {
         const marker = new google.maps.Marker({
           map: show ? map : null,
@@ -646,11 +649,13 @@
         marker._feature = { properties: f, geometry: { coordinates: [f.lng, f.lat] } };
         marker._kind = "waterfront";
         marker.addListener("click", () => {
+          const plus = f.plus_code ? `<div style="margin-bottom:6px;"><strong>Plus Code:</strong> <code>${f.plus_code}</code></div>` : "";
+          const note = f.note ? `<div style="margin-bottom:6px;">${f.note}</div>` : "";
           infoWindow.setContent(`
             <div style="min-width:240px;">
               <h3 style="margin:0 0 8px 0;color:#1e8449;font-size:1.05rem;">🌿 ${f.name}</h3>
               <div style="margin-bottom:6px;"><strong>地址:</strong> ${f.address}</div>
-              <div style="margin-bottom:6px;"><strong>Plus Code:</strong> <code>${f.plus_code}</code></div>
+              ${plus}${note}
               <hr style="margin:8px 0;border:none;border-top:1px solid #eee;">
               <div style="font-size:0.78rem;color:#666;">
                 <div>座標: ${f.lat.toFixed(5)}, ${f.lng.toFixed(5)}</div>
@@ -662,7 +667,54 @@
         });
         waterfrontMarkers.push(marker);
       });
-      console.log(`[親水廊道] 已載入 ${waterfrontMarkers.length} 處`);
+
+      let bikeCount = 0;
+      try {
+        const res = await fetch("data/dahan-waterfront-bike.geojson", { cache: "no-store" });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const gj = await res.json();
+        (gj.features || []).forEach((feat) => {
+          const [lng, lat] = feat.geometry.coordinates;
+          const p = feat.properties || {};
+          const title = p.name || "大漢溪自行車道";
+          const marker = new google.maps.Marker({
+            map: show ? map : null,
+            position: { lat, lng },
+            icon: {
+              path: google.maps.SymbolPath.CIRCLE,
+              scale: 5,
+              fillColor: "#52be80",
+              fillOpacity: 0.9,
+              strokeColor: "#ffffff",
+              strokeWeight: 2,
+            },
+            title,
+            zIndex: 35,
+          });
+          marker._feature = feat;
+          marker._kind = "waterfront";
+          marker.addListener("click", () => {
+            infoWindow.setContent(`
+              <div style="min-width:220px;">
+                <h3 style="margin:0 0 8px 0;color:#1e8449;font-size:1rem;">🚴 ${title}</h3>
+                <div style="margin-bottom:4px;"><strong>河域:</strong> ${p.location || "大漢溪"}</div>
+                <div style="margin-bottom:4px;"><strong>位置:</strong> ${p.position || "—"}</div>
+                <div style="font-size:0.78rem;color:#666;margin-top:6px;">
+                  類型: ${p.category || "親水自行車道"}<br>
+                  座標: ${lat.toFixed(5)}, ${lng.toFixed(5)}
+                </div>
+              </div>
+            `);
+            infoWindow.open({ map, anchor: marker });
+          });
+          waterfrontMarkers.push(marker);
+          bikeCount += 1;
+        });
+      } catch (e) {
+        console.warn("[親水廊道] 自行車道 GeoJSON 載入失敗:", e.message);
+      }
+
+      console.log(`[親水廊道] 園區 ${WATERFRONT_FEATURES.length} 處、自行車道出入口 ${bikeCount} 處`);
     }
 
     async function loadPumpingStations() {
@@ -1055,8 +1107,12 @@
       });
       waterfrontMarkers.forEach((m) => {
         const p = (m._feature.properties) || {};
-        const text = `${p.name || ""} ${p.address || ""}`.toLowerCase();
-        if (text.includes(q)) hits.push({ kind: "親水廊道", name: p.name, sub: p.address || "", marker: m });
+        const text = `${p.name || ""} ${p.address || ""} ${p.location || ""} ${p.position || ""}`.toLowerCase();
+        if (text.includes(q)) {
+          const kind = p.layer === "bike_access" ? "親水自行車道" : "親水廊道";
+          const sub = p.address || p.location || p.position || "";
+          hits.push({ kind, name: p.name, sub, marker: m });
+        }
       });
       outEl.style.display = "block";
       if (!hits.length) {

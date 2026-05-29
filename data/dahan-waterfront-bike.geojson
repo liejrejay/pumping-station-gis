@@ -1,0 +1,2710 @@
+{
+  "type": "FeatureCollection",
+  "name": "dahan-waterfront-bike",
+  "description": "大漢溪流域親水自行車道出入口（篩選自新北市自行車道開放資料）",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.37,
+          24.927
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "堤坡階梯",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.369,
+          24.927
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "市區橋梁牽引道",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.369,
+          24.928
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "堤坡階梯",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.37,
+          24.93
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "一般平接出入口",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.369,
+          24.93
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "堤坡階梯",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.37,
+          24.932
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "堤坡階梯",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.37,
+          24.933
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "跨河自行橋",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.369,
+          24.923
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "一般平接出入口",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.369,
+          24.924
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "跨堤斜坡道",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.37,
+          24.926
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "跨堤斜坡道",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.37,
+          24.927
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "市區橋梁牽引道",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.37,
+          24.927
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "跨堤斜坡道",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.37,
+          24.93
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "跨堤斜坡道",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.411,
+          24.955
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "堤坡階梯",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.444,
+          25.016
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "堤坡階梯",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.44,
+          24.994
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "防洪牆階梯",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.441,
+          24.994
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "防洪牆階梯",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.441,
+          24.998
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "防洪牆階梯",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.441,
+          25.003
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "防洪牆階梯",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.441,
+          25.004
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "防洪牆階梯",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.441,
+          25.007
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "防洪牆階梯",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.441,
+          25.007
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "防洪牆階梯",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.442,
+          25.01
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "防洪牆階梯",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.442,
+          25.01
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "防洪牆階梯",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.453,
+          25.027
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "防洪牆階梯",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.458,
+          25.03
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "防洪牆階梯",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.463,
+          25.032
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "防洪牆階梯",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.466,
+          25.035
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "防洪牆階梯",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.469,
+          25.035
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "防洪牆階梯",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.469,
+          25.035
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "防洪牆階梯",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.472,
+          25.036
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "防洪牆階梯",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.473,
+          25.037
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "防洪牆階梯",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.435,
+          24.976
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "市區橋樑牽引道",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.44,
+          24.994
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "市區橋樑牽引道",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.441,
+          24.995
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "市區橋樑牽引道",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.455,
+          25.03
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "市區橋樑牽引道",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.456,
+          25.03
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "市區橋樑牽引道",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.48,
+          25.037
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "市區橋樑牽引道",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.444,
+          25.015
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "跨堤斜坡道",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.449,
+          25.023
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "跨堤斜坡道",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.409,
+          24.952
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "跨堤陸橋",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.412,
+          24.962
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "跨堤陸橋",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.418,
+          24.965
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "跨堤陸橋",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.424,
+          24.967
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "跨堤陸橋",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.429,
+          24.971
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "跨堤陸橋",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.438,
+          24.98
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "跨堤陸橋",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.441,
+          25.004
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "跨堤陸橋",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.448,
+          25.021
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "跨堤陸橋",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.452,
+          25.026
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "跨堤陸橋",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.438,
+          24.981
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "抽水站階梯",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.446,
+          25.02
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "抽水站階梯",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.447,
+          25.02
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "抽水站階梯",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.456,
+          25.029
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "抽水站階梯",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.47,
+          25.036
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "抽水站階梯",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.422,
+          24.967
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "越堤道路",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.432,
+          24.972
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "越堤道路",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.434,
+          24.975
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "越堤道路",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.44,
+          24.989
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "越堤道路",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.445,
+          25.017
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "越堤道路",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.461,
+          25.032
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "越堤道路",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.462,
+          25.032
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "越堤道路",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.456,
+          25.029
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "防汛水門",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.447,
+          25.028
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "橫移門",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.453,
+          25.033
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "橫移門",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.322,
+          24.927
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "一般平接出入口",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.328,
+          24.932
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "一般平接出入口",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.341,
+          24.931
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "一般平接出入口",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.346,
+          24.935
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "一般平接出入口",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.346,
+          24.937
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "一般平接出入口",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.353,
+          24.946
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "一般平接出入口",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.354,
+          24.95
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "一般平接出入口",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.354,
+          24.951
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "一般平接出入口",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.355,
+          24.952
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "一般平接出入口",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.356,
+          24.952
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "一般平接出入口",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.359,
+          24.955
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "一般平接出入口",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.39,
+          24.967
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "一般平接出入口",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.398,
+          24.969
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "一般平接出入口",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.402,
+          24.969
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "一般平接出入口",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.404,
+          24.969
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "一般平接出入口",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.406,
+          24.969
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "一般平接出入口",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.41,
+          24.97
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "一般平接出入口",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.412,
+          24.97
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "一般平接出入口",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.417,
+          24.972
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "一般平接出入口",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.421,
+          24.973
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "一般平接出入口",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.424,
+          24.975
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "一般平接出入口",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.427,
+          24.977
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "一般平接出入口",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.433,
+          24.985
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "堤坡階梯",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.474,
+          25.044
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "堤坡階梯",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.476,
+          25.045
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "堤坡階梯",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.479,
+          25.047
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "堤坡階梯",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.436,
+          25.008
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "防洪牆階梯",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.438,
+          25.016
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "防洪牆階梯",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.454,
+          25.034
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "市區橋梁牽引道",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.454,
+          25.034
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "市區橋梁牽引道",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.461,
+          25.037
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "市區橋梁牽引道",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.419,
+          24.972
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "跨堤斜坡道",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.428,
+          24.979
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "跨堤斜坡道",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.435,
+          24.992
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "跨堤斜坡道",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.435,
+          25.0
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "跨堤斜坡道",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.393,
+          24.968
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "跨堤陸橋",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.47,
+          25.043
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "跨堤陸橋",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.472,
+          25.043
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "跨堤陸橋",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.429,
+          24.979
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "抽水站階梯",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.422,
+          24.975
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "抽水站階梯",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.436,
+          24.992
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "抽水站階梯",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.437,
+          25.001
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "抽水站階梯",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.435,
+          25.001
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "越堤道路",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.439,
+          25.018
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "越堤道路",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.44,
+          25.02
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "越堤道路",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.441,
+          25.022
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "越堤道路",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.443,
+          25.024
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "越堤道路",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.463,
+          25.039
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "越堤道路",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.478,
+          25.037
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "防洪牆階梯",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.437,
+          25.013
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "防洪牆階梯",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.435,
+          25.004
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "堤坡階梯",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.445,
+          25.019
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "跨堤陸橋",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.454,
+          25.033
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "市區橋梁牽引道",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.443,
+          25.014
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "越堤道路",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.351,
+          24.943
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "堤坡階梯",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.412,
+          24.956
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "跨堤陸橋",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.412,
+          24.962
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "越堤道路",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.411,
+          24.96
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "越堤道路",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.426,
+          24.969
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "越堤道路",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.41,
+          24.951
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "馬祖田陸橋(溪頭路)",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.412,
+          24.956
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "人行天橋(溪頭路20巷)",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.424,
+          24.967
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "人行天橋(自由街)",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.429,
+          24.971
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "人行天橋(自強街11巷)",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.438,
+          24.98
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "員福陸橋(員福街)",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.44,
+          24.99
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "浮洲橋越堤道",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.441,
+          24.994
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "浮洲橋自行車牽引道",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.442,
+          25.004
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "歡仔園防汛陸橋(大觀路一段38巷)",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.445,
+          25.015
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "四汴頭越堤道",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.446,
+          25.018
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "華中防汛陸橋(板城路)",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.448,
+          25.021
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "雙溪口防汛陸橋",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.452,
+          25.026
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "社后防汛陸橋",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.462,
+          25.032
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "大漢橋旁越堤道",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.355,
+          24.95
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "南靖橋頭平接路口",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.449,
+          25.023
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "越堤道入口",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.391,
+          24.968
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "柑園崗哨平接路口",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.394,
+          24.968
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "柑園大橋旁陸橋",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.404,
+          24.969
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "大漢溪",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.404,
+          24.969
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "柑園二橋自行車牽引道",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.412,
+          24.97
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "自行車牽引道(鹿角溪溼地園區入口)",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.419,
+          24.972
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "自行車牽引道(東豐街)",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.428,
+          24.978
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "城林橋旁自行車牽引道(省民公園)",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.435,
+          24.991
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "自行車牽引道",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.435,
+          25.0
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "西盛水門旁自行車牽引道(環河路2巷)",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.435,
+          24.999
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "21號越堤道",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.44,
+          25.019
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "19號越堤道",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.442,
+          25.023
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "17號越堤道",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.455,
+          25.033
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "利濟街橫移門(利濟街)",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.454,
+          25.033
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "新海橋牽引道(大觀街)",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.461,
+          25.037
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "大漢橋牽引道(思源路)",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.42,
+          24.979
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "省民陸橋",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.427929,
+          24.97817787
+        ]
+      },
+      "properties": {
+        "location": "大漢溪",
+        "position": "新鶯堤外便道(新莊、板橋、鶯歌)",
+        "name": "大漢溪自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.404,
+          24.951
+        ]
+      },
+      "properties": {
+        "location": "大漢溪三峽河",
+        "position": "樹林田尾街",
+        "name": "三峽河自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.37,
+          24.933
+        ]
+      },
+      "properties": {
+        "location": "大漢溪三峽河",
+        "position": "三峽祖師廟出入口",
+        "name": "三峽河自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.368,
+          24.924
+        ]
+      },
+      "properties": {
+        "location": "大漢溪三峽河",
+        "position": "三峽麻園溪出入口",
+        "name": "三峽河自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.367,
+          24.92
+        ]
+      },
+      "properties": {
+        "location": "大漢溪三峽河",
+        "position": "三峽大同橋",
+        "name": "三峽河自行車道",
+        "layer": "bike_access",
+        "category": "親水自行車道"
+      }
+    }
+  ]
+}
