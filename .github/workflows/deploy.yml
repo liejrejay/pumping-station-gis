@@ -3,6 +3,7 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [ main, master ]
+  workflow_dispatch:  # 設好 Secret 後可手動重新部署
 
 permissions:
   contents: read
@@ -42,13 +43,13 @@ jobs:
         cp -r js dist/ 2>/dev/null || true
         cp -r data dist/ 2>/dev/null || true
         
-        # 從 GitHub Secret 注入 runtime-config（不入 git）
-        if [ -n "$GOOGLE_MAPS_API_KEY" ]; then
-          node -e "const k=process.env.GOOGLE_MAPS_API_KEY; require('fs').writeFileSync('dist/js/runtime-config.js', 'window.GOOGLE_MAPS_API_KEY = '+JSON.stringify(k)+';\\n');"
-          echo "✅ runtime-config.js 已產生"
-        else
-          echo "⚠️ 未設定 GOOGLE_MAPS_API_KEY secret，地圖將無法載入"
+        # 從 GitHub Secret 注入 runtime-config（不入 git，公開站地圖必備）
+        if [ -z "$GOOGLE_MAPS_API_KEY" ]; then
+          echo "::error::未設定 GOOGLE_MAPS_API_KEY。請到 Settings → Secrets and variables → Actions 新增後再部署。"
+          exit 1
         fi
+        node -e "const k=process.env.GOOGLE_MAPS_API_KEY; require('fs').writeFileSync('dist/js/runtime-config.js', 'window.GOOGLE_MAPS_API_KEY = '+JSON.stringify(k)+';\\n');"
+        echo "✅ runtime-config.js 已產生（長度 ${#GOOGLE_MAPS_API_KEY}）"
         
         echo "" > dist/.nojekyll
         echo "/* /index.html 200" > dist/_redirects
