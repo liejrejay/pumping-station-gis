@@ -1,15 +1,45 @@
 const express = require('express');
 const fs = require('fs').promises;
+const fsSync = require('fs');
 const path = require('path');
 const cors = require('cors');
 
+// 讀取 .env（不入 git）
+try {
+    const envPath = path.join(__dirname, '.env');
+    const text = fsSync.readFileSync(envPath, 'utf8');
+    for (const raw of text.split(/\r?\n/)) {
+        const line = raw.trim();
+        if (!line || line.startsWith('#')) continue;
+        const m = line.match(/^([A-Z_][A-Z0-9_]*)\s*=\s*(.*)$/);
+        if (m && process.env[m[1]] === undefined) {
+            process.env[m[1]] = m[2].replace(/^['"]|['"]$/g, '');
+        }
+    }
+} catch (_) { /* 無 .env 時略過 */ }
+
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 const USERS_FILE = path.join(__dirname, 'data', 'users.json');
 
 // 中介軟體
 app.use(cors());
 app.use(express.json());
+
+// API 路由須在 static 之前，避免被靜態檔覆蓋
+app.get('/api/config', (req, res) => {
+    const key = process.env.GOOGLE_MAPS_API_KEY || '';
+    res.setHeader('Cache-Control', 'no-store');
+    res.json({ googleMapsApiKey: key });
+});
+
+app.get('/api/config.js', (req, res) => {
+    const key = process.env.GOOGLE_MAPS_API_KEY || '';
+    res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-store');
+    res.send(`window.GOOGLE_MAPS_API_KEY = ${JSON.stringify(key)};\n`);
+});
+
 app.use(express.static('.')); // 提供靜態檔案服務
 
 // 預設系統用戶
@@ -246,6 +276,8 @@ app.listen(PORT, () => {
 - POST /api/users/login  - 用戶登入驗證
 - GET  /api/users/stats  - 獲取用戶統計
 - GET  /api/users/export - 匯出註冊用戶
+- GET  /api/config       - Google Maps API key（JSON，來自 .env）
+- GET  /api/config.js    - 同上（JavaScript）
 - GET  /api/health       - 健康檢查
     `);
 });

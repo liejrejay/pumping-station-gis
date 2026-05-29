@@ -469,12 +469,6 @@
 
   <script src="js/userManager.js"></script>
   <script src="js/mobileOptimization.js"></script>
-  <!-- 內嵌 API Key 配置 -->
-  <script>
-    // 直接設定 Google Maps API Key
-    window.GOOGLE_MAPS_API_KEY = 'AIzaSyAWvgoKH9b7sfI_6yMG4U1teg-Dq4wQ9Fk';
-    console.log('[Config] ✅ API Key 已載入');
-  </script>
 
   <script>
     // ============================================================
@@ -1230,42 +1224,61 @@
     }
 
     // ============================================================
-    // Google Maps script loader
-    //   key 來源優先序：
-    //     1. window.GOOGLE_MAPS_API_KEY  （由 js/config.local.js 設，未提交至 repo）
-    //     2. localStorage('GOOGLE_MAPS_API_KEY')
-    //   兩者都沒有 → 顯示提示，不載入地圖
+    // Google Maps API key（不入 HTML）
+    //   1. GET /api/config        ← 本機 node server.js + .env
+    //   2. js/runtime-config.js   ← GitHub Pages CI 從 Secret 產生
+    //   3. localStorage / ?api_key=  備用
     // ============================================================
-    function _resolveApiKey() {
-      // 直接返回內嵌的 API Key
-      if (window.GOOGLE_MAPS_API_KEY) {
-        return window.GOOGLE_MAPS_API_KEY;
-      }
-      
-      // 備用：從 localStorage 
-      const fromStorage = localStorage.getItem("GOOGLE_MAPS_API_KEY");
-      if (fromStorage) return fromStorage;
-      
-      // 最後備用：從 URL 參數
-      const urlParams = new URLSearchParams(window.location.search);
-      const fromUrl = urlParams.get('api_key');
-      if (fromUrl) return fromUrl;
-      
-      console.error("❌ 找不到 Google Maps API Key");
-      return null;
+    function loadScriptOnce(src) {
+      return new Promise((resolve, reject) => {
+        const existing = document.querySelector(`script[data-src="${src}"]`);
+        if (existing) {
+          existing.addEventListener("load", resolve);
+          existing.addEventListener("error", reject);
+          return;
+        }
+        const s = document.createElement("script");
+        s.src = src;
+        s.dataset.src = src;
+        s.onload = resolve;
+        s.onerror = reject;
+        document.head.appendChild(s);
+      });
     }
 
-    function promptForApiKey() {
-      // 不再自動提示輸入 API Key，改為使用免費地圖
-      // 如果用戶真的需要 Google Maps，可以：
-      // 1. 在 URL 加上 ?api_key=YOUR_KEY
-      // 2. 手動在 localStorage 設定
-      // 3. 建立 js/config.local.js 檔案
-      
-      console.log("[Map] 未設定 Google Maps API Key，使用免費的 OpenStreetMap");
-      console.log("[Map] 如需使用 Google Maps，請參考 API-KEY-SETUP.md");
-      
-      return null; // 不提示，直接使用免費地圖
+    async function resolveApiKey() {
+      // 本機：Express 從 process.env 讀 .env
+      try {
+        const res = await fetch("/api/config", { cache: "no-store" });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.googleMapsApiKey) {
+            console.log("[Config] ✅ 已從 /api/config（環境變數）取得 key");
+            return data.googleMapsApiKey;
+          }
+        }
+      } catch (e) {
+        console.warn("[Config] /api/config 無法連線（請用 node server.js 開啟）", e.message);
+      }
+
+      // GitHub Pages：部署時注入的 runtime-config.js
+      if (!window.GOOGLE_MAPS_API_KEY) {
+        try {
+          await loadScriptOnce("js/runtime-config.js");
+        } catch (_) { /* 檔案不存在 */ }
+      }
+      if (window.GOOGLE_MAPS_API_KEY && window.GOOGLE_MAPS_API_KEY !== "YOUR_GOOGLE_MAPS_API_KEY_HERE") {
+        console.log("[Config] ✅ 已從 js/runtime-config.js 取得 key");
+        return window.GOOGLE_MAPS_API_KEY;
+      }
+
+      const fromStorage = localStorage.getItem("GOOGLE_MAPS_API_KEY");
+      if (fromStorage) return fromStorage;
+
+      const fromUrl = new URLSearchParams(window.location.search).get("api_key");
+      if (fromUrl) return fromUrl;
+
+      return null;
     }
 
     // 捕捉 Google Maps 自家的鑑權失敗（key 無效 / referer 不對 / billing 未開）
@@ -1286,27 +1299,21 @@
       // 不自動重新載入，讓使用者看到錯誤訊息
     };
 
-    (function loadGoogleMapsScript() {
-      // 即時診斷資訊
-      console.log("=== Google Maps 載入診斷開始 ===");
-      console.log("當前時間:", new Date().toLocaleString());
-      console.log("網域:", window.location.hostname);
-      console.log("協定:", window.location.protocol);
-      console.log("完整 URL:", window.location.href);
-      
-      const key = _resolveApiKey();
+    (async function loadGoogleMapsScript() {
+      console.log("=== Google Maps 載入開始 ===");
+      console.log("網址:", window.location.href);
+
+      const key = await resolveApiKey();
       if (!key) {
         const el = document.getElementById("updateStatus");
-        const msg = "❌ API Key 載入失敗";
+        const msg = "未設定 Google Maps API key";
         console.error("[GMaps]", msg);
-        console.error("請檢查 js/config.encrypted.js 檔案");
         if (el) {
           el.innerHTML = `
             ${msg}<br>
-            <small style="color: #e74c3c;">請按 F12 查看 Console 了解詳情</small><br>
-            <button onclick="window.open('diagnostic.html', '_blank')" style="margin-top:10px;padding:8px 16px;background:#007bff;color:white;border:none;border-radius:4px;cursor:pointer;">
-              開啟診斷工具
-            </button>
+            <small style="color:#e74c3c;">本機：建立 .env（見 .env.example）後執行 <code>node server.js</code></small><br>
+            <small>不要用 file:// 直接開 HTML</small><br>
+            <small>GitHub Pages：在 repo Secrets 設定 <code>GOOGLE_MAPS_API_KEY</code></small>
           `;
         }
         hideLoadingOverlay();

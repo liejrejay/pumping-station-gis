@@ -44,6 +44,12 @@
   - ✅ 檢視公開抽水站資料
   - ❌ 無法編輯任何內容
 
+## 🔑 地圖 API Key（全組共用一把）
+
+- Key **不會**出現在 GitHub 上，請向**組長私下索取**同一把 key。
+- 本機請依專案根目錄 `.env.example` 建立 `.env` 並填入 key，再執行 `node server.js`。
+- 詳細步驟見 [README.md - Google Maps API Key](README.md#-google-maps-api-key全組共用一把)。
+
 ## 🗺️ 系統功能
 
 ### 📍 地圖功能
