@@ -532,6 +532,8 @@
 
   <script src="js/userManager.js"></script>
   <script src="js/mobileOptimization.js"></script>
+  <script src="js/weatherApiConfig.js"></script>
+  <script src="js/realtimeWaterLevel.js"></script>
   <script src="js/weatherAlert.js"></script>
 
   <script>
@@ -826,6 +828,13 @@
       const res = await fetch("data/water-level-stations.geojson", { cache: "no-store" });
       if (!res.ok) throw new Error("water-level-stations.geojson HTTP " + res.status);
       const gj = await res.json();
+      
+      // 啟動即時水位更新系統
+      if (window.waterLevelSystem) {
+        console.log('🌊 啟動即時水位更新系統');
+        waterLevelSystem.startAutoUpdate();
+        waterLevelSystem.createStatusPanel();
+      }
       clearMarkers(wlActiveMarkers);
       clearMarkers(wlInactiveMarkers);
       const showInactive = document.getElementById("layerWlInactive")?.checked;
@@ -842,8 +851,18 @@
         marker._feature = feat;
         marker._kind = active ? "wl-active" : "wl-inactive";
         marker.addListener("click", () => {
-          infoWindow.setContent(buildWaterLevelPopupHtml(feat));
+          // 使用即時資料版本的彈出視窗
+          const realTimeData = marker._realTimeData || null;
+          infoWindow.setContent(buildWaterLevelPopupHtmlWithRealtime(feat, realTimeData));
           infoWindow.open({ map, anchor: marker });
+          
+          // 標記 InfoWindow 為已開啟
+          marker._infoWindowOpen = true;
+        });
+        
+        // 監聽 InfoWindow 關閉事件
+        google.maps.event.addListener(infoWindow, 'closeclick', () => {
+          marker._infoWindowOpen = false;
         });
         (active ? wlActiveMarkers : wlInactiveMarkers).push(marker);
       });
@@ -1406,6 +1425,173 @@
         console.log('✅ 氣象警示系統初始化完成');
         
       }, 5000);
+    }
+    
+    // ============================================================
+    // 即時水位資料更新整合
+    // ============================================================
+    
+    // 監聽水位資料更新事件
+    window.addEventListener('waterLevelUpdated', function(event) {
+      const { data, stationCount } = event.detail;
+      console.log(`🌊 水位資料已更新，共 ${stationCount} 個站點`);
+      
+      // 更新地圖上的水位站標記
+      updateWaterLevelMarkers(data);
+      
+      // 更新氣象警示系統
+      if (window.weatherAlert) {
+        weatherAlert.updateWaterLevelData(data);
+      }
+      
+      // 顯示更新通知
+      showUpdateNotification(`水位資料已更新 (${stationCount} 站點)`);
+    });
+    
+    // 更新水位站標記的顯示資訊
+    window.updateWaterLevelMarkers = function(waterLevelData) {
+      // 更新現有的水位站標記
+      [...wlActiveMarkers, ...wlInactiveMarkers].forEach(marker => {
+        const stationId = marker._feature?.properties?.stationid;
+        if (stationId && waterLevelData[stationId]) {
+          const realTimeData = waterLevelData[stationId];
+          
+          // 更新標記的即時資料
+          marker._realTimeData = realTimeData;
+          
+          // 如果標記當前顯示 InfoWindow，更新內容
+          if (marker._infoWindowOpen) {
+            const content = buildWaterLevelPopupHtml(marker._feature, realTimeData);
+            if (window.infoWindow) {
+              window.infoWindow.setContent(content);
+            }
+          }
+        }
+      });
+    };
+    
+    // 修改水位站彈出視窗內容建立函數，使用即時資料
+    function buildWaterLevelPopupHtmlWithRealtime(feature, realTimeData = null) {
+      const p = feature.properties || {};
+      
+      // 優先使用即時資料，否則使用快取資料
+      const currentData = realTimeData || realtimeWaterLevels[p.stationid];
+      
+      let valueHtml = `<span style="color:#888;">${p.status === "現存" ? "載入中…" : "已廢站，無即時資料"}</span>`;
+      
+      if (currentData && currentData.waterlevel !== "" && currentData.waterlevel != null) {
+        const waterLevel = parseFloat(currentData.waterlevel);
+        const updateTime = currentData.datetime ? 
+          new Date(currentData.datetime).toLocaleString() : '未知時間';
+        
+        // 根據水位高低設定顏色
+        let levelColor = '#0b5394'; // 預設藍色
+        if (waterLevel > 5) levelColor = '#dc3545';      // 紅色 - 危險
+        else if (waterLevel > 3) levelColor = '#fd7e14';  // 橙色 - 警戒
+        else if (waterLevel > 2) levelColor = '#ffc107';  // 黃色 - 注意
+        
+        valueHtml = `
+          <span style="color:${levelColor};font-weight:600;font-size:1.1em;">
+            ${waterLevel.toFixed(2)} m
+          </span>
+          <br>
+          <span style="color:#666;font-size:0.8rem;">
+            📅 ${updateTime}
+          </span>
+        `;
+      }
+      
+      return `
+        <div style="min-width:260px;">
+          <h3 style="margin:0 0 8px 0;color:#0b5394;font-size:1.1rem;">💧 ${p.name}</h3>
+          <div style="margin-bottom:6px;"><strong>站號:</strong> <code>${p.stationid}</code></div>
+          <div style="margin-bottom:6px;"><strong>所屬河川:</strong> ${p.river}</div>
+          <div style="margin-bottom:6px;"><strong>狀態:</strong> ${p.status || "—"}</div>
+          <div style="margin-bottom:6px;"><strong>位置:</strong> ${p.address || "—"}</div>
+          <hr style="margin:8px 0;border:none;border-top:1px solid #eee;">
+          <div style="padding:8px;background:#f8f9fa;border-radius:4px;">
+            <strong>即時水位:</strong><br>
+            ${valueHtml}
+          </div>
+          <div style="font-size:0.75rem;color:#666;margin-top:6px;text-align:center;">
+            資料來源：中央氣象署 | 即時更新
+          </div>
+        </div>
+      `;
+    }
+    
+    // 顯示更新通知
+    function showUpdateNotification(message) {
+      // 創建通知元素
+      const notification = document.createElement('div');
+      notification.className = 'update-notification';
+      notification.innerHTML = `
+        <div class="notification-content">
+          <span class="notification-icon">🔄</span>
+          <span class="notification-text">${message}</span>
+        </div>
+      `;
+      
+      // 添加樣式
+      const style = `
+        .update-notification {
+          position: fixed;
+          top: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+          background: rgba(40, 167, 69, 0.95);
+          color: white;
+          padding: 12px 20px;
+          border-radius: 25px;
+          z-index: 2000;
+          font-size: 14px;
+          font-weight: 500;
+          backdrop-filter: blur(10px);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+          animation: slideDown 0.3s ease-out;
+        }
+        
+        .notification-content {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        
+        .notification-icon {
+          font-size: 16px;
+        }
+        
+        @keyframes slideDown {
+          from { transform: translateX(-50%) translateY(-100%); opacity: 0; }
+          to { transform: translateX(-50%) translateY(0); opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+          from { transform: translateX(-50%) translateY(0); opacity: 1; }
+          to { transform: translateX(-50%) translateY(-100%); opacity: 0; }
+        }
+      `;
+      
+      // 添加樣式到頁面
+      if (!document.getElementById('notification-styles')) {
+        const styleElement = document.createElement('style');
+        styleElement.id = 'notification-styles';
+        styleElement.textContent = style;
+        document.head.appendChild(styleElement);
+      }
+      
+      // 顯示通知
+      document.body.appendChild(notification);
+      
+      // 3秒後移除通知
+      setTimeout(() => {
+        notification.style.animation = 'slideUp 0.3s ease-in';
+        setTimeout(() => {
+          if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+          }
+        }, 300);
+      }, 3000);
     }
 
     // ============================================================

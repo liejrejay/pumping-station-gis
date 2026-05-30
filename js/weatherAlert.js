@@ -67,33 +67,46 @@ class WeatherAlertSystem {
      */
     async fetchWeatherData() {
         try {
-            // 使用中央氣象署 API (需要申請 API Key)
-            const weatherAPI = 'https://opendata.cwa.gov.tw/api/v1/rest/datastore/';
+            console.log('🌦️ 開始獲取氣象資料...');
             
-            // 獲取即時雨量資料
-            const rainfallData = await this.fetchRainfallData();
+            // 檢查是否有 API Key
+            if (window.WeatherAPIConfig?.CWA?.apiKey) {
+                console.log('🔑 使用真實 CWA API');
+                
+                // 獲取即時雨量資料
+                const rainfallData = await this.fetchRainfallData();
+                
+                // 獲取天氣預報
+                const forecastData = await this.fetchForecastData();
+                
+                // 獲取颱風資訊
+                const typhoonData = await this.fetchTyphoonData();
+                
+                this.weatherData = {
+                    rainfall: rainfallData,
+                    forecast: forecastData,
+                    typhoon: typhoonData,
+                    lastUpdate: new Date().toISOString(),
+                    source: 'CWA_API'
+                };
+                
+                console.log('✅ 真實氣象資料更新完成');
+                
+            } else {
+                console.log('⚠️ 未設定 API Key，使用模擬資料');
+                this.weatherData = this.generateMockWeatherData();
+                this.weatherData.source = 'MOCK_DATA';
+            }
             
-            // 獲取天氣預報
-            const forecastData = await this.fetchForecastData();
-            
-            // 獲取颱風資訊
-            const typhoonData = await this.fetchTyphoonData();
-            
-            this.weatherData = {
-                rainfall: rainfallData,
-                forecast: forecastData,
-                typhoon: typhoonData,
-                lastUpdate: new Date().toISOString()
-            };
-            
-            console.log('✅ 氣象資料更新完成', this.weatherData);
             return this.weatherData;
             
         } catch (error) {
             console.error('❌ 氣象資料獲取失敗:', error);
             
             // 使用模擬資料進行測試
+            console.log('🔄 切換到模擬資料模式');
             this.weatherData = this.generateMockWeatherData();
+            this.weatherData.source = 'FALLBACK_MOCK';
             return this.weatherData;
         }
     }
@@ -102,23 +115,78 @@ class WeatherAlertSystem {
      * 獲取降雨資料
      */
     async fetchRainfallData() {
-        // 這裡可以整合多個資料源
-        const sources = [
-            'https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0002-001', // 自動雨量站
-            'https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0001-001'  // 自動氣象站
-        ];
-        
-        // 實際使用時需要 API Key
-        // const response = await fetch(`${sources[0]}?Authorization=${API_KEY}`);
-        // return await response.json();
+        if (window.WeatherAPIConfig?.CWA?.apiKey) {
+            try {
+                const apiKey = window.WeatherAPIConfig.CWA.apiKey;
+                const baseUrl = window.WeatherAPIConfig.CWA.baseUrl;
+                const endpoint = window.WeatherAPIConfig.CWA.endpoints.rainfall;
+                
+                const response = await fetch(
+                    `${baseUrl}${endpoint}?Authorization=${apiKey}&limit=50&format=json`
+                );
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                console.log('✅ CWA 降雨資料獲取成功');
+                
+                // 轉換 CWA 資料格式
+                return this.transformCWARainfallData(data);
+                
+            } catch (error) {
+                console.error('❌ CWA 降雨資料獲取失敗:', error);
+                throw error;
+            }
+        }
         
         // 模擬資料
         return {
             stations: [
-                { id: 'C0A570', name: '板橋', rainfall_1hr: 15.5, rainfall_24hr: 45.2 },
-                { id: 'C0A590', name: '新莊', rainfall_1hr: 23.1, rainfall_24hr: 67.8 },
-                { id: 'C0A580', name: '三重', rainfall_1hr: 18.7, rainfall_24hr: 52.3 }
-            ]
+                { id: 'C0A570', name: '板橋', rainfall_1hr: 15.5, rainfall_24hr: 45.2, lat: 25.0078, lng: 121.4593 },
+                { id: 'C0A590', name: '新莊', rainfall_1hr: 23.1, rainfall_24hr: 67.8, lat: 25.0375, lng: 121.4315 },
+                { id: 'C0A580', name: '三重', rainfall_1hr: 18.7, rainfall_24hr: 52.3, lat: 25.0630, lng: 121.4837 },
+                { id: 'C0A600', name: '蘆洲', rainfall_1hr: 12.3, rainfall_24hr: 38.9, lat: 25.0853, lng: 121.4644 }
+            ],
+            timestamp: new Date().toISOString()
+        };
+    }
+    
+    /**
+     * 轉換中央氣象署降雨資料格式
+     */
+    transformCWARainfallData(cwaData) {
+        const stations = [];
+        
+        if (cwaData.success === "true" && cwaData.records?.location) {
+            cwaData.records.location.forEach(location => {
+                const station = {
+                    id: location.stationId,
+                    name: location.locationName,
+                    lat: parseFloat(location.lat),
+                    lng: parseFloat(location.lon),
+                    rainfall_1hr: 0,
+                    rainfall_24hr: 0
+                };
+                
+                // 解析各種降雨資料
+                location.weatherElement?.forEach(element => {
+                    if (element.elementName === 'NOW') {
+                        station.rainfall_1hr = parseFloat(element.elementValue) || 0;
+                    } else if (element.elementName === 'H_24R') {
+                        station.rainfall_24hr = parseFloat(element.elementValue) || 0;
+                    }
+                });
+                
+                stations.push(station);
+            });
+        }
+        
+        return {
+            stations: stations,
+            timestamp: new Date().toISOString(),
+            source: 'CWA'
         };
     }
     
