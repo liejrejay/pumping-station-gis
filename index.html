@@ -6,6 +6,7 @@
   <title>大漢溪抽水站 Web GIS</title>
   <link rel="stylesheet" href="css/animations.css" />
   <link rel="stylesheet" href="css/responsive.css" />
+  <link rel="stylesheet" href="css/weatherAlert.css" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: "PingFang TC", "Noto Sans TC", system-ui, sans-serif; color: #2d3436; }
@@ -477,8 +478,61 @@
     <div class="legend-row"><span class="swatch-line" style="background:#0b8fe6"></span>大漢溪河道</div>
   </div>
 
+  <!-- 氣象警示系統 -->
+  <button id="alertToggleBtn" class="alert-toggle-btn" onclick="toggleAlertPanel()" title="氣象警示">
+    🌦️
+    <span id="alertBadge" class="alert-badge" style="display: none;">0</span>
+  </button>
+
+  <div id="weatherAlertPanel" class="weather-alert-panel">
+    <div class="alert-header">
+      <h3>🌦️ 氣象警示系統</h3>
+      <button onclick="toggleAlertPanel()" class="btn-close">×</button>
+    </div>
+    
+    <div class="weather-info">
+      <div style="text-align: center; margin-bottom: 10px;">
+        <strong>即時氣象資訊</strong>
+      </div>
+      <div class="weather-grid">
+        <div class="weather-item">
+          <div class="weather-value" id="currentRainfall">--</div>
+          <div class="weather-label">雨量 (mm/hr)</div>
+        </div>
+        <div class="weather-item">
+          <div class="weather-value" id="currentTemp">--</div>
+          <div class="weather-label">溫度 (°C)</div>
+        </div>
+        <div class="weather-item">
+          <div class="weather-value" id="currentHumidity">--</div>
+          <div class="weather-label">濕度 (%)</div>
+        </div>
+        <div class="weather-item">
+          <div class="weather-value" id="currentWind">--</div>
+          <div class="weather-label">風速 (m/s)</div>
+        </div>
+      </div>
+      
+      <div class="risk-indicator" style="margin-top: 15px;">
+        <span class="risk-text">整體風險:</span>
+        <div class="risk-bar">
+          <div id="overallRiskFill" class="risk-fill" style="width: 0%"></div>
+        </div>
+        <span id="overallRiskText" class="risk-text">低</span>
+      </div>
+    </div>
+    
+    <div id="alertContent">
+      <div class="loading-weather">
+        <div class="loading-spinner"></div>
+        正在載入氣象資料...
+      </div>
+    </div>
+  </div>
+
   <script src="js/userManager.js"></script>
   <script src="js/mobileOptimization.js"></script>
+  <script src="js/weatherAlert.js"></script>
 
   <script>
     // ============================================================
@@ -1203,7 +1257,155 @@
       if (!overlay) return;
       overlay.style.opacity = "0";
       mapEl.classList.add("loaded");
-      setTimeout(() => (overlay.style.display = "none"), 180);
+      setTimeout(() => {
+        overlay.style.display = "none";
+        // 地圖載入完成後初始化氣象警示系統
+        initWeatherAlert();
+      }, 180);
+    }
+
+    // ============================================================
+    // 氣象警示系統整合
+    // ============================================================
+    
+    function toggleAlertPanel() {
+      const panel = document.getElementById('weatherAlertPanel');
+      
+      if (panel.classList.contains('show')) {
+        panel.classList.remove('show');
+      } else {
+        panel.classList.add('show');
+        updateWeatherDisplay();
+      }
+    }
+    
+    async function updateWeatherDisplay() {
+      try {
+        if (typeof weatherAlert === 'undefined') return;
+        
+        const weatherData = await weatherAlert.fetchWeatherData();
+        
+        // 更新 UI 顯示
+        if (document.getElementById('currentRainfall')) {
+          document.getElementById('currentRainfall').textContent = 
+            (weatherData.rainfall?.current || 0).toFixed(1);
+        }
+        if (document.getElementById('currentTemp')) {
+          document.getElementById('currentTemp').textContent = 
+            (weatherData.temperature || 0).toFixed(1);
+        }
+        if (document.getElementById('currentHumidity')) {
+          document.getElementById('currentHumidity').textContent = 
+            Math.round(weatherData.humidity || 0);
+        }
+        if (document.getElementById('currentWind')) {
+          document.getElementById('currentWind').textContent = 
+            (weatherData.windSpeed || 0).toFixed(1);
+        }
+          
+        const avgRisk = calculateOverallRisk();
+        updateRiskDisplay(avgRisk);
+        weatherAlert.updateAlertUI();
+        
+      } catch (error) {
+        console.error('更新氣象顯示失敗:', error);
+      }
+    }
+    
+    function calculateOverallRisk() {
+      if (typeof weatherAlert === 'undefined') return { score: 0, level: 'low' };
+      
+      const stations = Object.values(weatherAlert.pumpingStations || {});
+      if (stations.length === 0) return { score: 0, level: 'low' };
+      
+      const totalScore = stations.reduce((sum, station) => {
+        const risk = weatherAlert.calculateRiskScore(station);
+        return sum + risk.totalScore;
+      }, 0);
+      
+      const avgScore = totalScore / stations.length;
+      const level = weatherAlert.getRiskLevel(avgScore);
+      
+      return { score: avgScore, level };
+    }
+    
+    function updateRiskDisplay(risk) {
+      const fill = document.getElementById('overallRiskFill');
+      const text = document.getElementById('overallRiskText');
+      const btn = document.getElementById('alertToggleBtn');
+      
+      if (fill) fill.style.width = `${risk.score}%`;
+      
+      const levelText = {
+        low: '低風險',
+        medium: '中風險', 
+        high: '高風險',
+        critical: '極高風險'
+      };
+      
+      if (text) text.textContent = levelText[risk.level] || '低風險';
+      
+      if (btn) {
+        if (risk.level === 'high' || risk.level === 'critical') {
+          btn.classList.add('has-alerts');
+        } else {
+          btn.classList.remove('has-alerts');
+        }
+      }
+    }
+    
+    window.highlightPumpingStation = function(stationId, level) {
+      const marker = pumpingMarkers.find(m => m._feature?.properties?.id == stationId);
+      if (marker) {
+        const colors = { low: '#28a745', medium: '#ffc107', high: '#fd7e14', critical: '#dc3545' };
+        const color = colors[level] || '#28a745';
+        
+        const alertIcon = {
+          url: 'data:image/svg+xml,' + encodeURIComponent(`
+            <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="16" cy="16" r="12" fill="${color}" stroke="#fff" stroke-width="2"/>
+              <text x="16" y="20" text-anchor="middle" fill="white" font-size="10" font-weight="bold">🚨</text>
+            </svg>
+          `),
+          scaledSize: new google.maps.Size(32, 32),
+          anchor: new google.maps.Point(16, 16)
+        };
+        
+        marker.setIcon(alertIcon);
+        setTimeout(() => marker.setIcon(pumpingStationIcon()), 30000);
+      }
+    };
+    
+    function initWeatherAlert() {
+      console.log('🌦️ 初始化氣象警示系統');
+      
+      setTimeout(() => {
+        if (typeof weatherAlert === 'undefined') {
+          console.warn('weatherAlert 系統尚未載入');
+          return;
+        }
+        
+        const stations = pumpingMarkers.map((marker, index) => ({
+          id: marker._feature?.properties?.id || index + 1,
+          name: marker._feature?.properties?.name || `抽水站${index + 1}`,
+          nearestWaterStation: marker._feature?.properties?.nearest_wl,
+          waterLevel: 0
+        }));
+        
+        weatherAlert.updatePumpingStations(stations);
+        weatherAlert.updateWaterLevelData(realtimeWaterLevels || {});
+        weatherAlert.startMonitoring(300000);
+        
+        setTimeout(updateWeatherDisplay, 1000);
+        
+        const alertContent = document.getElementById('alertContent');
+        if (alertContent) {
+          alertContent.innerHTML = '<div id="alertPanel"></div>';
+        }
+        
+        console.log('✅ 氣象警示系統初始化完成');
+        
+      }, 5000);
     }
 
     // ============================================================
