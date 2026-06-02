@@ -1040,10 +1040,6 @@
           <div style="margin-bottom:6px;"><strong>抽水站類型:</strong> ${pumpTypeText}</div>
           <div style="margin-bottom:6px;"><strong>地址:</strong> ${p.address || "—"}</div>
           <div style="margin-bottom:6px;"><strong>所屬河川:</strong> ${p.river || "大漢溪"}</div>
-          ${p.service_area ? `<div style="margin-bottom:6px;"><strong>供水範圍:</strong> ${p.service_area}</div>` : ""}
-          ${p.facility_status ? `<div style="margin-bottom:6px;"><strong>設施狀態:</strong> ${p.facility_status}</div>` : ""}
-          ${p.improvement_completed ? `<div style="margin-bottom:6px;"><strong>改善工程完成:</strong> ${p.improvement_completed}</div>` : ""}
-          ${p.description ? `<div style="margin-bottom:6px;font-size:0.85rem;color:#444;">${p.description}</div>` : ""}
           <hr style="margin:8px 0;border:none;border-top:1px solid #eee;">
           ${waterRow}
           <hr style="margin:8px 0;border:none;border-top:1px solid #eee;">
