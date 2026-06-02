@@ -238,6 +238,21 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
+.alert-item--clickable {
+    cursor: pointer;
+}
+
+.alert-item--clickable:focus {
+    outline: 2px solid #667eea;
+    outline-offset: 2px;
+}
+
+.alert-goto-hint {
+    font-size: 11px;
+    color: #667eea;
+    margin-top: 6px;
+}
+
 .alert-item.alert-low { border-left: 4px solid #28a745; }
 .alert-item.alert-medium { border-left: 4px solid #ffc107; }
 .alert-item.alert-high { border-left: 4px solid #fd7e14; }
@@ -278,29 +293,13 @@
     line-height: 1.45;
 }
 
-.alert-score {
-    font-weight: bold;
-    margin-bottom: 8px;
-    padding: 4px 8px;
-    background: #f8f9fa;
-    border-radius: 4px;
-    display: inline-block;
-    font-size: 13px;
-}
-
-.alert-factors {
-    font-size: 12px;
-    color: #6c757d;
-    line-height: 1.35;
-}
-
 .alert-actions {
     padding: 0 14px 14px;
     display: flex;
     gap: 8px;
 }
 
-.btn-ack, .btn-detail {
+.btn-ack, .btn-goto {
     flex: 1;
     padding: 8px 12px;
     border: none;
@@ -310,8 +309,8 @@
     font-weight: 500;
 }
 
-.btn-ack { background: #28a745; color: white; }
-.btn-detail { background: #6c757d; color: white; }
+.btn-ack { background: #6c757d; color: white; }
+.btn-goto { background: #2980b9; color: white; }
 
 .no-alerts {
     text-align: center;

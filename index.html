@@ -8,7 +8,7 @@
   <title>大漢溪抽水站 Web GIS</title>
   <link rel="stylesheet" href="css/animations.css?v=20260602c" />
   <link rel="stylesheet" href="css/responsive.css?v=20260602c" />
-  <link rel="stylesheet" href="css/weatherAlert.css?v=20260602d" />
+  <link rel="stylesheet" href="css/weatherAlert.css?v=20260602e" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: "PingFang TC", "Noto Sans TC", system-ui, sans-serif; color: #2d3436; }
@@ -587,13 +587,6 @@
           </div>
         </div>
         <div id="weatherSourceNote" class="weather-source-note"></div>
-        <div class="risk-indicator weather-risk-row">
-          <span class="risk-text">整體風險:</span>
-          <div class="risk-bar">
-            <div id="overallRiskFill" class="risk-fill" style="width: 0%"></div>
-          </div>
-          <span id="overallRiskText" class="risk-text">低</span>
-        </div>
       </div>
       <div id="alertPanel" class="alert-content-area">
         <div class="loading-weather">
@@ -608,7 +601,7 @@
   <script src="js/mobileOptimization.js?v=20260602c"></script>
   <script src="js/weatherApiConfig.js?v=20260602c"></script>
   <script src="js/realtimeWaterLevel.js?v=20260602c"></script>
-  <script src="js/weatherAlert.js?v=20260602c"></script>
+  <script src="js/weatherAlert.js?v=20260602e"></script>
 
   <script>
     // ============================================================
@@ -721,6 +714,7 @@
     }
     window.renderWaterLevelSidebar = renderWaterLevelSidebar;
     window.assetUrl = assetUrl;
+    window.updateAlertToggleBadge = updateAlertToggleBadge;
 
     // ============================================================
     // Google Maps 主初始化（由 API <script callback=initMap> 觸發）
@@ -1609,57 +1603,33 @@
           }
         }
           
-        const avgRisk = calculateOverallRisk();
-        updateRiskDisplay(avgRisk);
         weatherAlert.updateAlertUI();
+        updateAlertToggleBadge();
         
       } catch (error) {
         console.error('更新氣象顯示失敗:', error);
       }
     }
     
-    function calculateOverallRisk() {
-      if (typeof weatherAlert === 'undefined') return { score: 0, level: 'low' };
-      
-      const stations = Object.values(weatherAlert.pumpingStations || {});
-      if (stations.length === 0) return { score: 0, level: 'low' };
-      
-      const totalScore = stations.reduce((sum, station) => {
-        const risk = weatherAlert.calculateRiskScore(station);
-        return sum + risk.totalScore;
-      }, 0);
-      
-      const avgScore = totalScore / stations.length;
-      const level = weatherAlert.getRiskLevel(avgScore);
-      
-      return { score: avgScore, level };
-    }
-    
-    function updateRiskDisplay(risk) {
-      const fill = document.getElementById('overallRiskFill');
-      const text = document.getElementById('overallRiskText');
+    function updateAlertToggleBadge() {
       const btn = document.getElementById('alertToggleBtn');
-      
-      if (fill) fill.style.width = `${risk.score}%`;
-      
-      const levelText = {
-        low: '低風險',
-        medium: '中風險', 
-        high: '高風險',
-        critical: '極高風險'
-      };
-      
-      if (text) text.textContent = levelText[risk.level] || '低風險';
-      
-      if (btn) {
-        if (risk.level === 'high' || risk.level === 'critical') {
-          btn.classList.add('has-alerts');
-        } else {
-          btn.classList.remove('has-alerts');
-        }
-      }
+      if (!btn || typeof weatherAlert === 'undefined') return;
+      const n = weatherAlert.alerts.filter((a) => !a.acknowledged).length;
+      btn.classList.toggle('has-alerts', n > 0);
     }
-    
+
+    window.flyToPumpingStation = function (stationId) {
+      if (!map || !infoWindow) return false;
+      const marker = pumpingMarkers.find((m) => m._feature?.properties?.id == stationId);
+      if (!marker) return false;
+      const pos = marker.getPosition();
+      map.panTo(pos);
+      if (map.getZoom() < 14) map.setZoom(14);
+      infoWindow.setContent(buildStationPopupHtml(marker._feature));
+      infoWindow.open({ map, anchor: marker });
+      return true;
+    };
+
     window.highlightPumpingStation = function(stationId, level) {
       const marker = pumpingMarkers.find(m => m._feature?.properties?.id == stationId);
       if (marker) {

@@ -32,22 +32,12 @@ class WeatherAlertSystem {
                 extreme: { threshold: 100, color: '#721c24', level: 'critical' }   // 豪雨 100mm/hr
             },
             
-            // 水位警示
+            // 水位警示（公尺）
             waterLevel: {
-                normal: { threshold: 2.0, color: '#28a745', level: 'safe' },       // 正常 <2m
-                attention: { threshold: 3.0, color: '#ffc107', level: 'warning' }, // 注意 2-3m
-                warning: { threshold: 4.0, color: '#fd7e14', level: 'warning' },   // 警戒 3-4m
-                danger: { threshold: 5.0, color: '#dc3545', level: 'danger' },     // 危險 4-5m
-                emergency: { threshold: 6.0, color: '#721c24', level: 'critical' } // 緊急 >5m
+                attention: 3.0,
+                warning: 4.0,
+                danger: 5.0,
             },
-            
-            // 綜合風險評估
-            riskMatrix: {
-                low: { score: 0-30, color: '#28a745', action: 'monitor' },
-                medium: { score: 31-60, color: '#ffc107', action: 'prepare' },
-                high: { score: 61-80, color: '#fd7e14', action: 'alert' },
-                critical: { score: 81-100, color: '#dc3545', action: 'emergency' }
-            }
         };
     }
     
@@ -327,126 +317,80 @@ class WeatherAlertSystem {
     
     
     /**
-     * 風險評估演算法
+     * 依降雨／鄰近水位產生警示（不做綜合風險評分）
      */
-    calculateRiskScore(stationData) {
-        let riskScore = 0;
-        const factors = [];
-        
-        // 1. 降雨因子 (40% 權重)
+    buildStationAlert(station) {
+        const parts = [];
+        let level = 'medium';
         const rainfall = this.weatherData.rainfall?.current || 0;
-        let rainfallScore = 0;
-        if (rainfall > 100) rainfallScore = 40;
-        else if (rainfall > 50) rainfallScore = 30;
-        else if (rainfall > 25) rainfallScore = 20;
-        else if (rainfall > 10) rainfallScore = 10;
-        
-        riskScore += rainfallScore;
-        factors.push(`降雨: ${rainfall.toFixed(1)}mm/hr (${rainfallScore}分)`);
-        
-        // 2. 水位因子 (35% 權重)
-        const waterLevel = stationData.waterLevel || 0;
-        let waterLevelScore = 0;
-        if (waterLevel > 6) waterLevelScore = 35;
-        else if (waterLevel > 5) waterLevelScore = 28;
-        else if (waterLevel > 4) waterLevelScore = 21;
-        else if (waterLevel > 3) waterLevelScore = 14;
-        else if (waterLevel > 2) waterLevelScore = 7;
-        
-        riskScore += waterLevelScore;
-        factors.push(`水位: ${waterLevel.toFixed(2)}m (${waterLevelScore}分)`);
-        
-        // 3. 預報因子 (15% 權重)
-        const rainForecast = this.weatherData.rainfall?.forecast_3hr || 0;
-        let forecastScore = 0;
-        if (rainForecast > 50) forecastScore = 15;
-        else if (rainForecast > 30) forecastScore = 10;
-        else if (rainForecast > 15) forecastScore = 5;
-        
-        riskScore += forecastScore;
-        factors.push(`3小時預報: ${rainForecast.toFixed(1)}mm (${forecastScore}分)`);
-        
-        // 4. 季節/時間因子 (10% 權重)
-        const month = new Date().getMonth() + 1;
-        const seasonScore = (month >= 5 && month <= 9) ? 10 : 5; // 汛期
-        riskScore += seasonScore;
-        factors.push(`季節因子: ${seasonScore}分`);
-        
+        const wl = station.waterLevel || 0;
+        const wlRules = this.alertRules.waterLevel;
+
+        if (rainfall >= 50) {
+            parts.push(`雨勢 ${rainfall.toFixed(1)} mm/hr`);
+            level = 'high';
+        } else if (rainfall >= 25) {
+            parts.push(`降雨 ${rainfall.toFixed(1)} mm/hr`);
+        }
+
+        if (wl > wlRules.danger) {
+            parts.push(`鄰近水位 ${wl.toFixed(2)} m`);
+            level = 'critical';
+        } else if (wl > wlRules.warning) {
+            parts.push(`鄰近水位 ${wl.toFixed(2)} m`);
+            if (level !== 'critical') level = 'high';
+        } else if (wl > wlRules.attention) {
+            parts.push(`鄰近水位 ${wl.toFixed(2)} m`);
+        }
+
+        if (parts.length === 0) return null;
+
         return {
-            totalScore: Math.min(riskScore, 100),
-            factors: factors,
-            level: this.getRiskLevel(riskScore)
+            level,
+            message: `${station.name}：${parts.join('、')}`,
         };
     }
-    
-    /**
-     * 取得風險等級
-     */
-    getRiskLevel(score) {
-        if (score >= 81) return 'critical';
-        if (score >= 61) return 'high'; 
-        if (score >= 31) return 'medium';
-        return 'low';
-    }
-    
+
     /**
      * 檢查並生成警示
      */
     async checkAlerts() {
         if (!this.isMonitoring) return;
-        
-        // 更新氣象資料
+
         await this.fetchWeatherData();
-        
+
         const newAlerts = [];
-        
-        // 檢查每個抽水站
-        Object.values(this.pumpingStations).forEach(station => {
-            const riskAssessment = this.calculateRiskScore(station);
-            
-            // 產生對應的警示
-            if (riskAssessment.totalScore >= 31) {
-                const alert = {
-                    id: `alert_${station.id}_${Date.now()}`,
-                    stationId: station.id,
-                    stationName: station.name,
-                    type: 'weather_risk',
-                    level: riskAssessment.level,
-                    score: riskAssessment.totalScore,
-                    factors: riskAssessment.factors,
-                    message: this.generateAlertMessage(station, riskAssessment),
-                    timestamp: new Date().toISOString(),
-                    acknowledged: false
-                };
-                
-                newAlerts.push(alert);
-            }
+        const seen = new Set();
+
+        Object.values(this.pumpingStations).forEach((station) => {
+            const info = this.buildStationAlert(station);
+            if (!info) return;
+
+            const key = `${station.id}_${info.level}`;
+            if (seen.has(key)) return;
+            seen.add(key);
+
+            newAlerts.push({
+                id: `alert_${station.id}_${Date.now()}`,
+                stationId: station.id,
+                stationName: station.name,
+                type: 'weather_notice',
+                level: info.level,
+                message: info.message,
+                timestamp: new Date().toISOString(),
+                acknowledged: false,
+            });
         });
-        
-        // 更新警示列表
-        this.alerts = [...newAlerts, ...this.alerts.filter(a => !a.acknowledged)];
-        
-        // 發送通知
-        newAlerts.forEach(alert => this.sendNotification(alert));
-        
-        // 更新 UI
+
+        this.alerts = [...newAlerts, ...this.alerts.filter((a) => !a.acknowledged)];
+
+        newAlerts.forEach((alert) => this.sendNotification(alert));
         this.updateAlertUI();
-        
+        if (typeof window.updateAlertToggleBadge === 'function') {
+            window.updateAlertToggleBadge();
+        }
+
         return newAlerts;
-    }
-    
-    /**
-     * 生成警示訊息
-     */
-    generateAlertMessage(station, risk) {
-        const messages = {
-            low: `${station.name} - 正常監控中`,
-            medium: `${station.name} - 請注意天氣變化，建議準備應變措施`,
-            high: `${station.name} - 天氣條件惡化，建議啟動應變機制`,
-            critical: `${station.name} - 極端天氣警報！立即啟動緊急應變！`
-        };
-        
-        return messages[risk.level] || messages.medium;
     }
     
     /**
@@ -464,19 +408,28 @@ class WeatherAlertSystem {
             
             notification.onclick = () => {
                 window.focus();
-                this.showAlertDetail(alert);
+                this.goToStation(alert.stationId);
             };
         }
         
-        // 2. 音效提醒
         if (alert.level === 'high' || alert.level === 'critical') {
             this.playAlertSound();
         }
-        
-        // 3. 視覺提醒 (閃爍、顏色變化)
+
         this.highlightStationOnMap(alert.stationId, alert.level);
-        
-        console.log(`🚨 ${alert.level.toUpperCase()} 警示:`, alert.message);
+        console.log(`📢 氣象通知:`, alert.message);
+    }
+
+    goToStation(stationId) {
+        if (window.flyToPumpingStation && window.flyToPumpingStation(stationId)) {
+            return;
+        }
+        this.highlightStationOnMap(stationId, 'medium');
+    }
+
+    showAlertDetail(alertId) {
+        const alert = this.alerts.find((a) => a.id === alertId);
+        if (alert) this.goToStation(alert.stationId);
     }
     
     /**
@@ -528,11 +481,13 @@ class WeatherAlertSystem {
             `;
         }
         
-        // 更新警示計數
         const alertBadge = document.getElementById('alertBadge');
         if (alertBadge) {
             alertBadge.textContent = activeAlerts.length;
-            alertBadge.style.display = activeAlerts.length > 0 ? 'block' : 'none';
+            alertBadge.style.display = activeAlerts.length > 0 ? 'flex' : 'none';
+        }
+        if (typeof window.updateAlertToggleBadge === 'function') {
+            window.updateAlertToggleBadge();
         }
     }
     
@@ -547,22 +502,24 @@ class WeatherAlertSystem {
             critical: '#dc3545'
         };
         
+        const sid = alert.stationId;
         return `
-            <div class="alert-item alert-${alert.level}" style="border-left: 4px solid ${levelColors[alert.level]}">
+            <div class="alert-item alert-${alert.level} alert-item--clickable"
+                 style="border-left: 4px solid ${levelColors[alert.level] || '#ffc107'}"
+                 role="button" tabindex="0"
+                 onclick="weatherAlert.goToStation(${sid})"
+                 onkeydown="if(event.key==='Enter')weatherAlert.goToStation(${sid})">
                 <div class="alert-content">
                     <div class="alert-title">
                         <strong>${alert.stationName}</strong>
                         <span class="alert-time">${new Date(alert.timestamp).toLocaleTimeString()}</span>
                     </div>
                     <div class="alert-message">${alert.message}</div>
-                    <div class="alert-score">風險評分: ${alert.score}/100</div>
-                    <div class="alert-factors">
-                        ${alert.factors.map(f => `<small>${f}</small>`).join('<br>')}
-                    </div>
+                    <div class="alert-goto-hint">點擊前往地圖上的抽水站 →</div>
                 </div>
                 <div class="alert-actions">
-                    <button onclick="weatherAlert.acknowledgeAlert('${alert.id}')" class="btn-ack">確認</button>
-                    <button onclick="weatherAlert.showAlertDetail('${alert.id}')" class="btn-detail">詳情</button>
+                    <button type="button" class="btn-goto" onclick="event.stopPropagation();weatherAlert.goToStation(${sid})">📍 定位</button>
+                    <button type="button" class="btn-ack" onclick="event.stopPropagation();weatherAlert.acknowledgeAlert('${alert.id}')">確認</button>
                 </div>
             </div>
         `;
