@@ -69,7 +69,10 @@ class WeatherAlertSystem {
         console.log('🌦️ 開始獲取氣象資料...');
 
         // 1) 本機 node server：/api/weather/current（.env → CWA_API_KEY）
+        const isLocalDev =
+            location.hostname === 'localhost' || location.hostname === '127.0.0.1';
         try {
+            if (!isLocalDev) throw new Error('靜態站略過 API 代理');
             const res = await fetch('/api/weather/current', { cache: 'no-store' });
             if (res.ok) {
                 const data = await res.json();

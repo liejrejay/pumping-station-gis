@@ -317,6 +317,32 @@
     .wl-station-list .wl-name { color: #444; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .wl-station-list .wl-val { font-weight: 600; color: #0b5394; white-space: nowrap; }
     .wl-station-list .wl-na { color: #aaa; font-weight: normal; }
+    .water-status-panel {
+      width: 100%;
+      box-sizing: border-box;
+      background: #f5f9fc;
+      border: 1px solid #d6e4f0;
+      border-radius: 8px;
+      padding: 8px 10px;
+      margin-top: 4px;
+    }
+    .water-status-panel .status-header {
+      font-weight: 600;
+      font-size: 0.8rem;
+      color: #1a5276;
+      margin-bottom: 6px;
+    }
+    .water-status-panel .status-indicator {
+      padding: 5px 8px;
+      border-radius: 4px;
+      font-size: 0.78rem;
+      margin-bottom: 4px;
+    }
+    .water-status-panel .status-indicator.success { background: #d4edda; color: #155724; }
+    .water-status-panel .status-indicator.error { background: #f8d7da; color: #721c24; }
+    .water-status-panel .status-indicator.pending { background: #fff3cd; color: #856404; }
+    .water-status-panel .status-info { font-size: 0.68rem; color: #666; text-align: center; margin-top: 4px; }
+    .water-status-panel .status-hint { font-size: 0.65rem; color: #888; text-align: center; margin-top: 6px; }
 
     /* 右下角：僅圖例 */
     .legend {
@@ -431,7 +457,15 @@
           <span id="updateStatus">準備中...</span>
         </div>
         <button class="action-btn primary" id="manualRefresh" onclick="manualRefresh()" style="margin-top:8px;">🔄 立即更新</button>
-        <div id="waterLevelPanelHost" class="water-level-sidebar-host"></div>
+        <div id="waterLevelPanelHost" class="water-level-sidebar-host">
+          <div id="waterLevelStatusPanel" class="water-status-panel">
+            <div class="status-header"><span>💧 即時水位（大漢溪 8 站）</span></div>
+            <div id="waterLevelStatus" class="status-indicator">準備中…</div>
+            <ul id="waterLevelStationList" class="wl-station-list" aria-label="即時水位站列表"></ul>
+            <div class="status-info"><small>最後更新: <span id="lastWaterUpdate">--</span></small></div>
+            <div class="status-hint">資料來源：水利署 WRA</div>
+          </div>
+        </div>
       </section>
 
       <!-- 屬性查詢 -->
@@ -625,6 +659,57 @@
     window.WATER_LEVEL_STATIONS = WATER_LEVEL_STATIONS;
     window.WL_REALTIME_API = WL_REALTIME_API;
 
+    /** 僅本機 npm start 有 Express API；GitHub Pages 勿打 /api/* */
+    function isLocalDevServer() {
+      const h = location.hostname;
+      return h === "localhost" || h === "127.0.0.1";
+    }
+
+    function formatWlDatetime(dt) {
+      if (!dt) return "";
+      return String(dt).replace("T", " ").slice(0, 16);
+    }
+
+    function waterLevelMarkerLabel(waterlevel) {
+      const v = parseFloat(waterlevel);
+      if (Number.isNaN(v)) return null;
+      return {
+        text: v.toFixed(1) + "m",
+        color: "#083d6b",
+        fontSize: "11px",
+        fontWeight: "700",
+      };
+    }
+
+    function renderWaterLevelSidebar(data, source) {
+      const list = document.getElementById("waterLevelStationList");
+      const status = document.getElementById("waterLevelStatus");
+      const lastEl = document.getElementById("lastWaterUpdate");
+      const n = Object.keys(data || {}).length;
+      if (list) {
+        list.innerHTML = WATER_LEVEL_STATIONS.map((s) => {
+          const rt = data[s.stationid];
+          const val =
+            rt && rt.waterlevel !== "" && rt.waterlevel != null
+              ? `<span class="wl-val">${parseFloat(rt.waterlevel).toFixed(2)} m</span>`
+              : '<span class="wl-na">—</span>';
+          return `<li><span class="wl-name" title="${s.name}">${s.name}</span>${val}</li>`;
+        }).join("");
+      }
+      if (status) {
+        if (n > 0) {
+          const snap = source === "WRA_SNAPSHOT" ? "（快照）" : "";
+          status.className = "status-indicator success";
+          status.textContent = `已更新 ${n}/${WATER_LEVEL_STATIONS.length} 站${snap}`;
+        } else {
+          status.className = "status-indicator error";
+          status.textContent = "尚無即時資料";
+        }
+      }
+      if (lastEl) lastEl.textContent = new Date().toLocaleString("zh-TW");
+    }
+    window.renderWaterLevelSidebar = renderWaterLevelSidebar;
+
     // ============================================================
     // Google Maps 主初始化（由 API <script callback=initMap> 觸發）
     // ============================================================
@@ -676,10 +761,11 @@
       document.getElementById("sidebar").style.display = "flex";
       attachSidebarToggle();
 
-      if (window.waterLevelSystem) waterLevelSystem.createStatusPanel();
-      loadAllLayers();
-      loadRealtimeWaterLevels();
-      setInterval(loadRealtimeWaterLevels, WL_REFRESH_INTERVAL_MS);
+      (async () => {
+        await loadAllLayers();
+        await loadRealtimeWaterLevels();
+        setInterval(loadRealtimeWaterLevels, WL_REFRESH_INTERVAL_MS);
+      })();
 
       startAutoUpdate();
 
@@ -733,6 +819,16 @@
         throw e;
       }
       lastUpdateTime = Date.now();
+      if (Object.keys(realtimeWaterLevels).length) {
+        applyWaterLevelsToMap(realtimeWaterLevels);
+      }
+    }
+
+    function applyWaterLevelsToMap(data) {
+      if (typeof window.updateWaterLevelMarkers === "function") {
+        window.updateWaterLevelMarkers(data);
+      }
+      renderWaterLevelSidebar(data, window.__wlLastSource || "");
     }
 
     async function loadWaterfront() {
@@ -872,27 +968,27 @@
       if (!res.ok) throw new Error("water-level-stations.geojson HTTP " + res.status);
       const gj = await res.json();
       
-      if (window.waterLevelSystem) {
-        waterLevelSystem.createStatusPanel();
-      }
       clearMarkers(wlActiveMarkers);
       clearMarkers(wlInactiveMarkers);
       const showInactive = document.getElementById("layerWlInactive")?.checked;
       (gj.features || []).forEach((feat) => {
         const [lng, lat] = feat.geometry.coordinates;
         const active = (feat.properties || {}).status === "現存";
+        const sid = feat.properties?.stationid;
+        const rt0 = sid ? realtimeWaterLevels[sid] : null;
         const marker = new google.maps.Marker({
           map: active || showInactive ? map : null,
           position: { lat, lng },
           icon: waterStationIcon(active),
           title: feat.properties.name,
+          label: active && rt0 ? waterLevelMarkerLabel(rt0.waterlevel) : null,
           zIndex: 50,
         });
+        if (rt0) marker._realTimeData = rt0;
         marker._feature = feat;
         marker._kind = active ? "wl-active" : "wl-inactive";
         marker.addListener("click", () => {
-          // 使用即時資料版本的彈出視窗
-          const realTimeData = marker._realTimeData || null;
+          const realTimeData = marker._realTimeData || realtimeWaterLevels[sid] || null;
           infoWindow.setContent(buildWaterLevelPopupHtmlWithRealtime(feat, realTimeData));
           infoWindow.open({ map, anchor: marker });
           
@@ -993,8 +1089,8 @@
         }
       };
 
-      try {
-        if (location.protocol !== "file:") {
+      if (isLocalDevServer()) {
+        try {
           const r = await fetch("/api/water-level/current", { cache: "no-store" });
           if (r.ok) {
             const j = await r.json();
@@ -1003,9 +1099,9 @@
               source = j.source || "WRA_API";
             }
           }
+        } catch (e) {
+          console.warn("[水位] 本機 API 失敗:", e.message);
         }
-      } catch (e) {
-        console.warn("[水位] 本機 API 失敗:", e.message);
       }
 
       if (!Object.keys(next).length) {
@@ -1041,26 +1137,16 @@
 
       realtimeWaterLevels = next;
       window.realtimeWaterLevels = next;
+      window.__wlLastSource = source;
 
       const n = Object.keys(next).length;
       console.log(`[水位] 已更新 ${n}/${WATER_LEVEL_STATIONS.length} 站 (${source || "無資料"})`);
 
-      if (window.waterLevelSystem) {
-        if (!document.getElementById("waterLevelStatusPanel")) {
-          waterLevelSystem.createStatusPanel();
-        }
-        if (waterLevelSystem.renderStationList) {
-          waterLevelSystem.renderStationList(next, source);
-        }
-      }
-      if (typeof updateWaterLevelMarkers === "function") {
-        updateWaterLevelMarkers(next);
-      }
+      renderWaterLevelSidebar(next, source);
+      applyWaterLevelsToMap(next);
+
       if (window.weatherAlert?.updateWaterLevelData) {
         weatherAlert.updateWaterLevelData(next);
-      }
-      if (n === 0 && window.waterLevelSystem?.updateStatusIndicator) {
-        waterLevelSystem.updateStatusIndicator("error", "無法取得水位，請按「立即更新」重試");
       }
       return next;
     }
@@ -1106,7 +1192,7 @@
           : `${Math.round(wl.distance_m)} 公尺`;
         let valueHtml;
         if (rt && rt.waterlevel !== "" && rt.waterlevel != null) {
-          const t = (rt.datetime || "").replace("T", " ").slice(0, 16);
+          const t = formatWlDatetime(rt.datetime);
           valueHtml = `<span style="color:#0b5394;font-weight:600;">${parseFloat(rt.waterlevel).toFixed(2)} m</span>
                        <span style="color:#888;font-size:0.8rem;"> @ ${t}</span>`;
         } else {
@@ -1147,7 +1233,7 @@
       const rt = realtimeWaterLevels[p.stationid];
       let valueHtml = `<span style="color:#888;">${p.status === "現存" ? "載入中…" : "已廢站，無即時資料"}</span>`;
       if (rt && rt.waterlevel !== "" && rt.waterlevel != null) {
-        const t = (rt.datetime || "").replace("T", " ").slice(0, 16);
+        const t = formatWlDatetime(rt.datetime);
         valueHtml = `<span style="color:#0b5394;font-weight:600;">${parseFloat(rt.waterlevel).toFixed(2)} m</span>
                      <span style="color:#888;font-size:0.8rem;"> @ ${t}</span>`;
       }
@@ -1604,6 +1690,7 @@
         if (!Number.isNaN(wl) && marker._kind === "wl-active") {
           const baseName = marker._feature?.properties?.name || stationId;
           marker.setTitle(`${baseName} · ${wl.toFixed(2)} m`);
+          marker.setLabel(waterLevelMarkerLabel(realTimeData.waterlevel));
         }
         if (marker._infoWindowOpen && marker._feature) {
           infoWindow.setContent(
@@ -1624,8 +1711,7 @@
       
       if (currentData && currentData.waterlevel !== "" && currentData.waterlevel != null) {
         const waterLevel = parseFloat(currentData.waterlevel);
-        const updateTime = currentData.datetime ? 
-          new Date(currentData.datetime).toLocaleString() : '未知時間';
+        const updateTime = formatWlDatetime(currentData.datetime) || "未知時間";
         
         // 根據水位高低設定顏色
         let levelColor = '#0b5394'; // 預設藍色
@@ -1657,7 +1743,7 @@
             ${valueHtml}
           </div>
           <div style="font-size:0.75rem;color:#666;margin-top:6px;text-align:center;">
-            資料來源：中央氣象署 | 即時更新
+            資料來源：水利署 WRA | 即時更新
           </div>
         </div>
       `;

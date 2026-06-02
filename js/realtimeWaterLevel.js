@@ -141,62 +141,13 @@ class RealtimeWaterLevelSystem {
   }
 
   createStatusPanel() {
-    const host = document.getElementById('waterLevelPanelHost');
-    if (!host) return;
+    /* 面板已寫在 index.html，避免 GitHub Pages 快取舊 JS 導致列表不顯示 */
+  }
 
-    const existing = document.getElementById('waterLevelStatusPanel');
-    if (existing) {
-      if (existing.parentElement !== host) host.appendChild(existing);
-      return;
+  renderStationList(data, source) {
+    if (typeof window.renderWaterLevelSidebar === 'function') {
+      window.renderWaterLevelSidebar(data, source);
     }
-
-    const panel = document.createElement('div');
-    panel.id = 'waterLevelStatusPanel';
-    panel.innerHTML = `
-      <div class="water-status-panel">
-        <div class="status-header"><span>💧 即時水位</span></div>
-        <div id="waterLevelStatus" class="status-indicator">準備中…</div>
-        <ul id="waterLevelStationList" class="wl-station-list"></ul>
-        <div class="status-info">
-          <small>最後更新: <span id="lastWaterUpdate">--</span></small>
-        </div>
-        <div class="status-hint">資料來源：水利署 WRA · 請用上方「立即更新」</div>
-      </div>
-    `;
-
-    if (!document.getElementById('water-level-panel-styles')) {
-      const style = document.createElement('style');
-      style.id = 'water-level-panel-styles';
-      style.textContent = `
-        .water-status-panel {
-          width: 100%;
-          box-sizing: border-box;
-          background: #f5f9fc;
-          border: 1px solid #d6e4f0;
-          border-radius: 8px;
-          padding: 8px 10px;
-        }
-        .status-header {
-          font-weight: 600;
-          font-size: 0.8rem;
-          color: #1a5276;
-          margin-bottom: 6px;
-        }
-        .status-indicator {
-          padding: 5px 8px;
-          border-radius: 4px;
-          font-size: 0.78rem;
-          margin-bottom: 4px;
-        }
-        .status-indicator.success { background: #d4edda; color: #155724; }
-        .status-indicator.error { background: #f8d7da; color: #721c24; }
-        .status-indicator.pending { background: #fff3cd; color: #856404; }
-        .status-info { font-size: 0.68rem; color: #666; text-align: center; margin-top: 4px; }
-        .status-hint { font-size: 0.65rem; color: #888; text-align: center; margin-top: 6px; }
-      `;
-      document.head.appendChild(style);
-    }
-    host.appendChild(panel);
   }
 }
 
