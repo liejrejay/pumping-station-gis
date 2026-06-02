@@ -1330,12 +1330,12 @@
         }
 
         if (note) {
-          if (weatherData.source === 'CWA_API' || weatherData.source === 'CWA_CLIENT') {
+          if (weatherData.source === 'CWA_API' || weatherData.source === 'CWA_CLIENT' || weatherData.source === 'CWA_SNAPSHOT') {
             const n = weatherData.representativeStation || '大漢溪流域';
-            const t = weatherData.lastUpdate
-              ? new Date(weatherData.lastUpdate).toLocaleString('zh-TW')
-              : '';
-            note.textContent = `資料來源：中央氣象署 · ${n}${t ? ' · ' + t : ''}`;
+            const t = weatherData.snapshotAt || weatherData.lastUpdate;
+            const tStr = t ? new Date(t).toLocaleString('zh-TW') : '';
+            const snapHint = weatherData.source === 'CWA_SNAPSHOT' ? '（部署快照）' : '（即時）';
+            note.textContent = `資料來源：中央氣象署${snapHint} · ${n}${tStr ? ' · ' + tStr : ''}`;
             note.style.color = '#1e8449';
           } else {
             note.textContent = weatherData.statusMessage || '尚未連線氣象 API';

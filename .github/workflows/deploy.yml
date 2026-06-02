@@ -25,8 +25,16 @@ jobs:
       - name: Create production build
         env:
           GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
+          CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
         run: |
           mkdir -p dist/js
+
+          if [ -n "$CWA_API_KEY" ]; then
+            node scripts/fetch_cwa_snapshot.js
+            echo "✅ 已更新氣象快照（公開站離線可看）"
+          else
+            echo "::warning::未設定 CWA_API_KEY Secret，公開站氣象可能無資料"
+          fi
 
           cp *.html dist/ 2>/dev/null || true
           cp -r css dist/ 2>/dev/null || true

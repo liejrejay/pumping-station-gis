@@ -84,18 +84,37 @@ class WeatherAlertSystem {
                 console.log('✅ 中央氣象署即時資料', data.representativeStation);
                 return this.weatherData;
             }
-            const errBody = await res.json().catch(() => ({}));
             if (res.status === 503) {
-                console.warn('⚠️', errBody.hint || errBody.error);
-                this.weatherData = this.emptyWeatherData('NO_KEY', errBody.hint || errBody.error);
-                return this.weatherData;
+                console.warn('[weather] 本機未設定 CWA_API_KEY，改讀公開站快照');
+            } else {
+                const errBody = await res.json().catch(() => ({}));
+                throw new Error(errBody.error || `HTTP ${res.status}`);
             }
-            throw new Error(errBody.error || `HTTP ${res.status}`);
         } catch (serverErr) {
             console.warn('[weather] 伺服器代理不可用:', serverErr.message);
         }
 
-        // 2) 備援：weatherApiConfig.js 內直接填 CWA.apiKey（僅本機／靜態站）
+        // 2) GitHub Pages 等靜態站：讀部署時寫入的快照（電腦關機也能看）
+        try {
+            const snapRes = await fetch('data/cwa-weather-latest.json', { cache: 'no-store' });
+            if (snapRes.ok) {
+                const data = await snapRes.json();
+                const forecastData = await this.fetchForecastData();
+                const typhoonData = await this.fetchTyphoonData();
+                this.weatherData = {
+                    ...data,
+                    forecast: forecastData,
+                    typhoon: typhoonData,
+                    source: 'CWA_SNAPSHOT',
+                };
+                console.log('✅ 氣象快照', data.snapshotAt || data.lastUpdate);
+                return this.weatherData;
+            }
+        } catch (snapErr) {
+            console.warn('[weather] 快照不可用:', snapErr.message);
+        }
+
+        // 3) 備援：weatherApiConfig.js 內直接填 CWA.apiKey
         if (window.WeatherAPIConfig?.CWA?.apiKey) {
             try {
                 const rainfallData = await this.fetchRainfallData();
@@ -121,7 +140,7 @@ class WeatherAlertSystem {
 
         this.weatherData = this.emptyWeatherData(
             'UNCONFIGURED',
-            '請在 .env 設定 CWA_API_KEY 並用 npm start 開啟（勿用 file://）'
+            '本機請 npm start；公開站請在 GitHub Secret 設定 CWA_API_KEY 後重新部署'
         );
         return this.weatherData;
     }
