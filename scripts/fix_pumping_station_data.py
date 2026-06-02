@@ -16,7 +16,23 @@ COORD_OVERRIDES = {
     "新莊抽水站": (121.4573, 25.0405),
     "湳仔溝抽水站": (121.4477, 25.0205),
     "湳仔溝二抽水站": (121.4481, 25.0209),
+    "建國抽水站": (121.4320, 25.0265),
+    "潭底溝抽水站": (121.4307, 25.0249),
+    "後港抽水站": (121.4298, 25.0276),
+    "公館溝抽水站": (121.4528, 25.0356),
 }
+
+# (name, 民國年, address without prefix, river, pump_type)
+XINZHUANG_REFERENCE = [
+    ("建國抽水站", 95, "新北市新莊區建國一路113-1號", "塔寮坑溪", "豎軸式"),
+    ("潭底溝抽水站", 96, "新北市新莊區建國二路81-1號", "塔寮坑溪", "豎軸式"),
+    ("公館溝抽水站", 95, "新北市新莊區環漢路2段385號", "大漢溪", "豎軸式"),
+    ("新莊抽水站", 86, "新北市新莊區環漢路2段142號", "大漢溪", "豎軸式"),
+    ("後港抽水站", 93, "新北市新莊區後港一路139-1號", "塔寮坑溪", "豎軸式"),
+]
+
+ALLOWED_RIVERS = frozenset({"大漢溪", "塔寮坑溪"})
+XINZHUANG_REFERENCE_NAMES = frozenset(n for n, *_ in XINZHUANG_REFERENCE)
 
 # legacy plus_code → drop (duplicate of official NTPC station)
 DROP_PLUS_CODES = {
@@ -35,6 +51,10 @@ OFFICIAL_ADDR_PATTERNS = [
     re.compile(r"新莊.*環漢路.*142"),
     re.compile(r"新莊.*環漢路.*630"),
     re.compile(r"新莊.*環漢路.*535"),
+    re.compile(r"新莊.*環漢路.*385"),
+    re.compile(r"新莊.*建國一路.*113"),
+    re.compile(r"新莊.*建國二路.*81"),
+    re.compile(r"新莊.*後港一路.*139"),
 ]
 
 
@@ -108,6 +128,83 @@ def should_drop_legacy(f: dict, official_coords: list[list[float]]) -> bool:
     return False
 
 
+def is_xinzhuang_address(addr: str) -> bool:
+    return "新莊區" in norm_addr(addr)
+
+
+def make_reference_feature(
+    name: str, roc: int, address: str, river: str, pump_type: str
+) -> dict:
+    lon, lat = COORD_OVERRIDES[name]
+    return {
+        "type": "Feature",
+        "geometry": {"type": "Point", "coordinates": [lon, lat]},
+        "properties": {
+            "name": name,
+            "address": address,
+            "river": river,
+            "pump_type": pump_type,
+            "year_ce": roc + 1911,
+            "year_ce_range": None,
+            "source": "reference table",
+            "geocode_quality": "approximate",
+        },
+    }
+
+
+def apply_xinzhuang_reference(features: list[dict]) -> list[dict]:
+    """Drop 新莊暫名站、移除非允許河川，並套用新莊五站對照表。"""
+    kept: list[dict] = []
+    by_name: dict[str, dict] = {}
+
+    for f in features:
+        p = f["properties"]
+        name = p.get("name") or ""
+        addr = p.get("address") or ""
+        river = (p.get("river") or "").strip()
+
+        if is_legacy(f) and is_xinzhuang_address(addr):
+            print(f"drop 新莊 legacy: {name}")
+            continue
+
+        if river and river not in ALLOWED_RIVERS:
+            print(f"drop wrong river ({river}): {name}")
+            continue
+
+        if name in XINZHUANG_REFERENCE_NAMES:
+            by_name[name] = f
+            continue
+
+        if is_legacy(f) and "暫名" in name:
+            if "中和區" in name or "永和區" in addr:
+                print(f"drop non-大漢溪 watershed legacy: {name}")
+                continue
+
+        kept.append(f)
+
+    for name, roc, address, river, pump_type in XINZHUANG_REFERENCE:
+        year_ce = roc + 1911
+        if name in by_name:
+            f = by_name[name]
+            p = f["properties"]
+            p["address"] = address
+            p["river"] = river
+            p["pump_type"] = pump_type
+            p["year_ce"] = year_ce
+            p["year_ce_range"] = None
+            p["label"] = name
+            p["source"] = p.get("source") or "reference table"
+            if name in COORD_OVERRIDES:
+                f["geometry"]["coordinates"] = list(COORD_OVERRIDES[name])
+            print(f"update: {name} ({river}, 民國{roc})")
+            kept.append(f)
+        else:
+            print(f"add: {name} ({river}, 民國{roc})")
+            kept.append(make_reference_feature(name, roc, address, river, pump_type))
+
+    return kept
+
+
 def dedupe_legacy_by_name(features: list[dict]) -> list[dict]:
     """Keep one legacy feature per station name (longest address wins)."""
     legacy = [f for f in features if is_legacy(f)]
@@ -163,6 +260,9 @@ def main() -> None:
             continue
 
         features.append(f)
+
+    print("\n--- 新莊區對照表與河川篩選 ---")
+    features = apply_xinzhuang_reference(features)
 
     before = len(features)
     features = dedupe_legacy_by_name(features)
