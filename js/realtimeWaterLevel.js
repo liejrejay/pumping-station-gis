@@ -288,6 +288,15 @@ class RealtimeWaterLevelSystem {
      * 創建狀態面板 UI
      */
     createStatusPanel() {
+        const host = document.getElementById('waterLevelPanelHost');
+        if (!host) return;
+
+        const existing = document.getElementById('waterLevelStatusPanel');
+        if (existing) {
+            if (existing.parentElement !== host) host.appendChild(existing);
+            return;
+        }
+
         const panel = document.createElement('div');
         panel.id = 'waterLevelStatusPanel';
         panel.innerHTML = `
@@ -307,24 +316,24 @@ class RealtimeWaterLevelSystem {
         const style = document.createElement('style');
         style.textContent = `
             .water-status-panel {
-                position: fixed;
-                bottom: 20px;
-                right: 20px;
-                background: rgba(255, 255, 255, 0.95);
-                backdrop-filter: blur(10px);
+                position: static;
+                width: 100%;
+                box-sizing: border-box;
+                background: #f5f9fc;
+                border: 1px solid #d6e4f0;
                 border-radius: 8px;
-                padding: 12px;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-                z-index: 1400;
-                min-width: 200px;
+                padding: 8px 10px;
+                box-shadow: none;
             }
             
             .status-header {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                margin-bottom: 8px;
-                font-weight: bold;
+                margin-bottom: 6px;
+                font-weight: 600;
+                font-size: 0.8rem;
+                color: #1a5276;
             }
             
             .refresh-btn {
@@ -342,10 +351,10 @@ class RealtimeWaterLevelSystem {
             }
             
             .status-indicator {
-                padding: 6px 8px;
+                padding: 5px 8px;
                 border-radius: 4px;
-                font-size: 14px;
-                margin-bottom: 6px;
+                font-size: 0.78rem;
+                margin-bottom: 4px;
                 transition: all 0.3s ease;
             }
             
@@ -360,23 +369,24 @@ class RealtimeWaterLevelSystem {
             }
             
             .status-info {
-                font-size: 12px;
+                font-size: 0.68rem;
                 color: #666;
                 text-align: center;
             }
             
             @media (max-width: 768px) {
                 .water-status-panel {
-                    bottom: 10px;
-                    right: 10px;
-                    left: 10px;
-                    min-width: auto;
+                    padding: 8px 10px;
+                    font-size: 12px;
                 }
             }
         `;
         
-        document.head.appendChild(style);
-        document.body.appendChild(panel);
+        if (!document.getElementById('water-level-panel-styles')) {
+            style.id = 'water-level-panel-styles';
+            document.head.appendChild(style);
+        }
+        host.appendChild(panel);
     }
 }
 

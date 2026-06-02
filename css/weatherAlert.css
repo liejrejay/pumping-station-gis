@@ -5,10 +5,10 @@
 /* 警示面板 */
 .weather-alert-panel {
     position: fixed;
-    top: 20px;
-    right: 20px;
-    width: 400px;
-    max-height: 80vh;
+    top: 72px;
+    right: 12px;
+    width: min(400px, calc(100vw - 340px));
+    max-height: calc(100vh - 90px);
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
     border-radius: 12px;
@@ -44,6 +44,16 @@
     z-index: 1500;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     transition: all 0.3s ease;
+}
+
+/* 與使用者面板並排（index.html .hud-top-right） */
+.alert-toggle-btn--compact {
+    position: static;
+    width: 44px;
+    height: 44px;
+    font-size: 20px;
+    flex-shrink: 0;
+    margin-top: 2px;
 }
 
 .alert-toggle-btn:hover {
@@ -320,15 +330,17 @@
 /* 響應式設計 */
 @media screen and (max-width: 768px) {
     .weather-alert-panel {
-        width: calc(100% - 40px);
-        right: 20px;
-        left: 20px;
+        width: calc(100vw - 24px);
+        max-width: none;
+        right: 12px;
+        left: auto;
+        top: 64px;
     }
     
-    .alert-toggle-btn {
-        width: 50px;
-        height: 50px;
-        font-size: 20px;
+    .alert-toggle-btn--compact {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
     }
     
     .weather-grid {
