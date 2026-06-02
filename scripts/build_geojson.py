@@ -7,9 +7,9 @@ Sources:
 
 Pipeline:
 1. Fetch NTPC dataset, filter river == "大漢溪", convert ROC year → CE year,
-   prefix addresses with "新北市", and merge entries sharing the same address.
-2. Forward-geocode merged API entries via OpenStreetMap Nominatim (name first,
-   then address fallback, then a hard-coded approximate point).
+   prefix addresses with "新北市" (one feature per API row; same-address sites stay separate).
+2. Forward-geocode API entries via Nominatim (hard-coded coords first, then name,
+   address, approximate fallback).
 3. Decode Plus Codes → lat/lng for the legacy list (kept districts only),
    reverse-geocode for a detailed address, then drop any legacy entry within
    ~100 m of an API entry (API entries win).
@@ -55,18 +55,13 @@ GENERIC_KEEP = {"新北市"}
 
 # Legacy Plus Code list: (plus_code, village, district).
 LEGACY_STATIONS: list[tuple[str, str, str]] = [
-    ("2FQ6+45", "文明里", "新北市新莊區"),
-    ("2CGV+24", "瓊林里", "新北市新莊區"),
     ("2FJ2+X7", "瓊林里", "新北市新莊區"),
-    ("2CHW+7C", "新莊區", "新北市"),
     ("2FPC+83", "溪頭里", "新北市板橋區"),
     ("2CFJ+X7", "新莊區", "新北市"),
     ("XCJH+2C", "溪福里", "新北市板橋區"),
     ("2FH4+85", "中正里", "新北市板橋區"),
-    ("2FQ6+8G", "文明里", "新北市新莊區"),
     ("2FFM+GV", "振義里", "新北市板橋區"),
     ("3F36+68", "頭前里", "新北市新莊區"),
-    ("2FFM+HH", "振義里", "新北市板橋區"),
     ("2FVC+48", "中興里", "新北市三重區"),
     ("2FH4+78", "中正里", "新北市板橋區"),
     ("2FH4+77", "中正里", "新北市板橋區"),
@@ -78,7 +73,6 @@ LEGACY_STATIONS: list[tuple[str, str, str]] = [
     ("2CHR+3F", "新莊區", "新北市"),
     ("2FJQ+8F", "華江里", "臺北市萬華區"),
     ("3C9W+P6", "楓樹里", "新北市泰山區"),
-    ("2CCR+RG", "瓊林里", "新北市新莊區"),
     ("2CCX+C7", "香社里", "新北市板橋區"),
     ("2CCX+G6", "香社里", "新北市板橋區"),
     ("XCJQ+GH", "員福里", "新北市土城區"),
@@ -96,10 +90,8 @@ LEGACY_STATIONS: list[tuple[str, str, str]] = [
     ("W8HV+WF", "鳶山里", "新北市三峽區"),
     ("2CHH+2W", "建福里", "新北市新莊區"),
     ("2G73+3P", "保順里", "新北市永和區"),
-    ("3G93+7V", "三重區", "新北市"),
     ("2F5Q+VR", "中原里", "新北市中和區"),
     ("3F8G+73", "二重里", "新北市三重區"),
-    ("3G93+4V", "三重區", "新北市"),
     ("3G45+X7", "大有里", "臺北市大同區"),
     ("2F5V+25", "中原里", "新北市中和區"),
     ("2GX4+WG", "玉泉里", "臺北市大同區"),
@@ -138,7 +130,8 @@ APPROX_OVERRIDES: dict[str, tuple[float, float]] = {
     "新北市新莊區環漢路2段535號": (25.0316, 121.4498),  # 塔寮坑二抽水站
     "新北市新莊區環漢路630號": (25.0394, 121.4570),    # 塔寮坑抽水站
     "新北市新莊區環漢路3段530號": (25.0014, 121.4350),  # 西盛抽水站 (already in OSM)
-    "新北市板橋區環河西路5段500號": (25.0205, 121.4477),  # 湳仔溝抽水站 (already in OSM)
+    "新北市板橋區環河西路5段500號": (25.0205, 121.4477),  # 湳仔溝抽水站
+    "新北市板橋區環河西路5段500號#二站": (25.0209, 121.4481),  # 湳仔溝二抽水站
     "新北市板橋區溪城路90-2號": (24.9803, 121.4284),   # 沙崙抽水站 (already in OSM)
     "新北市板橋區中正路511號": (25.0285, 121.4555),    # 新海抽水站
     "新北市板橋區長江路2段311巷18號之1": (25.0357, 121.4701),  # 華江抽水站
@@ -201,12 +194,23 @@ def geocode_api_entry(name: str, address: str) -> tuple[tuple[float, float], str
     """Return ((lat, lon), quality) for an API station.
 
     Strategy:
-        1. Search OSM by station name; accept only matches within 新北市
+        1. Hard-coded approximate override (avoids wrong OSM name matches).
+        2. Search OSM by station name; accept only matches within 新北市
            whose display name actually contains "抽水站".
-        2. Search OSM by address; accept any match within 新北市.
-        3. Hard-coded approximate override (mid-point of the addressed road).
+        3. Search OSM by address; accept any match within 新北市.
         4. Fall back to a generic 新北市 centroid.
     """
+    geocode_addr = address
+    if "湳仔溝二" in name:
+        geocode_addr = address + "#二站"
+
+    if geocode_addr in APPROX_OVERRIDES:
+        lat, lon = APPROX_OVERRIDES[geocode_addr]
+        return (lat, lon), "approximate"
+    if address in APPROX_OVERRIDES:
+        lat, lon = APPROX_OVERRIDES[address]
+        return (lat, lon), "approximate"
+
     try:
         results = nominatim_search(name)
     except Exception:
@@ -226,10 +230,6 @@ def geocode_api_entry(name: str, address: str) -> tuple[tuple[float, float], str
         disp = r.get("display_name", "")
         if is_in_new_taipei(disp):
             return (float(r["lat"]), float(r["lon"])), "osm_address"
-
-    if address in APPROX_OVERRIDES:
-        lat, lon = APPROX_OVERRIDES[address]
-        return (lat, lon), "approximate"
 
     return (25.012, 121.465), "fallback_centroid"
 
@@ -272,7 +272,7 @@ def fetch_api_dahan() -> list[dict]:
         raise SystemExit(f"Unexpected NTPC payload: {type(raw)}")
     dahan = [r for r in raw if "大漢" in (r.get("river") or "")]
 
-    by_addr: dict[str, dict] = {}
+    entries: list[dict] = []
     for s in dahan:
         addr = (s.get("address") or "").strip()
         if not addr:
@@ -281,24 +281,16 @@ def fetch_api_dahan() -> list[dict]:
         title = (s.get("title") or "").strip()
         pump_type = (s.get("pump_type") or "").strip()
         year_ce = roc_to_ce(s.get("year"))
-
-        if full_addr in by_addr:
-            entry = by_addr[full_addr]
-            if title and title not in entry["names"]:
-                entry["names"].append(title)
-            if pump_type and pump_type not in entry["pump_types"]:
-                entry["pump_types"].append(pump_type)
-            if year_ce is not None:
-                entry["years"].append(year_ce)
-        else:
-            by_addr[full_addr] = {
+        entries.append(
+            {
                 "address": full_addr,
-                "names": [title] if title else [],
+                "names": [title] if title else ["(未命名)"],
                 "pump_types": [pump_type] if pump_type else [],
                 "years": [year_ce] if year_ce is not None else [],
                 "river": "大漢溪",
             }
-    return list(by_addr.values())
+        )
+    return entries
 
 
 def keep_legacy(stations: Iterable[tuple[str, str, str]]) -> list[tuple[str, str, str]]:
@@ -308,35 +300,32 @@ def keep_legacy(stations: Iterable[tuple[str, str, str]]) -> list[tuple[str, str
 def main() -> None:
     print("[1/4] Fetching NTPC API …")
     api_entries = fetch_api_dahan()
-    print(f"      Got {len(api_entries)} unique 大漢溪 entries (after address-merge).")
+    print(f"      Got {len(api_entries)} 大漢溪 API entries (one feature per row).")
 
     print("[2/4] Geocoding API entries via Nominatim …")
     api_features: list[dict] = []
     for i, e in enumerate(api_entries, start=1):
-        primary_name = e["names"][0] if e["names"] else "(未命名)"
-        (lat, lon), quality = geocode_api_entry(primary_name, e["address"])
-        joined_name = " / ".join(e["names"]) if e["names"] else "(未命名)"
-        joined_type = " / ".join(e["pump_types"]) if e["pump_types"] else None
-        years = e["years"]
-        year_min = min(years) if years else None
-        year_max = max(years) if years else None
+        station_name = e["names"][0] if e["names"] else "(未命名)"
+        (lat, lon), quality = geocode_api_entry(station_name, e["address"])
+        pump_type = e["pump_types"][0] if e["pump_types"] else None
+        year_ce = e["years"][0] if e["years"] else None
         api_features.append(
             {
                 "type": "Feature",
                 "geometry": {"type": "Point", "coordinates": [lon, lat]},
                 "properties": {
-                    "name": joined_name,
+                    "name": station_name,
                     "address": e["address"],
                     "river": e["river"],
-                    "pump_type": joined_type,
-                    "year_ce": year_min,
-                    "year_ce_range": [year_min, year_max] if year_min != year_max else None,
+                    "pump_type": pump_type,
+                    "year_ce": year_ce,
+                    "year_ce_range": None,
                     "source": "NTPC open data",
                     "geocode_quality": quality,
                 },
             }
         )
-        print(f"      [{i:>2}/{len(api_entries)}] {joined_name}  ({quality})")
+        print(f"      [{i:>2}/{len(api_entries)}] {station_name}  ({quality})")
 
     print("[3/4] Decoding Plus Code legacy stations …")
     legacy_kept = keep_legacy(LEGACY_STATIONS)
