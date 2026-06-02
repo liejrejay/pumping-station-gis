@@ -140,6 +140,10 @@ APPROX_OVERRIDES: dict[str, tuple[float, float]] = {
     "新北市新莊區建國一路113-1號": (25.0265, 121.4320),  # 建國抽水站
     "新北市新莊區建國二路81-1號": (25.0249, 121.4307),  # 潭底溝抽水站
     "新北市新莊區後港一路139-1號": (25.0276, 121.4298),  # 後港抽水站
+    "新北市新莊區新樹路85巷11-1號": (25.0277, 121.4412),  # 西盛溝抽水站
+    "新北市新莊區福壽街336號": (25.0584, 121.4580),  # 昌平抽水站
+    "新北市新莊區中央路182號": (25.0593, 121.4503),  # 中隆抽水站
+    "新北市新莊區福美街12號": (25.0531, 121.4608),  # 頭前抽水站
 }
 
 
@@ -338,10 +342,7 @@ def main() -> None:
     api_points = [tuple(f["geometry"]["coordinates"][::-1]) for f in api_features]  # (lat, lon)
     for i, (code, village, district) in enumerate(legacy_kept, start=1):
         lat, lon = decode_plus_code(code, district)
-        # Drop if within 100 m of any API station (API wins).
-        if any(haversine_m((lat, lon), p) <= 100.0 for p in api_points):
-            print(f"      [{i:>2}/{len(legacy_kept)}] {code} dropped (≤100m to API station)")
-            continue
+        # 保留所有暫名站（不因地距正式站過近而刪除）
         addr = reverse_geocode(lat, lon)
         legacy_features.append(
             {
