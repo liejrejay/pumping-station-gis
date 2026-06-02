@@ -3,6 +3,7 @@ const fs = require('fs').promises;
 const fsSync = require('fs');
 const path = require('path');
 const cors = require('cors');
+const { buildDahanWeatherSummary } = require('./lib/cwaWeather');
 
 // 讀取 .env（不入 git）
 try {
@@ -29,8 +30,31 @@ app.use(express.json());
 // API 路由須在 static 之前，避免被靜態檔覆蓋
 app.get('/api/config', (req, res) => {
     const key = process.env.GOOGLE_MAPS_API_KEY || '';
+    const cwaKey = process.env.CWA_API_KEY || '';
     res.setHeader('Cache-Control', 'no-store');
-    res.json({ googleMapsApiKey: key });
+    res.json({
+        googleMapsApiKey: key,
+        cwaApiConfigured: Boolean(cwaKey),
+    });
+});
+
+/** 即時氣象（中央氣象署，key 在 .env，不入前端） */
+app.get('/api/weather/current', async (req, res) => {
+    const apiKey = process.env.CWA_API_KEY || '';
+    res.setHeader('Cache-Control', 'no-store');
+    if (!apiKey) {
+        return res.status(503).json({
+            error: 'CWA_API_KEY 未設定',
+            hint: '請在 .env 加入 CWA_API_KEY=您的授權碼（https://opendata.cwa.gov.tw/）',
+        });
+    }
+    try {
+        const data = await buildDahanWeatherSummary(apiKey);
+        res.json(data);
+    } catch (err) {
+        console.error('[weather]', err.message);
+        res.status(502).json({ error: err.message });
+    }
 });
 
 app.get('/api/config.js', (req, res) => {
@@ -276,8 +300,9 @@ app.listen(PORT, () => {
 - POST /api/users/login  - 用戶登入驗證
 - GET  /api/users/stats  - 獲取用戶統計
 - GET  /api/users/export - 匯出註冊用戶
-- GET  /api/config       - Google Maps API key（JSON，來自 .env）
-- GET  /api/config.js    - 同上（JavaScript）
+- GET  /api/config       - Google Maps / 氣象 API 設定狀態（.env）
+- GET  /api/config.js    - Google Maps key（JavaScript）
+- GET  /api/weather/current - 大漢溪流域即時氣象（CWA，需 CWA_API_KEY）
 - GET  /api/health       - 健康檢查
     `);
 });

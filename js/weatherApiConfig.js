@@ -7,7 +7,7 @@ const WeatherAPIConfig = {
     // 中央氣象署開放資料平臺
     CWA: {
         baseUrl: 'https://opendata.cwa.gov.tw/api/v1/rest/datastore/',
-        apiKey: '', // 請到 https://opendata.cwa.gov.tw/ 申請
+        apiKey: '', // 建議改在 .env 設 CWA_API_KEY，由 npm start 代理（勿 commit 真 key）
         endpoints: {
             rainfall: 'O-A0002-001',      // 自動雨量站
             weather: 'O-A0001-001',       // 自動氣象站  

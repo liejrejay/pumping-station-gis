@@ -513,6 +513,7 @@
         </div>
       </div>
       
+      <div id="weatherSourceNote" style="font-size:0.68rem;color:#6c7a89;text-align:center;margin-top:8px;line-height:1.35;"></div>
       <div class="risk-indicator" style="margin-top: 15px;">
         <span class="risk-text">整體風險:</span>
         <div class="risk-bar">
@@ -1298,28 +1299,48 @@
       }
     }
     
+    function formatWeatherVal(v, digits) {
+      if (v == null || !Number.isFinite(v)) return '--';
+      return digits === 0 ? String(Math.round(v)) : v.toFixed(digits);
+    }
+
     async function updateWeatherDisplay() {
       try {
         if (typeof weatherAlert === 'undefined') return;
         
         const weatherData = await weatherAlert.fetchWeatherData();
+        const note = document.getElementById('weatherSourceNote');
         
         // 更新 UI 顯示
         if (document.getElementById('currentRainfall')) {
-          document.getElementById('currentRainfall').textContent = 
-            (weatherData.rainfall?.current || 0).toFixed(1);
+          document.getElementById('currentRainfall').textContent =
+            formatWeatherVal(weatherData.rainfall?.current, 1);
         }
         if (document.getElementById('currentTemp')) {
-          document.getElementById('currentTemp').textContent = 
-            (weatherData.temperature || 0).toFixed(1);
+          document.getElementById('currentTemp').textContent =
+            formatWeatherVal(weatherData.temperature, 1);
         }
         if (document.getElementById('currentHumidity')) {
-          document.getElementById('currentHumidity').textContent = 
-            Math.round(weatherData.humidity || 0);
+          document.getElementById('currentHumidity').textContent =
+            formatWeatherVal(weatherData.humidity, 0);
         }
         if (document.getElementById('currentWind')) {
-          document.getElementById('currentWind').textContent = 
-            (weatherData.windSpeed || 0).toFixed(1);
+          document.getElementById('currentWind').textContent =
+            formatWeatherVal(weatherData.windSpeed, 1);
+        }
+
+        if (note) {
+          if (weatherData.source === 'CWA_API' || weatherData.source === 'CWA_CLIENT') {
+            const n = weatherData.representativeStation || '大漢溪流域';
+            const t = weatherData.lastUpdate
+              ? new Date(weatherData.lastUpdate).toLocaleString('zh-TW')
+              : '';
+            note.textContent = `資料來源：中央氣象署 · ${n}${t ? ' · ' + t : ''}`;
+            note.style.color = '#1e8449';
+          } else {
+            note.textContent = weatherData.statusMessage || '尚未連線氣象 API';
+            note.style.color = '#c0392b';
+          }
         }
           
         const avgRisk = calculateOverallRisk();

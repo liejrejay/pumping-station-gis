@@ -66,49 +66,124 @@ class WeatherAlertSystem {
      * 獲取氣象資料
      */
     async fetchWeatherData() {
+        console.log('🌦️ 開始獲取氣象資料...');
+
+        // 1) 本機 node server：/api/weather/current（.env → CWA_API_KEY）
         try {
-            console.log('🌦️ 開始獲取氣象資料...');
-            
-            // 檢查是否有 API Key
-            if (window.WeatherAPIConfig?.CWA?.apiKey) {
-                console.log('🔑 使用真實 CWA API');
-                
-                // 獲取即時雨量資料
-                const rainfallData = await this.fetchRainfallData();
-                
-                // 獲取天氣預報
+            const res = await fetch('/api/weather/current', { cache: 'no-store' });
+            if (res.ok) {
+                const data = await res.json();
                 const forecastData = await this.fetchForecastData();
-                
-                // 獲取颱風資訊
                 const typhoonData = await this.fetchTyphoonData();
-                
                 this.weatherData = {
-                    rainfall: rainfallData,
+                    ...data,
                     forecast: forecastData,
                     typhoon: typhoonData,
-                    lastUpdate: new Date().toISOString(),
-                    source: 'CWA_API'
+                    source: 'CWA_API',
                 };
-                
-                console.log('✅ 真實氣象資料更新完成');
-                
-            } else {
-                console.log('⚠️ 未設定 API Key，使用模擬資料');
-                this.weatherData = this.generateMockWeatherData();
-                this.weatherData.source = 'MOCK_DATA';
+                console.log('✅ 中央氣象署即時資料', data.representativeStation);
+                return this.weatherData;
             }
-            
-            return this.weatherData;
-            
-        } catch (error) {
-            console.error('❌ 氣象資料獲取失敗:', error);
-            
-            // 使用模擬資料進行測試
-            console.log('🔄 切換到模擬資料模式');
-            this.weatherData = this.generateMockWeatherData();
-            this.weatherData.source = 'FALLBACK_MOCK';
-            return this.weatherData;
+            const errBody = await res.json().catch(() => ({}));
+            if (res.status === 503) {
+                console.warn('⚠️', errBody.hint || errBody.error);
+                this.weatherData = this.emptyWeatherData('NO_KEY', errBody.hint || errBody.error);
+                return this.weatherData;
+            }
+            throw new Error(errBody.error || `HTTP ${res.status}`);
+        } catch (serverErr) {
+            console.warn('[weather] 伺服器代理不可用:', serverErr.message);
         }
+
+        // 2) 備援：weatherApiConfig.js 內直接填 CWA.apiKey（僅本機／靜態站）
+        if (window.WeatherAPIConfig?.CWA?.apiKey) {
+            try {
+                const rainfallData = await this.fetchRainfallData();
+                const wx = await this.fetchCwaWeatherStations();
+                this.weatherData = {
+                    rainfall: rainfallData,
+                    temperature: wx.temperature,
+                    humidity: wx.humidity,
+                    windSpeed: wx.windSpeed,
+                    pressure: wx.pressure,
+                    representativeStation: wx.representativeStation,
+                    forecast: await this.fetchForecastData(),
+                    typhoon: await this.fetchTyphoonData(),
+                    lastUpdate: new Date().toISOString(),
+                    source: 'CWA_CLIENT',
+                };
+                console.log('✅ CWA 客戶端直連');
+                return this.weatherData;
+            } catch (e) {
+                console.error('❌ CWA 直連失敗:', e);
+            }
+        }
+
+        this.weatherData = this.emptyWeatherData(
+            'UNCONFIGURED',
+            '請在 .env 設定 CWA_API_KEY 並用 npm start 開啟（勿用 file://）'
+        );
+        return this.weatherData;
+    }
+
+    /** 無 API 時回傳空值（不再使用隨機數） */
+    emptyWeatherData(source, statusMessage) {
+        return {
+            rainfall: { current: null, forecast_3hr: null, forecast_6hr: null },
+            temperature: null,
+            humidity: null,
+            windSpeed: null,
+            pressure: null,
+            lastUpdate: new Date().toISOString(),
+            source,
+            statusMessage,
+        };
+    }
+
+    /** 從 O-A0001-001 取大漢溪流域溫濕度風速（客戶端直連用） */
+    async fetchCwaWeatherStations() {
+        const apiKey = window.WeatherAPIConfig.CWA.apiKey;
+        const baseUrl = window.WeatherAPIConfig.CWA.baseUrl;
+        const endpoint = window.WeatherAPIConfig.CWA.endpoints.weather;
+        const response = await fetch(
+            `${baseUrl}${endpoint}?Authorization=${encodeURIComponent(apiKey)}&format=JSON`
+        );
+        if (!response.ok) throw new Error(`CWA weather HTTP ${response.status}`);
+        const data = await response.json();
+        const stations = this.transformCWAWeatherStations(data);
+        const avg = (arr) => {
+            const v = arr.filter((n) => n != null && Number.isFinite(n));
+            return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null;
+        };
+        return {
+            temperature: avg(stations.map((s) => s.temp)),
+            humidity: avg(stations.map((s) => s.humidity)),
+            windSpeed: avg(stations.map((s) => s.windSpeed)),
+            pressure: avg(stations.map((s) => s.pressure)),
+            representativeStation: stations[0]?.name || '大漢溪流域',
+        };
+    }
+
+    transformCWAWeatherStations(cwaData) {
+        const minLat = 24.65, maxLat = 25.06, minLng = 121.24, maxLng = 121.5;
+        const out = [];
+        if (cwaData.success !== 'true' || !cwaData.records?.location) return out;
+        cwaData.records.location.forEach((loc) => {
+            const lat = parseFloat(loc.lat);
+            const lng = parseFloat(loc.lon);
+            if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+            if (lat < minLat || lat > maxLat || lng < minLng || lng > maxLng) return;
+            const el = {};
+            (loc.weatherElement || []).forEach((e) => { el[e.elementName] = e.elementValue; });
+            out.push({
+                name: loc.locationName,
+                temp: parseFloat(el.TEMP) || null,
+                humidity: parseFloat(el.HUMD) || null,
+                windSpeed: parseFloat(el.WS) || null,
+                pressure: parseFloat(el.PRES) || null,
+            });
+        });
+        return out;
     }
     
     /**
@@ -159,18 +234,23 @@ class WeatherAlertSystem {
     transformCWARainfallData(cwaData) {
         const stations = [];
         
+        const minLat = 24.65, maxLat = 25.06, minLng = 121.24, maxLng = 121.5;
         if (cwaData.success === "true" && cwaData.records?.location) {
             cwaData.records.location.forEach(location => {
+                const lat = parseFloat(location.lat);
+                const lng = parseFloat(location.lon);
+                if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+                if (lat < minLat || lat > maxLat || lng < minLng || lng > maxLng) return;
+
                 const station = {
                     id: location.stationId,
                     name: location.locationName,
-                    lat: parseFloat(location.lat),
-                    lng: parseFloat(location.lon),
+                    lat,
+                    lng,
                     rainfall_1hr: 0,
                     rainfall_24hr: 0
                 };
                 
-                // 解析各種降雨資料
                 location.weatherElement?.forEach(element => {
                     if (element.elementName === 'NOW') {
                         station.rainfall_1hr = parseFloat(element.elementValue) || 0;
@@ -182,9 +262,14 @@ class WeatherAlertSystem {
                 stations.push(station);
             });
         }
+
+        const max1hr = stations.length
+            ? Math.max(...stations.map((s) => s.rainfall_1hr))
+            : 0;
         
         return {
-            stations: stations,
+            stations,
+            current: max1hr,
             timestamp: new Date().toISOString(),
             source: 'CWA'
         };
@@ -215,25 +300,6 @@ class WeatherAlertSystem {
         };
     }
     
-    /**
-     * 生成模擬氣象資料
-     */
-    generateMockWeatherData() {
-        const now = new Date();
-        return {
-            rainfall: {
-                current: Math.random() * 50,     // 0-50mm/hr
-                forecast_3hr: Math.random() * 30,
-                forecast_6hr: Math.random() * 40,
-                trend: Math.random() > 0.5 ? 'increasing' : 'decreasing'
-            },
-            temperature: 20 + Math.random() * 15, // 20-35°C
-            humidity: 60 + Math.random() * 40,     // 60-100%
-            windSpeed: Math.random() * 20,         // 0-20 m/s
-            pressure: 1000 + Math.random() * 50,   // 1000-1050 hPa
-            lastUpdate: now.toISOString()
-        };
-    }
     
     /**
      * 風險評估演算法
