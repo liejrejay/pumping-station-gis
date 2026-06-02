@@ -429,7 +429,7 @@
         ]
       },
       "properties": {
-        "name": "文明里 抽水站(暫名)",
+        "name": "新莊抽水站",
         "address": "新北市新莊區文明里環漢路二段142號",
         "river": "大漢溪",
         "pump_type": null,
@@ -454,11 +454,11 @@
         ]
       },
       "properties": {
-        "name": "瓊林里 抽水站(暫名)",
+        "name": "塔寮坑抽水站",
         "address": "新北市新莊區瓊林里環漢路二段630號",
         "river": "大漢溪",
-        "pump_type": null,
-        "year_ce": null,
+        "pump_type": "豎軸式",
+        "year_ce":1997,
         "year_ce_range": null,
         "source": "legacy plus_code",
         "geocode_quality": "plus_code",
@@ -466,7 +466,7 @@
         "village": "瓊林里",
         "district": "新北市新莊區",
         "id": 21,
-        "label": "瓊林里 抽水站(暫名)"
+        "label": "塔寮坑抽水站"
       }
     },
     {
@@ -479,11 +479,11 @@
         ]
       },
       "properties": {
-        "name": "新莊區 抽水站(暫名)",
+        "name": "塔寮坑二抽水站",
         "address": "新北市新莊區瓊林里環漢路二段535號",
         "river": "大漢溪",
-        "pump_type": null,
-        "year_ce": null,
+        "pump_type": "豎軸式",
+        "year_ce": 2006,
         "year_ce_range": null,
         "source": "legacy plus_code",
         "geocode_quality": "plus_code",
@@ -491,7 +491,7 @@
         "village": "新莊區",
         "district": "新北市",
         "id": 22,
-        "label": "新莊區 抽水站(暫名)"
+        "label": "塔寮坑二抽水站"
       }
     },
     {
@@ -504,11 +504,11 @@
         ]
       },
       "properties": {
-        "name": "新莊區 抽水站(暫名)",
+        "name": "潭底溝抽水站",
         "address": "新北市新莊區建安里建國二路81-1",
-        "river": "大漢溪",
-        "pump_type": null,
-        "year_ce": null,
+        "river": "塔寮坑溪",
+        "pump_type": "豎軸式",
+        "year_ce":2006,
         "year_ce_range": null,
         "source": "legacy plus_code",
         "geocode_quality": "plus_code",
@@ -516,7 +516,7 @@
         "village": "新莊區",
         "district": "新北市",
         "id": 23,
-        "label": "新莊區 抽水站(暫名)"
+        "label": "潭底溝抽水站"
       }
     },
     {
@@ -529,11 +529,11 @@
         ]
       },
       "properties": {
-        "name": "文明里 抽水站(暫名)",
+        "name": "公館溝抽水站",
         "address": "新北市新莊區文明里環漢路二段",
         "river": "大漢溪",
-        "pump_type": null,
-        "year_ce": null,
+        "pump_type": "豎軸式",
+        "year_ce": 2006,
         "year_ce_range": null,
         "source": "legacy plus_code",
         "geocode_quality": "plus_code",
@@ -541,34 +541,10 @@
         "village": "文明里",
         "district": "新北市新莊區",
         "id": 24,
-        "label": "文明里 抽水站(暫名)"
+        "label": "公館溝抽水站"
       }
     },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          121.48468749999999,
-          25.0238125
-        ]
-      },
-      "properties": {
-        "name": "振義里 抽水站(暫名)",
-        "address": "新北市板橋區振義里萬安路20巷10弄16號",
-        "river": "大漢溪",
-        "pump_type": null,
-        "year_ce": null,
-        "year_ce_range": null,
-        "source": "legacy plus_code",
-        "geocode_quality": "plus_code",
-        "plus_code": "2FFM+GV",
-        "village": "振義里",
-        "district": "新北市板橋區",
-        "id": 25,
-        "label": "振義里 抽水站(暫名)"
-      }
-    },
+
     {
       "type": "Feature",
       "geometry": {
@@ -579,11 +555,11 @@
         ]
       },
       "properties": {
-        "name": "頭前里 抽水站(暫名)",
+        "name": "頭前抽水站",
         "address": "新北市新莊區頭前里福美街12號",
-        "river": "大漢溪",
-        "pump_type": null,
-        "year_ce": null,
+        "river": "中港大排",
+        "pump_type": "沉水式",
+        "year_ce": 2010,
         "year_ce_range": null,
         "source": "legacy plus_code",
         "geocode_quality": "plus_code",
@@ -591,84 +567,10 @@
         "village": "頭前里",
         "district": "新北市新莊區",
         "id": 26,
-        "label": "頭前里 抽水站(暫名)"
+        "label": "頭前抽水站"
       }
     },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          121.4839375,
-          25.023937500000002
-        ]
-      },
-      "properties": {
-        "name": "振義里 抽水站(暫名)",
-        "address": "新北市板橋區振義里萬安街",
-        "river": "大漢溪",
-        "pump_type": null,
-        "year_ce": null,
-        "year_ce_range": null,
-        "source": "legacy plus_code",
-        "geocode_quality": "plus_code",
-        "plus_code": "2FFM+HH",
-        "village": "振義里",
-        "district": "新北市板橋區",
-        "id": 27,
-        "label": "振義里 抽水站(暫名)"
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          121.4808125,
-          25.0368125
-        ]
-      },
-      "properties": {
-        "name": "柏翠里 抽水站(暫名)",
-        "address": "新北市板橋區柏翠里環河西路四段",
-        "river": "大漢溪",
-        "pump_type": null,
-        "year_ce": null,
-        "year_ce_range": null,
-        "source": "legacy plus_code",
-        "geocode_quality": "plus_code",
-        "plus_code": "2FPJ+P8",
-        "village": "柏翠里",
-        "district": "新北市板橋區",
-        "id": 28,
-        "label": "柏翠里 抽水站(暫名)"
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          121.4396875,
-          25.056312499999997
-        ]
-      },
-      "properties": {
-        "name": "中原里 抽水站(暫名)",
-        "address": "新北市新莊區中原里10M-1",
-        "river": "大漢溪",
-        "pump_type": null,
-        "year_ce": null,
-        "year_ce_range": null,
-        "source": "legacy plus_code",
-        "geocode_quality": "plus_code",
-        "plus_code": "3C4Q+GV",
-        "village": "中原里",
-        "district": "新北市新莊區",
-        "id": 29,
-        "label": "中原里 抽水站(暫名)"
-      }
-    },
+    
     {
       "type": "Feature",
       "geometry": {
@@ -679,7 +581,7 @@
         ]
       },
       "properties": {
-        "name": "中原里 抽水站(暫名)",
+        "name": "新北市政府中隆抽水站",
         "address": "新北市新莊區中隆里中央路182號",
         "river": "大漢溪",
         "pump_type": null,
@@ -691,7 +593,7 @@
         "village": "中原里",
         "district": "新北市新莊區",
         "id": 30,
-        "label": "中原里 抽水站(暫名)"
+        "label": "新北市政府中隆抽水站"
       }
     },
     {
@@ -704,11 +606,11 @@
         ]
       },
       "properties": {
-        "name": "新莊區 抽水站(暫名)",
+        "name": "西盛溝抽水站",
         "address": "新北市新莊區國泰里新樹路85巷11-1",
         "river": "大漢溪",
-        "pump_type": null,
-        "year_ce": null,
+        "pump_type": "豎軸式",
+        "year_ce": 2006,
         "year_ce_range": null,
         "source": "legacy plus_code",
         "geocode_quality": "plus_code",
@@ -716,7 +618,7 @@
         "village": "新莊區",
         "district": "新北市",
         "id": 31,
-        "label": "新莊區 抽水站(暫名)"
+        "label": "西盛溝抽水站"
       }
     },
     {
@@ -729,8 +631,8 @@
         ]
       },
       "properties": {
-        "name": "楓樹里 抽水站(暫名)",
-        "address": "新北市五股區興珍里五工一路136號",
+        "name": "中港東抽水站",
+        "address": "新北市五股區楓樹里五工一路136號",
         "river": "大漢溪",
         "pump_type": null,
         "year_ce": null,
@@ -741,7 +643,7 @@
         "village": "楓樹里",
         "district": "新北市泰山區",
         "id": 32,
-        "label": "楓樹里 抽水站(暫名)"
+        "label": "中港東抽水站"
       }
     },
     {
@@ -754,8 +656,8 @@
         ]
       },
       "properties": {
-        "name": "瓊林里 抽水站(暫名)",
-        "address": "新北市新莊區瓊林里環漢路三段",
+        "name": "西盛抽水站",
+        "address": "新北市新莊區西盛里環漢路三段",
         "river": "大漢溪",
         "pump_type": null,
         "year_ce": null,
@@ -766,34 +668,10 @@
         "village": "瓊林里",
         "district": "新北市新莊區",
         "id": 33,
-        "label": "瓊林里 抽水站(暫名)"
+        "label": "西盛抽水站"
       }
     },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          121.4861875,
-          25.0180625
-        ]
-      },
-      "properties": {
-        "name": "板橋區 抽水站(暫名)",
-        "address": "新北市板橋區光復里光復街172巷16號",
-        "river": "大漢溪",
-        "pump_type": null,
-        "year_ce": null,
-        "year_ce_range": null,
-        "source": "legacy plus_code",
-        "geocode_quality": "plus_code",
-        "plus_code": "2F9P+6F",
-        "village": "板橋區",
-        "district": "新北市",
-        "id": 34,
-        "label": "板橋區 抽水站(暫名)"
-      }
-    },
+    
     {
       "type": "Feature",
       "geometry": {
@@ -804,11 +682,11 @@
         ]
       },
       "properties": {
-        "name": "昌平里 抽水站(暫名)",
-        "address": "新北市新莊區昌平里福壽街431號",
+        "name": "昌平抽水站",
+        "address": "新北市新莊區昌平里福壽街336號",
         "river": "大漢溪",
-        "pump_type": null,
-        "year_ce": null,
+        "pump_type": "豎軸式",
+        "year_ce": 2008,
         "year_ce_range": null,
         "source": "legacy plus_code",
         "geocode_quality": "plus_code",
@@ -816,7 +694,7 @@
         "village": "昌平里",
         "district": "新北市新莊區",
         "id": 35,
-        "label": "昌平里 抽水站(暫名)"
+        "label": "昌平抽水站"
       }
     },
     {
@@ -829,8 +707,8 @@
         ]
       },
       "properties": {
-        "name": "三重區 抽水站(暫名)",
-        "address": "新北市三重區頂崁里疏洪西路",
+        "name": "頂崁抽水站",
+        "address": "新北市三重區大有街特23號",
         "river": "大漢溪",
         "pump_type": null,
         "year_ce": null,
@@ -841,7 +719,7 @@
         "village": "三重區",
         "district": "新北市",
         "id": 36,
-        "label": "三重區 抽水站(暫名)"
+        "label": "頂崁抽水站"
       }
     },
     {
@@ -854,11 +732,11 @@
         ]
       },
       "properties": {
-        "name": "建安里 抽水站(暫名)",
+        "name": "西盛溝抽水站",
         "address": "新北市新莊區建安里新樹路85巷11之1號",
-        "river": "大漢溪",
-        "pump_type": null,
-        "year_ce": null,
+        "river": "塔寮坑溪",
+        "pump_type": "豎軸式",
+        "year_ce": 2006,
         "year_ce_range": null,
         "source": "legacy plus_code",
         "geocode_quality": "plus_code",
@@ -866,59 +744,11 @@
         "village": "建安里",
         "district": "新北市新莊區",
         "id": 37,
-        "label": "建安里 抽水站(暫名)"
+        "label": "西盛溝抽水站"
       }
     },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          121.4440625,
-          25.0690625
-        ]
-      },
-      "properties": {
-        "name": "楓樹里 抽水站(暫名)",
-        "address": "新北市泰山區楓樹里新五路二段2巷",
-        "river": "大漢溪",
-        "pump_type": null,
-        "year_ce": null,
-        "year_ce_range": null,
-        "source": "legacy plus_code",
-        "geocode_quality": "plus_code",
-        "plus_code": "3C9V+JJ",
-        "village": "楓樹里",
-        "district": "新北市泰山區",
-        "id": 38,
-        "label": "楓樹里 抽水站(暫名)"
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          121.4649375,
-          25.0651875
-        ]
-      },
-      "properties": {
-        "name": "福基里 抽水站(暫名)",
-        "address": "新北市新莊區福基里化成路557號",
-        "river": "大漢溪",
-        "pump_type": null,
-        "year_ce": null,
-        "year_ce_range": null,
-        "source": "legacy plus_code",
-        "geocode_quality": "plus_code",
-        "plus_code": "3F87+3X",
-        "village": "福基里",
-        "district": "新北市新莊區",
-        "id": 39,
-        "label": "福基里 抽水站(暫名)"
-      }
-    },
+  
+   
     {
       "type": "Feature",
       "geometry": {
@@ -929,7 +759,7 @@
         ]
       },
       "properties": {
-        "name": "同慶里 抽水站(暫名)",
+        "name": "新北市政府水利局同安抽水站",
         "address": "新北市三重區同慶里",
         "river": "大漢溪",
         "pump_type": null,
@@ -941,34 +771,10 @@
         "village": "同慶里",
         "district": "新北市三重區",
         "id": 40,
-        "label": "同慶里 抽水站(暫名)"
+        "label": "新北市政府水利局同安抽水站"
       }
     },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          121.4476875,
-          25.0835625
-        ]
-      },
-      "properties": {
-        "name": "五股區 抽水站(暫名)",
-        "address": "新北市五股區更寮里五股二交流道",
-        "river": "大漢溪",
-        "pump_type": null,
-        "year_ce": null,
-        "year_ce_range": null,
-        "source": "legacy plus_code",
-        "geocode_quality": "plus_code",
-        "plus_code": "3CMX+C3",
-        "village": "五股區",
-        "district": "新北市",
-        "id": 41,
-        "label": "五股區 抽水站(暫名)"
-      }
-    },
+    
     {
       "type": "Feature",
       "geometry": {
@@ -979,7 +785,7 @@
         ]
       },
       "properties": {
-        "name": "光復里 抽水站(暫名)",
+        "name": "自來水光復抽水加壓站",
         "address": "新北市板橋區光復里環河西路四段55號",
         "river": "大漢溪",
         "pump_type": null,
@@ -991,34 +797,10 @@
         "village": "光復里",
         "district": "新北市板橋區",
         "id": 42,
-        "label": "光復里 抽水站(暫名)"
+        "label": "自來水光復抽水加壓站"
       }
     },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          121.4989375,
-          25.0084375
-        ]
-      },
-      "properties": {
-        "name": "中和區 抽水站(暫名)",
-        "address": "新北市永和區保順里環河西路二段251號",
-        "river": "大漢溪",
-        "pump_type": null,
-        "year_ce": null,
-        "year_ce_range": null,
-        "source": "legacy plus_code",
-        "geocode_quality": "plus_code",
-        "plus_code": "2F5X+9H",
-        "village": "中和區",
-        "district": "新北市",
-        "id": 43,
-        "label": "中和區 抽水站(暫名)"
-      }
-    },
+   
     {
       "type": "Feature",
       "geometry": {
@@ -1029,7 +811,7 @@
         ]
       },
       "properties": {
-        "name": "鳶山里 抽水站(暫名)",
+        "name": "鳶山堰抽水站",
         "address": "新北市三峽區鳶山里中山路576號",
         "river": "大漢溪",
         "pump_type": null,
@@ -1041,7 +823,7 @@
         "village": "鳶山里",
         "district": "新北市三峽區",
         "id": 44,
-        "label": "鳶山里 抽水站(暫名)"
+        "label": "鳶山堰抽水站"
       }
     },
     {
@@ -1054,9 +836,9 @@
         ]
       },
       "properties": {
-        "name": "建福里 抽水站(暫名)",
+        "name": "後港抽水站",
         "address": "新北市新莊區建福里後港一路139之1號",
-        "river": "大漢溪",
+        "river": "塔寮坑溪",
         "pump_type": null,
         "year_ce": null,
         "year_ce_range": null,
@@ -1066,134 +848,12 @@
         "village": "建福里",
         "district": "新北市新莊區",
         "id": 45,
-        "label": "建福里 抽水站(暫名)"
+        "label": "後港抽水站"
       }
     },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          121.5046875,
-          25.0681875
-        ]
-      },
-      "properties": {
-        "name": "三重區 抽水站(暫名)",
-        "address": "新北市三重區環河北路",
-        "river": "大漢溪",
-        "pump_type": null,
-        "year_ce": null,
-        "year_ce_range": null,
-        "source": "legacy plus_code",
-        "geocode_quality": "plus_code",
-        "plus_code": "3G93+7V",
-        "village": "三重區",
-        "district": "新北市",
-        "id": 46,
-        "label": "三重區 抽水站(暫名)"
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          121.4751875,
-          25.065687500000003
-        ]
-      },
-      "properties": {
-        "name": "二重里 抽水站(暫名)",
-        "address": "新北市三重區二重里大有街1-62",
-        "river": "大漢溪",
-        "pump_type": null,
-        "year_ce": null,
-        "year_ce_range": null,
-        "source": "legacy plus_code",
-        "geocode_quality": "plus_code",
-        "plus_code": "3F8G+73",
-        "village": "二重里",
-        "district": "新北市三重區",
-        "id": 47,
-        "label": "二重里 抽水站(暫名)"
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          121.5046875,
-          25.067812500000002
-        ]
-      },
-      "properties": {
-        "name": "三重區 抽水站(暫名)",
-        "address": "新北市三重區環河北路",
-        "river": "大漢溪",
-        "pump_type": null,
-        "year_ce": null,
-        "year_ce_range": null,
-        "source": "legacy plus_code",
-        "geocode_quality": "plus_code",
-        "plus_code": "3G93+4V",
-        "village": "三重區",
-        "district": "新北市",
-        "id": 48,
-        "label": "三重區 抽水站(暫名)"
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          121.5011875,
-          25.0793125
-        ]
-      },
-      "properties": {
-        "name": "五常里 抽水站(暫名)",
-        "address": "新北市三重區環河北路二段",
-        "river": "大漢溪",
-        "pump_type": null,
-        "year_ce": null,
-        "year_ce_range": null,
-        "source": "legacy plus_code",
-        "geocode_quality": "plus_code",
-        "plus_code": "3GH2+PF",
-        "village": "五常里",
-        "district": "新北市三重區",
-        "id": 49,
-        "label": "五常里 抽水站(暫名)"
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          121.48231249999999,
-          25.0508125
-        ]
-      },
-      "properties": {
-        "name": "德厚里 抽水站(暫名)",
-        "address": "新北市三重區頭前重新橋觀光市集",
-        "river": "大漢溪",
-        "pump_type": null,
-        "year_ce": null,
-        "year_ce_range": null,
-        "source": "legacy plus_code",
-        "geocode_quality": "plus_code",
-        "plus_code": "3F2J+8W",
-        "village": "德厚里",
-        "district": "新北市三重區",
-        "id": 50,
-        "label": "德厚里 抽水站(暫名)"
-      }
-    },
+    
+    
+
     {
       "type": "Feature",
       "geometry": {
@@ -1204,7 +864,7 @@
         ]
       },
       "properties": {
-        "name": "彭福里 抽水站(暫名)",
+        "name": "浮洲加壓站",
         "address": "新北市樹林區彭興里水源街",
         "river": "大漢溪",
         "pump_type": null,
@@ -1216,7 +876,7 @@
         "village": "彭福里",
         "district": "新北市樹林區",
         "id": 51,
-        "label": "彭福里 抽水站(暫名)"
+        "label": "浮洲加壓站"
       }
     },
     {
@@ -1229,9 +889,9 @@
         ]
       },
       "properties": {
-        "name": "泰豐里 抽水站(暫名)",
+        "name": "農業部農田水利署桃園管理處新莊工作站",
         "address": "新北市新莊區泰豐里豐年街59號",
-        "river": "大漢溪",
+        "river": " 塔寮坑溪 ",
         "pump_type": null,
         "year_ce": null,
         "year_ce_range": null,
@@ -1241,57 +901,7 @@
         "village": "泰豐里",
         "district": "新北市新莊區",
         "id": 52,
-        "label": "泰豐里 抽水站(暫名)"
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          121.4581875,
-          25.0844375
-        ]
-      },
-      "properties": {
-        "name": "蘆洲區 抽水站(暫名)",
-        "address": "新北市蘆洲區永康里長安街287巷1號",
-        "river": "大漢溪",
-        "pump_type": null,
-        "year_ce": null,
-        "year_ce_range": null,
-        "source": "legacy plus_code",
-        "geocode_quality": "plus_code",
-        "plus_code": "3FM5+Q7",
-        "village": "蘆洲區",
-        "district": "新北市",
-        "id": 53,
-        "label": "蘆洲區 抽水站(暫名)"
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          121.4683125,
-          25.0763125
-        ]
-      },
-      "properties": {
-        "name": "蘆洲區 抽水站(暫名)",
-        "address": "新北市五股區興珍里四維路",
-        "river": "大漢溪",
-        "pump_type": null,
-        "year_ce": null,
-        "year_ce_range": null,
-        "source": "legacy plus_code",
-        "geocode_quality": "plus_code",
-        "plus_code": "3FG9+G8",
-        "village": "蘆洲區",
-        "district": "新北市",
-        "id": 54,
-        "label": "蘆洲區 抽水站(暫名)"
+        "label": "農業部農田水利署桃園管理處新莊工作站"
       }
     }
   ]
