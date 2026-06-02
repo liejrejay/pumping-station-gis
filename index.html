@@ -8,7 +8,7 @@
   <title>大漢溪抽水站 Web GIS</title>
   <link rel="stylesheet" href="css/animations.css?v=20260602c" />
   <link rel="stylesheet" href="css/responsive.css?v=20260602c" />
-  <link rel="stylesheet" href="css/weatherAlert.css?v=20260602e" />
+  <link rel="stylesheet" href="css/weatherAlert.css?v=20260602f" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: "PingFang TC", "Noto Sans TC", system-ui, sans-serif; color: #2d3436; }
@@ -583,7 +583,7 @@
           </div>
           <div class="weather-item">
             <div class="weather-value" id="currentWind">--</div>
-            <div class="weather-label">風速 (km/h)</div>
+            <div class="weather-label">風速 km/h <span id="currentWindBf" style="font-weight:normal;opacity:0.85;"></span></div>
           </div>
         </div>
         <div id="weatherSourceNote" class="weather-source-note"></div>
@@ -601,7 +601,7 @@
   <script src="js/mobileOptimization.js?v=20260602c"></script>
   <script src="js/weatherApiConfig.js?v=20260602c"></script>
   <script src="js/realtimeWaterLevel.js?v=20260602c"></script>
-  <script src="js/weatherAlert.js?v=20260602e"></script>
+  <script src="js/weatherAlert.js?v=20260602f"></script>
 
   <script>
     // ============================================================
@@ -1562,6 +1562,23 @@
       return digits === 0 ? String(Math.round(v)) : v.toFixed(digits);
     }
 
+    /** m/s → 蒲福風力級數 */
+    function msToBeaufort(ms) {
+      if (ms < 0.3)  return 0;
+      if (ms < 1.6)  return 1;
+      if (ms < 3.4)  return 2;
+      if (ms < 5.5)  return 3;
+      if (ms < 8.0)  return 4;
+      if (ms < 10.8) return 5;
+      if (ms < 13.9) return 6;
+      if (ms < 17.2) return 7;
+      if (ms < 20.8) return 8;
+      if (ms < 24.5) return 9;
+      if (ms < 28.5) return 10;
+      if (ms < 32.7) return 11;
+      return 12;
+    }
+
     async function updateWeatherDisplay() {
       try {
         if (typeof weatherAlert === 'undefined') return;
@@ -1584,9 +1601,18 @@
         }
         if (document.getElementById('currentWind')) {
           const ms = weatherData.windSpeed;
-          const kmh = ms != null && Number.isFinite(ms) ? ms * 3.6 : null;
-          document.getElementById('currentWind').textContent =
-            formatWeatherVal(kmh, 1);
+          let display = '--';
+          if (ms != null && Number.isFinite(ms)) {
+            const kmh = ms * 3.6;
+            const beaufort = msToBeaufort(ms);
+            display = `${kmh.toFixed(1)}`;
+            const bfEl = document.getElementById('currentWindBf');
+            if (bfEl) bfEl.textContent = `(蒲福 ${beaufort} 級)`;
+          } else {
+            const bfEl = document.getElementById('currentWindBf');
+            if (bfEl) bfEl.textContent = '';
+          }
+          document.getElementById('currentWind').textContent = display;
         }
 
         if (note) {
