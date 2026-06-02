@@ -99,7 +99,10 @@ class WeatherAlertSystem {
 
         // 2) GitHub Pages 等靜態站：讀部署時寫入的快照（電腦關機也能看）
         try {
-            const snapRes = await fetch('data/cwa-weather-latest.json', { cache: 'no-store' });
+            const snapUrl = typeof window.assetUrl === 'function'
+                ? window.assetUrl('data/cwa-weather-latest.json')
+                : new URL('data/cwa-weather-latest.json', window.location.href).href;
+            const snapRes = await fetch(snapUrl, { cache: 'no-store' });
             if (snapRes.ok) {
                 const data = await snapRes.json();
                 const forecastData = await this.fetchForecastData();
