@@ -863,9 +863,13 @@
         "facility_status": "既有設施",
         "service_area": "新北市、桃園市民生用水",
         "improvement_completed": "2024-04",
+        "construction_year": 2024,
+        "year_ce": 2024,
+        "year_ce_range": [
+          2024,
+          2024
+        ],
         "description": "拓寬與周邊設備改善工程已於2024年4月完成",
-        "year_ce": null,
-        "year_ce_range": null,
         "source": "水利機關公開資訊",
         "geocode_quality": "plus_code",
         "plus_code": "W8HV+WF",

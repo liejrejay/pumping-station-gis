@@ -303,8 +303,8 @@ class RealtimeWaterLevelSystem {
             <div class="water-status-panel">
                 <div class="status-header">
                     <span>💧 即時水位</span>
-                    <button onclick="waterLevelSystem.manualUpdate()" class="refresh-btn" title="手動更新">🔄</button>
                 </div>
+                <div class="status-hint">請使用上方「立即更新」一次刷新全部資料</div>
                 <div id="waterLevelStatus" class="status-indicator">準備中...</div>
                 <div class="status-info">
                     <small>最後更新: <span id="lastWaterUpdate">--</span></small>
@@ -372,6 +372,13 @@ class RealtimeWaterLevelSystem {
                 font-size: 0.68rem;
                 color: #666;
                 text-align: center;
+            }
+
+            .status-hint {
+                font-size: 0.65rem;
+                color: #888;
+                text-align: center;
+                margin-bottom: 6px;
             }
             
             @media (max-width: 768px) {

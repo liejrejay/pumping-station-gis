@@ -695,8 +695,8 @@
     // ============================================================
     // 2. Operational layers：4 個來源全部載入
     // ============================================================
-    async function loadAllLayers() {
-      updateStatus("載入抽水站…", false, false);
+    async function loadAllLayers(silentStatus = false) {
+      if (!silentStatus) updateStatus("載入抽水站…", false, false);
       try {
         await Promise.all([
           loadPumpingStations(),
@@ -704,10 +704,11 @@
           loadRiver(),
         ]);
         await loadWaterfront();
-        updateStatus("資料載入完成", false, true);
+        if (!silentStatus) updateStatus("資料載入完成", false, true);
       } catch (e) {
         console.error(e);
-        updateStatus("資料載入失敗: " + e.message, true, false);
+        if (!silentStatus) updateStatus("資料載入失敗: " + e.message, true, false);
+        throw e;
       }
       lastUpdateTime = Date.now();
     }
@@ -1282,10 +1283,25 @@
       }
     }
 
-    function manualRefresh() {
-      updateStatus("手動更新中…", false, false);
-      loadAllLayers();
-      loadRealtimeWaterLevels();
+    async function manualRefresh() {
+      updateStatus("正在更新全部資料…", false, false);
+      try {
+        const jobs = [
+          loadAllLayers(true),
+          loadRealtimeWaterLevels(),
+        ];
+        if (window.waterLevelSystem?.manualUpdate) {
+          jobs.push(window.waterLevelSystem.manualUpdate());
+        }
+        if (typeof updateWeatherDisplay === "function") {
+          jobs.push(updateWeatherDisplay());
+        }
+        await Promise.all(jobs);
+        updateStatus("全部資料更新完成", false, true);
+      } catch (e) {
+        console.error(e);
+        updateStatus("更新失敗: " + e.message, true, false);
+      }
     }
 
     function startAutoUpdate() {
