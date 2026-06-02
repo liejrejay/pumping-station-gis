@@ -8,7 +8,7 @@
   <title>大漢溪抽水站 Web GIS</title>
   <link rel="stylesheet" href="css/animations.css?v=20260602c" />
   <link rel="stylesheet" href="css/responsive.css?v=20260602c" />
-  <link rel="stylesheet" href="css/weatherAlert.css?v=20260602c" />
+  <link rel="stylesheet" href="css/weatherAlert.css?v=20260602d" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: "PingFang TC", "Noto Sans TC", system-ui, sans-serif; color: #2d3436; }
@@ -558,49 +558,48 @@
     <div class="legend-row"><span class="swatch-line" style="background:#0b8fe6"></span>大漢溪河道</div>
   </div>
 
-  <div id="weatherAlertPanel" class="weather-alert-panel">
+  <div id="weatherAlertPanel" class="weather-alert-panel" role="dialog" aria-label="氣象警示">
     <div class="alert-header">
       <h3>🌦️ 氣象警示系統</h3>
-      <button onclick="toggleAlertPanel()" class="btn-close">×</button>
+      <button type="button" onclick="toggleAlertPanel()" class="btn-close" aria-label="關閉">×</button>
     </div>
-    
-    <div class="weather-info">
-      <div style="text-align: center; margin-bottom: 10px;">
-        <strong>即時氣象資訊</strong>
+    <div class="weather-alert-panel__scroll" id="weatherAlertScroll">
+      <div class="weather-info">
+        <div style="text-align: center; margin-bottom: 10px;">
+          <strong>即時氣象資訊</strong>
+        </div>
+        <div class="weather-grid">
+          <div class="weather-item">
+            <div class="weather-value" id="currentRainfall">--</div>
+            <div class="weather-label">雨量 (mm/hr)</div>
+          </div>
+          <div class="weather-item">
+            <div class="weather-value" id="currentTemp">--</div>
+            <div class="weather-label">溫度 (°C)</div>
+          </div>
+          <div class="weather-item">
+            <div class="weather-value" id="currentHumidity">--</div>
+            <div class="weather-label">濕度 (%)</div>
+          </div>
+          <div class="weather-item">
+            <div class="weather-value" id="currentWind">--</div>
+            <div class="weather-label">風速 (km/h)</div>
+          </div>
+        </div>
+        <div id="weatherSourceNote" class="weather-source-note"></div>
+        <div class="risk-indicator weather-risk-row">
+          <span class="risk-text">整體風險:</span>
+          <div class="risk-bar">
+            <div id="overallRiskFill" class="risk-fill" style="width: 0%"></div>
+          </div>
+          <span id="overallRiskText" class="risk-text">低</span>
+        </div>
       </div>
-      <div class="weather-grid">
-        <div class="weather-item">
-          <div class="weather-value" id="currentRainfall">--</div>
-          <div class="weather-label">雨量 (mm/hr)</div>
+      <div id="alertPanel" class="alert-content-area">
+        <div class="loading-weather">
+          <div class="loading-spinner"></div>
+          正在載入氣象資料…
         </div>
-        <div class="weather-item">
-          <div class="weather-value" id="currentTemp">--</div>
-          <div class="weather-label">溫度 (°C)</div>
-        </div>
-        <div class="weather-item">
-          <div class="weather-value" id="currentHumidity">--</div>
-          <div class="weather-label">濕度 (%)</div>
-        </div>
-        <div class="weather-item">
-          <div class="weather-value" id="currentWind">--</div>
-          <div class="weather-label">風速 (km/h)</div>
-        </div>
-      </div>
-      
-      <div id="weatherSourceNote" style="font-size:0.68rem;color:#6c7a89;text-align:center;margin-top:8px;line-height:1.35;"></div>
-      <div class="risk-indicator" style="margin-top: 15px;">
-        <span class="risk-text">整體風險:</span>
-        <div class="risk-bar">
-          <div id="overallRiskFill" class="risk-fill" style="width: 0%"></div>
-        </div>
-        <span id="overallRiskText" class="risk-text">低</span>
-      </div>
-    </div>
-    
-    <div id="alertContent">
-      <div class="loading-weather">
-        <div class="loading-spinner"></div>
-        正在載入氣象資料...
       </div>
     </div>
   </div>
@@ -1541,6 +1540,18 @@
     // 氣象警示系統整合
     // ============================================================
     
+    function initWeatherPanelScroll() {
+      const panel = document.getElementById("weatherAlertPanel");
+      const scroll = document.getElementById("weatherAlertScroll");
+      if (!panel || !scroll) return;
+      // 避免滾輪／觸控被 Google 地圖吃掉（其他電腦常見）
+      const stopToMap = (e) => e.stopPropagation();
+      panel.addEventListener("wheel", stopToMap, { passive: true });
+      scroll.addEventListener("wheel", stopToMap, { passive: true });
+      panel.addEventListener("touchstart", stopToMap, { passive: true });
+      scroll.addEventListener("touchmove", stopToMap, { passive: true });
+    }
+
     function toggleAlertPanel() {
       const panel = document.getElementById('weatherAlertPanel');
       
@@ -1692,11 +1703,6 @@
         weatherAlert.startMonitoring(300000);
         
         setTimeout(updateWeatherDisplay, 1000);
-        
-        const alertContent = document.getElementById('alertContent');
-        if (alertContent) {
-          alertContent.innerHTML = '<div id="alertPanel"></div>';
-        }
         
         console.log('✅ 氣象警示系統初始化完成');
         
@@ -2137,6 +2143,7 @@
 
     // 不等 Google Maps：頁面一載入就先顯示側欄水位（避免快取舊版或地圖延遲）
     document.addEventListener("DOMContentLoaded", () => {
+      initWeatherPanelScroll();
       if (typeof loadRealtimeWaterLevels === "function") {
         loadRealtimeWaterLevels().catch((e) => console.warn("[水位] 初次載入:", e));
       }

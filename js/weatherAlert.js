@@ -509,15 +509,24 @@ class WeatherAlertSystem {
         
         const activeAlerts = this.alerts.filter(a => !a.acknowledged);
         
-        alertPanel.innerHTML = `
-            <div class="alert-header">
-                <h3>🚨 警示通知 (${activeAlerts.length})</h3>
-                <button onclick="weatherAlert.clearAllAlerts()" class="btn-clear">清除全部</button>
-            </div>
-            <div class="alert-list">
-                ${activeAlerts.map(alert => this.renderAlert(alert)).join('')}
-            </div>
-        `;
+        if (activeAlerts.length === 0) {
+            alertPanel.innerHTML = `
+                <div class="no-alerts">
+                    <div class="no-alerts-icon">✅</div>
+                    <p>目前無未確認警示</p>
+                </div>
+            `;
+        } else {
+            alertPanel.innerHTML = `
+                <div class="alert-list-header">
+                    <strong>🚨 警示通知 (${activeAlerts.length})</strong>
+                    <button type="button" onclick="weatherAlert.clearAllAlerts()" class="btn-clear">清除全部</button>
+                </div>
+                <div class="alert-list">
+                    ${activeAlerts.map((alert) => this.renderAlert(alert)).join('')}
+                </div>
+            `;
+        }
         
         // 更新警示計數
         const alertBadge = document.getElementById('alertBadge');
