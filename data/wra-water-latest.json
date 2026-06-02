@@ -1,0 +1,58 @@
+{
+  "source": "WRA",
+  "updatedAt": "2026-06-02T03:33:44.697Z",
+  "stationCount": 8,
+  "totalWanted": 8,
+  "stations": {
+    "1140H001": {
+      "stationid": "1140H001",
+      "waterlevel": "684.41",
+      "datetime": "2026-06-02T11:20:00"
+    },
+    "1140H043": {
+      "stationid": "1140H043",
+      "waterlevel": "439.2",
+      "datetime": "2026-06-02T11:20:00"
+    },
+    "1140H054": {
+      "stationid": "1140H054",
+      "waterlevel": "246.7",
+      "datetime": "2026-06-02T11:20:00"
+    },
+    "1140H067": {
+      "stationid": "1140H067",
+      "waterlevel": "30.65",
+      "datetime": "2026-06-02T11:20:00"
+    },
+    "1140H076": {
+      "stationid": "1140H076",
+      "waterlevel": "134.35",
+      "datetime": "2026-06-02T11:20:00"
+    },
+    "1140H105": {
+      "stationid": "1140H105",
+      "waterlevel": "-20.56779",
+      "datetime": "2026-06-02T11:20:00"
+    },
+    "1140H111": {
+      "stationid": "1140H111",
+      "waterlevel": "1.12",
+      "datetime": "2026-06-02T11:20:00"
+    },
+    "1140H118": {
+      "stationid": "1140H118",
+      "waterlevel": "12.2",
+      "datetime": "2026-06-02T11:20:00"
+    }
+  },
+  "stationIds": [
+    "1140H001",
+    "1140H043",
+    "1140H054",
+    "1140H076",
+    "1140H105",
+    "1140H067",
+    "1140H111",
+    "1140H118"
+  ]
+}

@@ -36,6 +36,9 @@ jobs:
             echo "::warning::未設定 CWA_API_KEY Secret，公開站氣象可能無資料"
           fi
 
+          node scripts/fetch_wra_water_snapshot.js
+          echo "✅ 已更新水位快照（公開站）"
+
           cp *.html dist/ 2>/dev/null || true
           cp -r css dist/ 2>/dev/null || true
           cp -r js dist/ 2>/dev/null || true

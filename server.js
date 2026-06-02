@@ -4,6 +4,7 @@ const fsSync = require('fs');
 const path = require('path');
 const cors = require('cors');
 const { buildDahanWeatherSummary } = require('./lib/cwaWeather');
+const { buildDahanWaterLevelSummary } = require('./lib/wraWaterLevel');
 
 // 讀取 .env（不入 git）
 try {
@@ -53,6 +54,18 @@ app.get('/api/weather/current', async (req, res) => {
         res.json(data);
     } catch (err) {
         console.error('[weather]', err.message);
+        res.status(502).json({ error: err.message });
+    }
+});
+
+/** 即時水位（水利署 WRA OpenData，大漢溪 8 站） */
+app.get('/api/water-level/current', async (req, res) => {
+    res.setHeader('Cache-Control', 'no-store');
+    try {
+        const data = await buildDahanWaterLevelSummary();
+        res.json(data);
+    } catch (err) {
+        console.error('[water-level]', err.message);
         res.status(502).json({ error: err.message });
     }
 });
@@ -303,6 +316,7 @@ app.listen(PORT, () => {
 - GET  /api/config       - Google Maps / 氣象 API 設定狀態（.env）
 - GET  /api/config.js    - Google Maps key（JavaScript）
 - GET  /api/weather/current - 大漢溪流域即時氣象（CWA，需 CWA_API_KEY）
+- GET  /api/water-level/current - 大漢溪 8 站即時水位（WRA OpenData）
 - GET  /api/health       - 健康檢查
     `);
 });

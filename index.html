@@ -298,6 +298,25 @@
     .water-level-sidebar-host #waterLevelStatusPanel {
       width: 100%;
     }
+    .wl-station-list {
+      list-style: none;
+      margin: 6px 0 0;
+      padding: 0;
+      max-height: 200px;
+      overflow-y: auto;
+      font-size: 0.72rem;
+      border-top: 1px solid #e0e8ef;
+    }
+    .wl-station-list li {
+      display: flex;
+      justify-content: space-between;
+      gap: 6px;
+      padding: 4px 2px;
+      border-bottom: 1px solid #eef2f6;
+    }
+    .wl-station-list .wl-name { color: #444; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .wl-station-list .wl-val { font-weight: 600; color: #0b5394; white-space: nowrap; }
+    .wl-station-list .wl-na { color: #aaa; font-weight: normal; }
 
     /* 右下角：僅圖例 */
     .legend {
@@ -603,6 +622,8 @@
     ];
     const WL_REALTIME_API = "https://opendata.wra.gov.tw/api/v2/73c4c3de-4045-4765-abeb-89f9f9cd5ff0?page=1&size=1000";
     const WL_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
+    window.WATER_LEVEL_STATIONS = WATER_LEVEL_STATIONS;
+    window.WL_REALTIME_API = WL_REALTIME_API;
 
     // ============================================================
     // Google Maps 主初始化（由 API <script callback=initMap> 觸發）
@@ -655,6 +676,7 @@
       document.getElementById("sidebar").style.display = "flex";
       attachSidebarToggle();
 
+      if (window.waterLevelSystem) waterLevelSystem.createStatusPanel();
       loadAllLayers();
       loadRealtimeWaterLevels();
       setInterval(loadRealtimeWaterLevels, WL_REFRESH_INTERVAL_MS);
@@ -850,10 +872,7 @@
       if (!res.ok) throw new Error("water-level-stations.geojson HTTP " + res.status);
       const gj = await res.json();
       
-      // 啟動即時水位更新系統
       if (window.waterLevelSystem) {
-        console.log('🌊 啟動即時水位更新系統');
-        waterLevelSystem.startAutoUpdate();
         waterLevelSystem.createStatusPanel();
       }
       clearMarkers(wlActiveMarkers);
@@ -958,23 +977,94 @@
     // 即時水位 + 最近水位站
     // ============================================================
     async function loadRealtimeWaterLevels() {
+      const wanted = new Set(WATER_LEVEL_STATIONS.map((s) => s.stationid));
+      let next = {};
+      let source = "";
+
+      const applyRows = (rows) => {
+        for (const row of rows) {
+          if (!wanted.has(row.stationid)) continue;
+          const wl = row.waterlevel;
+          if (wl === null || wl === undefined || wl === "") continue;
+          next[row.stationid] = {
+            waterlevel: String(wl),
+            datetime: row.datetime || row.recordtime || null,
+          };
+        }
+      };
+
       try {
-        const r = await fetch(WL_REALTIME_API, { cache: "no-store" });
-        if (!r.ok) throw new Error("HTTP " + r.status);
-        const arr = await r.json();
-        const wanted = new Set(WATER_LEVEL_STATIONS.map((s) => s.stationid));
-        const next = {};
-        for (const row of arr) {
-          if (wanted.has(row.stationid)) {
-            next[row.stationid] = { waterlevel: row.waterlevel, datetime: row.recordtime };
+        if (location.protocol !== "file:") {
+          const r = await fetch("/api/water-level/current", { cache: "no-store" });
+          if (r.ok) {
+            const j = await r.json();
+            if (j.stations && typeof j.stations === "object") {
+              next = { ...j.stations };
+              source = j.source || "WRA_API";
+            }
           }
         }
-        realtimeWaterLevels = next;
-        console.log(`[水位] 已更新 ${Object.keys(next).length}/${WATER_LEVEL_STATIONS.length} 站`);
       } catch (e) {
-        console.warn("[水位] 取得即時水位失敗:", e);
+        console.warn("[水位] 本機 API 失敗:", e.message);
       }
+
+      if (!Object.keys(next).length) {
+        try {
+          const r = await fetch(WL_REALTIME_API, { cache: "no-store" });
+          if (!r.ok) throw new Error("WRA HTTP " + r.status);
+          const arr = await r.json();
+          if (!Array.isArray(arr)) throw new Error("WRA 回應格式異常");
+          applyRows(arr);
+          source = "WRA";
+        } catch (e) {
+          console.warn("[水位] WRA 直連失敗:", e.message);
+        }
+      }
+
+      if (!Object.keys(next).length) {
+        try {
+          const r = await fetch("data/wra-water-latest.json", { cache: "no-store" });
+          if (r.ok) {
+            const j = await r.json();
+            if (j.stations) {
+              next = { ...j.stations };
+              source = "WRA_SNAPSHOT";
+            } else if (Array.isArray(j.rows)) {
+              applyRows(j.rows);
+              source = "WRA_SNAPSHOT";
+            }
+          }
+        } catch (e) {
+          console.warn("[水位] 快照讀取失敗:", e.message);
+        }
+      }
+
+      realtimeWaterLevels = next;
+      window.realtimeWaterLevels = next;
+
+      const n = Object.keys(next).length;
+      console.log(`[水位] 已更新 ${n}/${WATER_LEVEL_STATIONS.length} 站 (${source || "無資料"})`);
+
+      if (window.waterLevelSystem) {
+        if (!document.getElementById("waterLevelStatusPanel")) {
+          waterLevelSystem.createStatusPanel();
+        }
+        if (waterLevelSystem.renderStationList) {
+          waterLevelSystem.renderStationList(next, source);
+        }
+      }
+      if (typeof updateWaterLevelMarkers === "function") {
+        updateWaterLevelMarkers(next);
+      }
+      if (window.weatherAlert?.updateWaterLevelData) {
+        weatherAlert.updateWaterLevelData(next);
+      }
+      if (n === 0 && window.waterLevelSystem?.updateStatusIndicator) {
+        waterLevelSystem.updateStatusIndicator("error", "無法取得水位，請按「立即更新」重試");
+      }
+      return next;
     }
+    window.loadRealtimeWaterLevels = loadRealtimeWaterLevels;
 
     function findNearestWaterStation(lat, lng) {
       let best = null;
@@ -1286,9 +1376,6 @@
           loadAllLayers(true),
           loadRealtimeWaterLevels(),
         ];
-        if (window.waterLevelSystem?.manualUpdate) {
-          jobs.push(window.waterLevelSystem.manualUpdate());
-        }
         if (typeof updateWeatherDisplay === "function") {
           jobs.push(updateWeatherDisplay());
         }
@@ -1508,22 +1595,20 @@
     
     // 更新水位站標記的顯示資訊
     window.updateWaterLevelMarkers = function(waterLevelData) {
-      // 更新現有的水位站標記
-      [...wlActiveMarkers, ...wlInactiveMarkers].forEach(marker => {
+      [...wlActiveMarkers, ...wlInactiveMarkers].forEach((marker) => {
         const stationId = marker._feature?.properties?.stationid;
-        if (stationId && waterLevelData[stationId]) {
-          const realTimeData = waterLevelData[stationId];
-          
-          // 更新標記的即時資料
-          marker._realTimeData = realTimeData;
-          
-          // 如果標記當前顯示 InfoWindow，更新內容
-          if (marker._infoWindowOpen) {
-            const content = buildWaterLevelPopupHtml(marker._feature, realTimeData);
-            if (window.infoWindow) {
-              window.infoWindow.setContent(content);
-            }
-          }
+        if (!stationId || !waterLevelData[stationId]) return;
+        const realTimeData = waterLevelData[stationId];
+        marker._realTimeData = realTimeData;
+        const wl = parseFloat(realTimeData.waterlevel);
+        if (!Number.isNaN(wl) && marker._kind === "wl-active") {
+          const baseName = marker._feature?.properties?.name || stationId;
+          marker.setTitle(`${baseName} · ${wl.toFixed(2)} m`);
+        }
+        if (marker._infoWindowOpen && marker._feature) {
+          infoWindow.setContent(
+            buildWaterLevelPopupHtmlWithRealtime(marker._feature, realTimeData)
+          );
         }
       });
     };
