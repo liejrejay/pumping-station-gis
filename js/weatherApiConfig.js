@@ -7,11 +7,13 @@ const WeatherAPIConfig = {
     // 中央氣象署開放資料平臺
     CWA: {
         baseUrl: 'https://opendata.cwa.gov.tw/api/v1/rest/datastore/',
-        apiKey: '', // 請到 https://opendata.cwa.gov.tw/ 申請
+        apiKey: 'CWA-775D44F9-041E-4A3D-B44B-67EE7D294961',
         endpoints: {
             rainfall: 'O-A0002-001',      // 自動雨量站
-            weather: 'O-A0001-001',       // 自動氣象站  
+            weather: 'O-A0001-001',       // 全測站逐時氣象（主用）
+            weather10min: 'O-A0003-001',  // 10分鐘綜觀氣象
             forecast: 'F-C0032-001',      // 36小時預報
+            townshipForecast: 'F-D0047-071', // 新北市鄉鎮1週預報（整體風險）
             typhoon: 'TY-001',            // 颱風資料
             warning: 'W-C0033-002'        // 特報資料
         },

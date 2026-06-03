@@ -41,6 +41,16 @@ class WeatherAlertSystem {
                 emergency: { threshold: 6.0, color: '#721c24', level: 'critical' } // 緊急 >5m
             },
             
+            // 氣溫警示
+            temperature: {
+                cold: { threshold: 10, color: '#007bff', level: 'warning' },        // 低溫 <10°C
+                cool: { threshold: 15, color: '#17a2b8', level: 'info' },          // 涼爽 10-15°C
+                comfortable: { threshold: 25, color: '#28a745', level: 'safe' },    // 舒適 15-25°C
+                warm: { threshold: 30, color: '#ffc107', level: 'warning' },        // 溫暖 25-30°C
+                hot: { threshold: 35, color: '#fd7e14', level: 'warning' },         // 炎熱 30-35°C
+                extreme: { threshold: 38, color: '#dc3545', level: 'danger' }       // 酷熱 >35°C
+            },
+            
             // 綜合風險評估
             riskMatrix: {
                 low: { score: 0-30, color: '#28a745', action: 'monitor' },
@@ -219,18 +229,31 @@ class WeatherAlertSystem {
      * 生成模擬氣象資料
      */
     generateMockWeatherData() {
+        // 不再使用隨機數（每次開啟面板數字會亂跳）
+        const snap = window.LocalWeatherDisplay?.getSnapshot?.();
         const now = new Date();
+        if (snap?.ready) {
+            return {
+                rainfall: {
+                    current: snap.rainfall ?? 0,
+                    forecast_3hr: 0,
+                    forecast_6hr: 0,
+                    trend: 'stable'
+                },
+                temperature: snap.temperature ?? 0,
+                humidity: snap.humidity ?? 0,
+                windSpeed: snap.windSpeed ?? 0,
+                pressure: 1013,
+                lastUpdate: now.toISOString(),
+                representativeStation: snap.stationName
+            };
+        }
         return {
-            rainfall: {
-                current: Math.random() * 50,     // 0-50mm/hr
-                forecast_3hr: Math.random() * 30,
-                forecast_6hr: Math.random() * 40,
-                trend: Math.random() > 0.5 ? 'increasing' : 'decreasing'
-            },
-            temperature: 20 + Math.random() * 15, // 20-35°C
-            humidity: 60 + Math.random() * 40,     // 60-100%
-            windSpeed: Math.random() * 20,         // 0-20 m/s
-            pressure: 1000 + Math.random() * 50,   // 1000-1050 hPa
+            rainfall: { current: 0, forecast_3hr: 0, forecast_6hr: 0, trend: 'stable' },
+            temperature: null,
+            humidity: null,
+            windSpeed: null,
+            pressure: 1013,
             lastUpdate: now.toISOString()
         };
     }
@@ -265,15 +288,26 @@ class WeatherAlertSystem {
         riskScore += waterLevelScore;
         factors.push(`水位: ${waterLevel.toFixed(2)}m (${waterLevelScore}分)`);
         
-        // 3. 預報因子 (15% 權重)
-        const rainForecast = this.weatherData.rainfall?.forecast_3hr || 0;
+        // 3. 鄉鎮預報因子 (15% 權重) — F-D0047-071 降雨機率
         let forecastScore = 0;
-        if (rainForecast > 50) forecastScore = 15;
-        else if (rainForecast > 30) forecastScore = 10;
-        else if (rainForecast > 15) forecastScore = 5;
-        
+        const lat = stationData.lat;
+        const lng = stationData.lng;
+        if (window.townshipForecastSystem && lat != null && lng != null) {
+            const { township, forecast } = window.townshipForecastSystem.getForecastForPoint(lat, lng);
+            const pop = forecast?.pop != null ? Number(forecast.pop) : 0;
+            if (pop >= 80) forecastScore = 15;
+            else if (pop >= 60) forecastScore = 12;
+            else if (pop >= 40) forecastScore = 8;
+            else if (pop >= 20) forecastScore = 4;
+            factors.push(`鄉鎮預報(${township}) 降雨機率 ${pop}% (${forecastScore}分)`);
+        } else {
+            const rainForecast = this.weatherData.rainfall?.forecast_3hr || 0;
+            if (rainForecast > 50) forecastScore = 15;
+            else if (rainForecast > 30) forecastScore = 10;
+            else if (rainForecast > 15) forecastScore = 5;
+            factors.push(`預報雨量: ${rainForecast.toFixed(1)}mm (${forecastScore}分)`);
+        }
         riskScore += forecastScore;
-        factors.push(`3小時預報: ${rainForecast.toFixed(1)}mm (${forecastScore}分)`);
         
         // 4. 季節/時間因子 (10% 權重)
         const month = new Date().getMonth() + 1;
