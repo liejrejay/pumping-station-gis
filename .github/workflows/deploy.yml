@@ -27,22 +27,30 @@ jobs:
           GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
           CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
         run: |
+          set -e
           mkdir -p dist/js
 
-          if [ -n "$CWA_API_KEY" ]; then
-            node scripts/fetch_cwa_snapshot.js
-            echo "✅ 已更新氣象快照（公開站離線可看）"
-          else
-            echo "::warning::未設定 CWA_API_KEY Secret，公開站氣象可能無資料"
-          fi
-
-          node scripts/fetch_wra_water_snapshot.js
-          echo "✅ 已更新水位快照（公開站）"
-
+          # 先複製靜態檔（抽水站 geojson 等），避免氣象 API 失敗導致整次部署失敗
           cp *.html dist/ 2>/dev/null || true
           cp -r css dist/ 2>/dev/null || true
           cp -r js dist/ 2>/dev/null || true
           cp -r data dist/ 2>/dev/null || true
+
+          if [ -n "$CWA_API_KEY" ]; then
+            node scripts/fetch_cwa_snapshot.js || echo "::warning::CWA 快照失敗，沿用 repo 內 data/cwa-weather-latest.json"
+          else
+            echo "::warning::未設定 CWA_API_KEY Secret，公開站氣象可能無資料"
+          fi
+
+          node scripts/fetch_wra_water_snapshot.js || echo "::warning::WRA 快照失敗，沿用 repo 內 data/wra-water-latest.json"
+          cp -r data dist/
+
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          if grep -q 'PUMPING_STATIONS_DATA_VERSION' dist/index.html; then
+            sed -i "s/PUMPING_STATIONS_DATA_VERSION = \"[^\"]*\"/PUMPING_STATIONS_DATA_VERSION = \"${SHORT_SHA}\"/" dist/index.html
+            echo "✅ pumping-stations cache bust → ${SHORT_SHA}"
+          fi
+          echo "${SHORT_SHA}" > dist/data/pumping-data-version.txt
 
           if [ -z "$GOOGLE_MAPS_API_KEY" ]; then
             echo "::error::未設定 GOOGLE_MAPS_API_KEY。請到 Settings → Secrets and variables → Actions 新增後再部署。"

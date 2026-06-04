@@ -36,6 +36,6 @@ buildDahanWeatherSummary(key)
     console.log('✅ 氣象快照 → data/cwa-weather-latest.json');
   })
   .catch((err) => {
-    console.error('❌ 氣象快照失敗:', err.message);
-    process.exit(1);
+    console.warn('⚠️  氣象快照失敗（沿用 repo 內既有檔）:', err.message);
+    process.exitCode = 0;
   });
