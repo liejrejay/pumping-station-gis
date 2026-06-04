@@ -419,56 +419,7 @@
         "geocode_quality": "reference"
       }
     },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          121.4503125,
-          25.059312499999997
-        ]
-      },
-      "properties": {
-        "name": "新北市政府中隆抽水站",
-        "address": "新北市新莊區中隆里中央路182號",
-        "river": "大漢溪",
-        "pump_type": null,
-        "year_ce": null,
-        "year_ce_range": null,
-        "source": "legacy plus_code",
-        "geocode_quality": "plus_code",
-        "plus_code": "3F52+P4",
-        "village": "中原里",
-        "district": "新北市新莊區",
-        "id": 20,
-        "label": "新北市政府中隆抽水站"
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          121.4455625,
-          25.069312500000002
-        ]
-      },
-      "properties": {
-        "name": "中港東抽水站",
-        "address": "新北市五股區楓樹里五工一路136號",
-        "river": "大漢溪",
-        "pump_type": null,
-        "year_ce": null,
-        "year_ce_range": null,
-        "source": "legacy plus_code",
-        "geocode_quality": "plus_code",
-        "plus_code": "3C9W+P6",
-        "village": "楓樹里",
-        "district": "新北市泰山區",
-        "id": 21,
-        "label": "中港東抽水站"
-      }
-    },
+    
     {
       "type": "Feature",
       "geometry": {
