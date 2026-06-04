@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import math
 import subprocess
 from pathlib import Path
 
@@ -65,6 +66,60 @@ def build_feature(
     }
 
 
+def _dist_m(c1: list[float], c2: list[float]) -> float:
+    lon1, lat1 = c1
+    lon2, lat2 = c2
+    r = 6371000.0
+    p1, p2 = math.radians(lat1), math.radians(lat2)
+    dp, dl = math.radians(lat2 - lat1), math.radians(lon2 - lon1)
+    a = math.sin(dp / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dl / 2) ** 2
+    return 2 * r * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+
+def filter_legacy_duplicates(
+    ref_features: list[dict], legacy: list[dict], *, near_m: float = 50.0
+) -> list[dict]:
+    """Drop legacy plus_code rows that duplicate a reference-table station."""
+    ref_names = {(f["properties"].get("name") or "").strip() for f in ref_features}
+    ref_points = [
+        (f["geometry"]["coordinates"], (f["properties"].get("name") or "").strip())
+        for f in ref_features
+    ]
+    kept: list[dict] = []
+    for lf in legacy:
+        p = lf["properties"]
+        name = (p.get("name") or "").strip()
+        if "暫名" in name:
+            kept.append(lf)
+            continue
+        if name in ref_names:
+            print(f"  skip legacy duplicate (name): {name}")
+            continue
+        coords = lf["geometry"]["coordinates"]
+        if any(
+            rname == name and _dist_m(coords, rc) <= near_m for rc, rname in ref_points
+        ):
+            print(f"  skip legacy duplicate (near {name})")
+            continue
+        kept.append(lf)
+    return kept
+
+
+def load_legacy_features_from_current_geojson() -> list[dict]:
+    """Fallback when git history is unavailable."""
+    if not GEOJSON.exists():
+        return []
+    data = json.loads(GEOJSON.read_text(encoding="utf-8"))
+    legacy: list[dict] = []
+    for f in data["features"]:
+        p = f.get("properties") or {}
+        name = p.get("name") or ""
+        source = p.get("source") or ""
+        if "暫名" in name or source == "legacy plus_code":
+            legacy.append(json.loads(json.dumps(f)))
+    return legacy
+
+
 def load_legacy_features_from_git(rev: str = LEGACY_GIT_REV) -> list[dict]:
     """Restore 暫名／legacy plus_code stations from git history."""
     try:
@@ -103,7 +158,13 @@ def main() -> None:
     ]
 
     legacy = load_legacy_features_from_git()
-    print(f"append {len(legacy)} legacy 暫名 stations (from git {LEGACY_GIT_REV})")
+    if not legacy:
+        legacy = load_legacy_features_from_current_geojson()
+        print(f"loaded {len(legacy)} legacy stations from existing {GEOJSON.name}")
+    else:
+        print(f"loaded {len(legacy)} legacy stations from git {LEGACY_GIT_REV}")
+    legacy = filter_legacy_duplicates(features, legacy)
+    print(f"append {len(legacy)} legacy stations after dedupe")
     features.extend(legacy)
 
     renumber_features(features)
