@@ -47,6 +47,15 @@ push 到 `main` 後，Actions 會把此網址寫入 `dist/js/runtime-config.js` 
 
 ---
 
+## 若 `runtime-config.js` 裡 API 仍是空字串
+
+1. 到 **Actions** 手動 **Run workflow**（只改 Secret、Pages 不會自動重寫 `runtime-config.js`）。
+2. 本專案另有備援：
+   - `config/public-api-base-url.txt`（建置時寫入）
+   - `js/api-endpoint.js`（瀏覽器載入後補上 Render 網址）
+
+---
+
 ## 步驟三：驗證全組共用
 
 1. 組員 A 在公開站 **註冊** 新帳號。

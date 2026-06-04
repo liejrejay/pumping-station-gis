@@ -631,8 +631,9 @@
     </div>
   </div>
 
-  <script src="js/apiBase.js?v=20260530i"></script>
-  <script src="js/userManager.js?v=20260530i"></script>
+  <script src="js/apiBase.js?v=20260604a"></script>
+  <script src="js/api-endpoint.js?v=20260604a"></script>
+  <script src="js/userManager.js?v=20260604a"></script>
   <script src="js/mobileOptimization.js?v=20260602c"></script>
   <script src="js/weatherApiConfig.js?v=20260602c"></script>
   <script src="js/realtimeRainfall.js?v=20260602c"></script>
@@ -2365,9 +2366,13 @@
       if (window.__runtimeConfigLoaded) return;
       try {
         await loadScriptOnce("js/runtime-config.js");
+        await loadScriptOnce("js/api-endpoint.js");
         window.__runtimeConfigLoaded = true;
       } catch (e) {
         console.warn("[Config] runtime-config.js 未載入:", e.message);
+        try {
+          await loadScriptOnce("js/api-endpoint.js");
+        } catch (_) { /* ignore */ }
       }
     }
 

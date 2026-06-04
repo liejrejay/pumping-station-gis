@@ -57,14 +57,21 @@ jobs:
             echo "::error::未設定 GOOGLE_MAPS_API_KEY。請到 Settings → Secrets and variables → Actions 新增後再部署。"
             exit 1
           fi
-          node -e "const fs=require('fs');const k=process.env.GOOGLE_MAPS_API_KEY;const api=process.env.PUBLIC_API_BASE_URL||'';fs.writeFileSync('dist/js/runtime-config.js','window.GOOGLE_MAPS_API_KEY = '+JSON.stringify(k)+';\\nwindow.PUBLIC_API_BASE_URL = '+JSON.stringify(api)+';\\n');"
+          API_URL="$PUBLIC_API_BASE_URL"
+          if [ -z "$API_URL" ] && [ -f config/public-api-base-url.txt ]; then
+            API_URL=$(tr -d '\r' < config/public-api-base-url.txt | head -n 1 | xargs)
+            echo "ℹ️  Secret 為空，改用 config/public-api-base-url.txt"
+          fi
+          export API_URL
+          node -e "const fs=require('fs');const k=process.env.GOOGLE_MAPS_API_KEY;const api=process.env.API_URL||'';fs.writeFileSync('dist/js/runtime-config.js','window.GOOGLE_MAPS_API_KEY = '+JSON.stringify(k)+';\\nwindow.PUBLIC_API_BASE_URL = '+JSON.stringify(api)+';\\n');"
           echo "✅ runtime-config.js 已產生"
-          if [ -z "$PUBLIC_API_BASE_URL" ]; then
-            echo "::warning::未設定 PUBLIC_API_BASE_URL Secret，公開站無法全組共用註冊／統計（請部署 Render API）"
+          if [ -z "$API_URL" ]; then
+            echo "::warning::PUBLIC_API_BASE_URL 仍為空（Secret 與 config 皆無）"
           else
-            echo "✅ PUBLIC_API_BASE_URL 已注入前端"
+            echo "✅ PUBLIC_API_BASE_URL 長度: ${#API_URL}"
           fi
           cp js/apiBase.js dist/js/
+          cp js/api-endpoint.js dist/js/ 2>/dev/null || true
 
           echo "" > dist/.nojekyll
 
