@@ -167,19 +167,21 @@ const LocalWeatherDisplay = {
     });
   },
 
-  /** 點選地圖站點：鎖定該地點並更新氣象面板 */
+  /** 點選地圖站點：鎖定該地點氣象（不自動開啟右側氣象面板，需手動按 🌦️） */
   showWeatherForPoint(lat, lng, name) {
     this.pinned = { lat, lng, name: name || '選定地點' };
     const snap = this.getSnapshotAt(lat, lng, { pinName: this.pinned.name });
 
     const panel = document.getElementById('weatherAlertPanel');
-    if (panel && !panel.classList.contains('show')) {
-      panel.classList.add('show');
-    }
-
-    if (typeof window.applyWeatherSnapshotToPanel === 'function') {
+    if (
+      panel?.classList.contains('show') &&
+      typeof window.applyWeatherSnapshotToPanel === 'function'
+    ) {
       window.applyWeatherSnapshotToPanel(snap);
     }
+
+    const resetBtn = document.getElementById('weatherResetPinBtn');
+    if (resetBtn) resetBtn.style.display = 'none';
 
     return snap;
   },
@@ -229,7 +231,7 @@ const LocalWeatherDisplay = {
           <div>🌧️ <strong>${this.formatValue(snap.rainfall, 1)}</strong> mm</div>
           <div>💨 <strong>${this.formatValue(snap.windSpeed, 1)}</strong> m/s</div>
         </div>
-        <div style="font-size:0.72rem;color:#888;margin-top:6px;">觀測 ${obs} · 點選已同步至右側氣象面板</div>
+        <div style="font-size:0.72rem;color:#888;margin-top:6px;">觀測 ${obs} · 按右上角 🌦️ 可開啟氣象面板查看此地天氣</div>
       </div>`;
   },
 };
