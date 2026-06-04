@@ -442,6 +442,7 @@
           <div class="stat-card">
             <div class="label">🏢 抽水站</div>
             <div class="value" id="countPumping">—</div>
+            <div class="stat-sub" id="countPumpingDetail">大漢溪 — · 其他 —</div>
           </div>
           <div class="stat-card wl">
             <div class="label">💧 水位站</div>
@@ -558,7 +559,6 @@
     <div class="legend-row"><span class="swatch-line" style="background:#27ae60"></span>親水廊道（河濱自行車道）</div>
     <div class="legend-row"><span class="swatch-line" style="background:#0b8fe6"></span>大漢溪河道</div>
     <div class="legend-row"><span class="swatch" style="background:#9b59b6"></span>大漢溪設施（桃園水位／景點）</div>
-    <div class="legend-row"><span class="swatch" style="background:#e74c3c"></span>大漢溪抽水站（河系大漢溪）</div>
   </div>
 
   <div id="weatherAlertPanel" class="weather-alert-panel" role="dialog" aria-label="氣象警示">
@@ -1003,33 +1003,29 @@
       clearMarkers(taoyuanMarkers);
       const show = document.getElementById("layerTaoyuan")?.checked;
       (gj.features || []).forEach((feat) => {
-        const [lng, lat] = feat.geometry.coordinates;
         const p = feat.properties || {};
+        // 抽水站統一由紅色「抽水站」圖層標示，此處僅桃園水位站與親水景點
+        if (p.facility_type === "抽水站") return;
+        const [lng, lat] = feat.geometry.coordinates;
         const sid = p.stationid;
         const rt0 = sid ? realtimeWaterLevels[sid] : null;
         const isWl = p.facility_type === "水位站";
-        const isPump = p.facility_type === "抽水站";
-        if (isPump) {
-          p.nearest_wl = findNearestWaterStation(lat, lng);
-        }
         const marker = new google.maps.Marker({
           map: show ? map : null,
           position: { lat, lng },
-          icon: taoyuanFacilityIcon({ isWl, isPump, active: p.status === "現存" }),
+          icon: taoyuanFacilityIcon({ isWl, isPump: false, active: p.status === "現存" }),
           title: p.name,
           label: isWl && p.status === "現存" && rt0 ? waterLevelMarkerLabel(rt0.waterlevel) : null,
-          zIndex: isPump ? 60 : 55,
+          zIndex: 55,
         });
         if (rt0) marker._realTimeData = rt0;
         marker._feature = feat;
-        marker._kind = isPump ? "taoyuan-pump" : "taoyuan";
+        marker._kind = "taoyuan";
         marker.addListener("click", () => {
           const realTimeData = marker._realTimeData || (sid ? realtimeWaterLevels[sid] : null) || null;
           const snap = LocalWeatherDisplay.showWeatherForPoint(lat, lng, p.name || "大漢溪設施");
           if (isWl) {
             infoWindow.setContent(buildWaterLevelPopupHtmlWithRealtime(feat, realTimeData, snap));
-          } else if (isPump) {
-            infoWindow.setContent(buildStationPopupHtml(feat, snap));
           } else {
             infoWindow.setContent(`
               <div style="min-width:240px;">
@@ -1049,8 +1045,7 @@
       });
       const n = taoyuanMarkers.length;
       const wl = (gj.features || []).filter((f) => f.properties?.facility_type === "水位站").length;
-      const pump = (gj.features || []).filter((f) => f.properties?.facility_type === "抽水站").length;
-      console.log(`[大漢溪設施] 已標示 ${n} 處（抽水站 ${pump}、水位站 ${wl}、景點 ${n - wl - pump}）`);
+      console.log(`[大漢溪設施] 已標示 ${n} 處（水位站 ${wl}、景點 ${n - wl}；大漢溪抽水站見紅色圖層）`);
     }
 
     async function loadPumpingStations() {
@@ -1060,16 +1055,16 @@
       );
       if (!res.ok) throw new Error("pumping-stations.geojson HTTP " + res.status);
       const gj = await res.json();
-      // 河系為大漢溪者改由「大漢溪設施」圖層標示，避免重複
-      const feats = dedupePumpingFeatures(gj.features || [])
-        .filter((f) => !((f.properties?.river || "").trim().includes("大漢")))
-        .map((f, i) => {
+      const feats = dedupePumpingFeatures(gj.features || []).map((f, i) => {
         const p = f.properties || {};
         if (p.id == null) p.id = i + 1;
         if (!p.construction_year && p.year_ce) p.construction_year = p.year_ce;
         p.nearest_wl = findNearestWaterStation(f.geometry.coordinates[1], f.geometry.coordinates[0]);
         return f;
       });
+      const dahanCount = feats.filter((f) =>
+        ((f.properties?.river || "").trim().includes("大漢"))
+      ).length;
       clearMarkers(pumpingMarkers);
       const bounds = new google.maps.LatLngBounds();
       feats.forEach((feat) => {
@@ -1094,6 +1089,11 @@
       });
       if (feats.length) map.fitBounds(bounds);
       document.getElementById("countPumping").textContent = feats.length;
+      const otherCount = feats.length - dahanCount;
+      const detailEl = document.getElementById("countPumpingDetail");
+      if (detailEl) {
+        detailEl.textContent = `大漢溪 ${dahanCount} · 其他河系 ${otherCount}`;
+      }
     }
 
     async function loadWaterLevelStations() {
