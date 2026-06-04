@@ -68,6 +68,10 @@ class RealtimeWaterLevelSystem {
 
   renderStationList(data, source) {
     this.lastSource = source || '';
+    if (typeof window.renderWaterLevelSidebar === 'function') {
+      window.renderWaterLevelSidebar(data, source);
+      return;
+    }
     const list = document.getElementById('waterLevelStationList');
     const stations = window.WATER_LEVEL_STATIONS || [];
     const n = Object.keys(data).length;
@@ -142,12 +146,6 @@ class RealtimeWaterLevelSystem {
 
   createStatusPanel() {
     /* 面板已寫在 index.html，避免 GitHub Pages 快取舊 JS 導致列表不顯示 */
-  }
-
-  renderStationList(data, source) {
-    if (typeof window.renderWaterLevelSidebar === 'function') {
-      window.renderWaterLevelSidebar(data, source);
-    }
   }
 }
 

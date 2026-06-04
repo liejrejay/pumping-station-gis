@@ -565,9 +565,16 @@
     </div>
     <div class="weather-alert-panel__scroll" id="weatherAlertScroll">
       <div class="weather-info">
-        <div style="text-align: center; margin-bottom: 10px;">
-          <strong>即時氣象資訊</strong>
+        <div style="text-align: center; margin-bottom: 6px;">
+          <strong id="weatherPanelTitle">大漢溪流域 · 代表測站</strong>
         </div>
+        <div id="weatherStationLabel" style="text-align:center;font-size:0.8rem;color:#555;margin-bottom:8px;line-height:1.4;">
+          載入中…
+        </div>
+        <button type="button" id="weatherResetPinBtn" onclick="LocalWeatherDisplay.clearPin()"
+          style="display:none;width:100%;margin-bottom:8px;padding:6px 10px;font-size:0.8rem;border:1px solid #bee5eb;background:#e8f4fc;color:#0b5394;border-radius:6px;cursor:pointer;">
+          ↩ 恢復流域預設測站
+        </button>
         <div class="weather-grid">
           <div class="weather-item">
             <div class="weather-value" id="currentRainfall">--</div>
@@ -587,6 +594,15 @@
           </div>
         </div>
         <div id="weatherSourceNote" class="weather-source-note"></div>
+        <div id="weatherUpdateHint" style="text-align:center;font-size:0.72rem;color:#888;margin-top:6px;"></div>
+        <div class="risk-indicator" style="margin-top: 15px;">
+          <span class="risk-text">整體風險:</span>
+          <div class="risk-bar">
+            <div id="overallRiskFill" class="risk-fill" style="width: 0%"></div>
+          </div>
+          <span id="overallRiskText" class="risk-text">低</span>
+        </div>
+        <div id="forecastRiskDetail" style="font-size:0.72rem;color:#666;margin-top:8px;line-height:1.45;text-align:left;"></div>
       </div>
       <div id="alertPanel" class="alert-content-area">
         <div class="loading-weather">
@@ -600,7 +616,11 @@
   <script src="js/userManager.js?v=20260602c"></script>
   <script src="js/mobileOptimization.js?v=20260602c"></script>
   <script src="js/weatherApiConfig.js?v=20260602c"></script>
+  <script src="js/realtimeRainfall.js?v=20260602c"></script>
+  <script src="js/realtimeTemperature.js?v=20260602c"></script>
   <script src="js/realtimeWaterLevel.js?v=20260602c"></script>
+  <script src="js/localWeatherDisplay.js?v=20260602c"></script>
+  <script src="js/townshipForecast.js?v=20260602c"></script>
   <script src="js/weatherAlert.js?v=20260602f"></script>
 
   <script>
@@ -648,7 +668,7 @@
       { stationid: "1140H111", name: "新海大橋(即時)",  lat: 25.033318, lng: 121.454806, address: "新北市板橋區環河路" },
       { stationid: "1140H118", name: "柑園橋(即時)",   lat: 24.985300, lng: 121.381900, address: "新北市樹林區佳園路二段" },
     ];
-    const WL_REALTIME_API = "https://opendata.wra.gov.tw/api/v2/73c4c3de-4045-4765-abeb-89f9f9cd5ff0?page=1&size=1000";
+    // 即時水位改由 js/realtimeWaterLevel.js（FHY WraApi）提供
     const WL_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
     window.WATER_LEVEL_STATIONS = WATER_LEVEL_STATIONS;
     window.WL_REALTIME_API = WL_REALTIME_API;
@@ -864,6 +884,7 @@
         marker._feature = { properties: f, geometry: { coordinates: [f.lng, f.lat] } };
         marker._kind = "waterfront";
         marker.addListener("click", () => {
+          const snap = LocalWeatherDisplay.showWeatherForPoint(f.lat, f.lng, f.name);
           const plus = f.plus_code ? `<div style="margin-bottom:6px;"><strong>Plus Code:</strong> <code>${f.plus_code}</code></div>` : "";
           const note = f.note ? `<div style="margin-bottom:6px;">${f.note}</div>` : "";
           infoWindow.setContent(`
@@ -871,6 +892,7 @@
               <h3 style="margin:0 0 8px 0;color:#1e8449;font-size:1.05rem;">🌿 ${f.name}</h3>
               <div style="margin-bottom:6px;"><strong>地址:</strong> ${f.address}</div>
               ${plus}${note}
+              ${LocalWeatherDisplay.buildPopupWeatherHtml(snap)}
               <hr style="margin:8px 0;border:none;border-top:1px solid #eee;">
               <div style="font-size:0.78rem;color:#666;">
                 <div>座標: ${f.lat.toFixed(5)}, ${f.lng.toFixed(5)}</div>
@@ -963,7 +985,8 @@
         marker._feature = feat;
         marker._kind = "pumping";
         marker.addListener("click", () => {
-          infoWindow.setContent(buildStationPopupHtml(feat));
+          const snap = LocalWeatherDisplay.showWeatherForPoint(lat, lng, feat.properties?.name);
+          infoWindow.setContent(buildStationPopupHtml(feat, snap));
           infoWindow.open({ map, anchor: marker });
         });
         pumpingMarkers.push(marker);
@@ -978,6 +1001,12 @@
       if (!res.ok) throw new Error("water-level-stations.geojson HTTP " + res.status);
       const gj = await res.json();
       
+      if (window.rainfallSystem) {
+        rainfallSystem.startAutoUpdate();
+      }
+      if (window.temperatureSystem) {
+        temperatureSystem.startAutoUpdate();
+      }
       clearMarkers(wlActiveMarkers);
       clearMarkers(wlInactiveMarkers);
       const showInactive = document.getElementById("layerWlInactive")?.checked;
@@ -999,10 +1028,11 @@
         marker._kind = active ? "wl-active" : "wl-inactive";
         marker.addListener("click", () => {
           const realTimeData = marker._realTimeData || realtimeWaterLevels[sid] || null;
-          infoWindow.setContent(buildWaterLevelPopupHtmlWithRealtime(feat, realTimeData));
+          const snap = typeof LocalWeatherDisplay !== 'undefined'
+            ? LocalWeatherDisplay.showWeatherForPoint(lat, lng, feat.properties?.name || '水位站')
+            : null;
+          infoWindow.setContent(buildWaterLevelPopupHtmlWithRealtime(feat, realTimeData, snap));
           infoWindow.open({ map, anchor: marker });
-          
-          // 標記 InfoWindow 為已開啟
           marker._infoWindowOpen = true;
         });
         
@@ -1212,8 +1242,10 @@
     // ============================================================
     // InfoWindow popup builders
     // ============================================================
-    function buildStationPopupHtml(feature) {
+    function buildStationPopupHtml(feature, weatherSnap) {
       const p = feature.properties || {};
+      const [lng, lat] = feature.geometry.coordinates;
+      const snap = weatherSnap || LocalWeatherDisplay.getSnapshotAt(lat, lng, { pinName: p.name });
       const yearText = (p.year_ce || p.construction_year)
         ? (p.year_ce_range && p.year_ce_range[0] !== p.year_ce_range[1]
             ? `${p.year_ce_range[0]}–${p.year_ce_range[1]} 年（西元）`
@@ -1256,6 +1288,7 @@
           <div style="margin-bottom:6px;"><strong>所屬河川:</strong> ${p.river || "大漢溪"}</div>
           <hr style="margin:8px 0;border:none;border-top:1px solid #eee;">
           ${waterRow}
+          ${LocalWeatherDisplay.buildPopupWeatherHtml(snap)}
           <hr style="margin:8px 0;border:none;border-top:1px solid #eee;">
           <div style="font-size:0.78rem;color:#666;">
             <div>座標: ${feature.geometry.coordinates[1].toFixed(5)}, ${feature.geometry.coordinates[0].toFixed(5)}</div>
@@ -1579,14 +1612,125 @@
       return 12;
     }
 
+    function setWindDisplay(ms) {
+      const windEl = document.getElementById('currentWind');
+      const bfEl = document.getElementById('currentWindBf');
+      if (!windEl) return;
+      if (ms != null && Number.isFinite(ms)) {
+        windEl.textContent = (ms * 3.6).toFixed(1);
+        if (bfEl) bfEl.textContent = `(蒲福 ${msToBeaufort(ms)} 級)`;
+      } else {
+        windEl.textContent = '--';
+        if (bfEl) bfEl.textContent = '';
+      }
+    }
+
+    function applyWeatherSnapshotToPanel(snap) {
+      const labelEl = document.getElementById('weatherStationLabel');
+      const hintEl = document.getElementById('weatherUpdateHint');
+      const titleEl = document.getElementById('weatherPanelTitle');
+      const resetBtn = document.getElementById('weatherResetPinBtn');
+      const pinned = LocalWeatherDisplay.pinned;
+
+      if (titleEl) {
+        titleEl.textContent = pinned
+          ? `📍 ${pinned.name}`
+          : '大漢溪流域 · 代表測站';
+      }
+      if (resetBtn) {
+        resetBtn.style.display = pinned ? 'block' : 'none';
+      }
+
+      if (!snap?.ready) {
+        if (labelEl) labelEl.textContent = snap?.message || '尚無觀測資料';
+        ['currentRainfall', 'currentTemp', 'currentHumidity', 'currentWind'].forEach((id) => {
+          const el = document.getElementById(id);
+          if (el) el.textContent = '--';
+        });
+        if (hintEl) hintEl.textContent = '';
+        return;
+      }
+
+      if (labelEl) {
+        const wx = snap.weatherDesc ? ` · ${snap.weatherDesc}` : '';
+        const hiLo =
+          snap.dailyHigh != null && snap.dailyLow != null
+            ? `<br>今日 ${snap.dailyLow.toFixed(1)}～${snap.dailyHigh.toFixed(1)}°C`
+            : '';
+        const distLabel = pinned
+          ? `距「${pinned.name}」約 ${snap.distanceKm} km`
+          : `距大漢溪流域中心約 ${snap.distanceKm} km`;
+        labelEl.innerHTML =
+          `觀測站 <strong>${snap.stationName}</strong>` +
+          (snap.county ? `（${snap.county}）` : '') +
+          wx +
+          `<br>${distLabel}` +
+          hiLo;
+      }
+
+      const setVal = (id, val, digits = 1) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.textContent = val != null && !Number.isNaN(val) ? Number(val).toFixed(digits) : '--';
+      };
+
+      setVal('currentRainfall', snap.rainfall, 1);
+      setVal('currentTemp', snap.temperature, 1);
+      setVal('currentHumidity', snap.humidity, 0);
+      setWindDisplay(snap.windSpeed);
+
+      if (hintEl) {
+        const t = snap.lastUpdate ? snap.lastUpdate.toLocaleString('zh-TW') : '--';
+        hintEl.textContent = `${snap.source} · 觀測 ${t} · 點選地圖站點可切換地點`;
+      }
+
+      if (typeof weatherAlert !== 'undefined') {
+        weatherAlert.weatherData.rainfall = {
+          current: snap.rainfall ?? 0,
+          forecast_3hr: 0,
+          stations: window.rainfallSystem?.rainfallData,
+          lastUpdate: new Date().toISOString(),
+        };
+        weatherAlert.weatherData.temperature = snap.temperature;
+        weatherAlert.weatherData.humidity = snap.humidity;
+        weatherAlert.weatherData.windSpeed = snap.windSpeed;
+        weatherAlert.weatherData.representativeStation = snap.stationName;
+
+        const avgRisk = calculateOverallRisk();
+        updateRiskDisplay(avgRisk);
+        weatherAlert.updateAlertUI();
+        updateAlertToggleBadge();
+      }
+    }
+    window.applyWeatherSnapshotToPanel = applyWeatherSnapshotToPanel;
+
     async function updateWeatherDisplay() {
       try {
+        const needTemp =
+          (!window.temperatureSystem?.temperatureData ||
+            !Object.keys(window.temperatureSystem.temperatureData).length) &&
+          window.temperatureSystem?.fetchTemperatureData;
+        const needRain =
+          (!window.rainfallSystem?.rainfallData ||
+            !Object.keys(window.rainfallSystem.rainfallData).length) &&
+          window.rainfallSystem?.fetchRainfallData;
+
+        if (needTemp) await temperatureSystem.fetchTemperatureData();
+        if (needRain) await rainfallSystem.fetchRainfallData();
+
+        if (typeof LocalWeatherDisplay !== 'undefined') {
+          const snap = LocalWeatherDisplay.getSnapshot();
+          if (snap?.ready) {
+            applyWeatherSnapshotToPanel(snap);
+            return;
+          }
+        }
+
         if (typeof weatherAlert === 'undefined') return;
-        
+
         const weatherData = await weatherAlert.fetchWeatherData();
         const note = document.getElementById('weatherSourceNote');
-        
-        // 更新 UI 顯示
+
         if (document.getElementById('currentRainfall')) {
           document.getElementById('currentRainfall').textContent =
             formatWeatherVal(weatherData.rainfall?.current, 1);
@@ -1599,21 +1743,7 @@
           document.getElementById('currentHumidity').textContent =
             formatWeatherVal(weatherData.humidity, 0);
         }
-        if (document.getElementById('currentWind')) {
-          const ms = weatherData.windSpeed;
-          let display = '--';
-          if (ms != null && Number.isFinite(ms)) {
-            const kmh = ms * 3.6;
-            const beaufort = msToBeaufort(ms);
-            display = `${kmh.toFixed(1)}`;
-            const bfEl = document.getElementById('currentWindBf');
-            if (bfEl) bfEl.textContent = `(蒲福 ${beaufort} 級)`;
-          } else {
-            const bfEl = document.getElementById('currentWindBf');
-            if (bfEl) bfEl.textContent = '';
-          }
-          document.getElementById('currentWind').textContent = display;
-        }
+        setWindDisplay(weatherData.windSpeed);
 
         if (note) {
           if (weatherData.source === 'CWA_API' || weatherData.source === 'CWA_CLIENT' || weatherData.source === 'CWA_SNAPSHOT') {
@@ -1628,20 +1758,97 @@
             note.style.color = '#c0392b';
           }
         }
-          
+
+        const avgRisk = calculateOverallRisk();
+        updateRiskDisplay(avgRisk);
         weatherAlert.updateAlertUI();
         updateAlertToggleBadge();
-        
       } catch (error) {
         console.error('更新氣象顯示失敗:', error);
       }
     }
-    
+    window.updateWeatherDisplay = updateWeatherDisplay;
+
+    function calculateOverallRisk() {
+      if (typeof weatherAlert === 'undefined') return { score: 0, level: 'low', forecast: null };
+
+      const active = weatherAlert.alerts.filter((a) => !a.acknowledged);
+      let stationScore = 0;
+      active.forEach((a) => {
+        if (a.level === 'critical') stationScore += 40;
+        else if (a.level === 'high') stationScore += 25;
+        else if (a.level === 'medium') stationScore += 15;
+        else stationScore += 5;
+      });
+      stationScore = Math.min(100, stationScore);
+
+      let forecastRisk = null;
+      if (window.townshipForecastSystem?.getBasinForecastRisk) {
+        forecastRisk = townshipForecastSystem.getBasinForecastRisk();
+      }
+
+      let finalScore = stationScore;
+      if (forecastRisk && Object.keys(townshipForecastSystem.forecastsByTown || {}).length > 0) {
+        finalScore = Math.round(stationScore * 0.55 + forecastRisk.score * 0.45);
+      }
+      finalScore = Math.min(100, finalScore);
+
+      const level =
+        finalScore >= 81 ? 'critical' :
+        finalScore >= 61 ? 'high' :
+        finalScore >= 31 ? 'medium' : 'low';
+
+      return {
+        score: finalScore,
+        level,
+        stationScore: Math.round(stationScore),
+        forecastRisk,
+      };
+    }
+
+    function updateRiskDisplay(risk) {
+      const fill = document.getElementById('overallRiskFill');
+      const text = document.getElementById('overallRiskText');
+      const detailEl = document.getElementById('forecastRiskDetail');
+
+      if (fill) fill.style.width = `${risk.score}%`;
+
+      const levelText = {
+        low: '低風險',
+        medium: '中風險',
+        high: '高風險',
+        critical: '極高風險',
+      };
+
+      if (text) text.textContent = levelText[risk.level] || '低風險';
+
+      if (detailEl) {
+        const fr = risk.forecastRisk;
+        if (fr && fr.towns?.length) {
+          const top = fr.towns
+            .slice()
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 3)
+            .map((t) => `${t.name} 降雨${t.forecast.pop ?? '—'}%`)
+            .join(' · ');
+          detailEl.innerHTML =
+            `<strong>預報風險</strong>（F-D0047-071）${fr.maxTown ? ` · 最高 ${fr.maxTown}` : ''}<br>` +
+            `即時監測 ${risk.stationScore ?? '—'}分 + 鄉鎮預報 ${fr.score}分<br>` +
+            top;
+        } else {
+          detailEl.textContent = '鄉鎮預報載入中…（新北市 F-D0047-071）';
+        }
+      }
+
+      updateAlertToggleBadge();
+    }
+
     function updateAlertToggleBadge() {
       const btn = document.getElementById('alertToggleBtn');
       if (!btn || typeof weatherAlert === 'undefined') return;
       const n = weatherAlert.alerts.filter((a) => !a.acknowledged).length;
-      btn.classList.toggle('has-alerts', n > 0);
+      const risk = calculateOverallRisk();
+      btn.classList.toggle('has-alerts', n > 0 || risk.level === 'high' || risk.level === 'critical');
     }
 
     window.flyToPumpingStation = function (stationId) {
@@ -1687,12 +1894,21 @@
           return;
         }
         
-        const stations = pumpingMarkers.map((marker, index) => ({
-          id: marker._feature?.properties?.id || index + 1,
-          name: marker._feature?.properties?.name || `抽水站${index + 1}`,
-          nearestWaterStation: marker._feature?.properties?.nearest_wl,
-          waterLevel: 0
-        }));
+        const stations = pumpingMarkers.map((marker, index) => {
+          const [lng, lat] = marker._feature?.geometry?.coordinates || [0, 0];
+          return {
+            id: marker._feature?.properties?.id || index + 1,
+            name: marker._feature?.properties?.name || `抽水站${index + 1}`,
+            lat,
+            lng,
+            nearestWaterStation: marker._feature?.properties?.nearest_wl,
+            waterLevel: 0
+          };
+        });
+
+        if (window.townshipForecastSystem) {
+          townshipForecastSystem.startAutoUpdate();
+        }
         
         weatherAlert.updatePumpingStations(stations);
         weatherAlert.updateWaterLevelData(realtimeWaterLevels || {});
@@ -1709,21 +1925,115 @@
     // 即時水位資料更新整合
     // ============================================================
     
-    // 監聽水位資料更新事件
-    window.addEventListener('waterLevelUpdated', function(event) {
-      const { data, stationCount } = event.detail;
-      console.log(`🌊 水位資料已更新，共 ${stationCount} 個站點`);
+    // 監聽降雨資料更新事件
+    window.addEventListener('rainfallUpdated', function(event) {
+      const { data, stats, stationCount } = event.detail;
+      console.log(`🌧️ 降雨資料已更新，共 ${stationCount} 個站點`);
       
-      // 更新地圖上的水位站標記
-      updateWaterLevelMarkers(data);
+      // 更新氣象警示系統的降雨資料
+      if (window.weatherAlert && window.weatherAlert.weatherData) {
+        window.weatherAlert.weatherData.rainfall = {
+          current: stats.averageHourly,
+          forecast_3hr: stats.maxHourly * 0.7, // 預估
+          stations: data,
+          lastUpdate: new Date().toISOString()
+        };
+      }
       
-      // 更新氣象警示系統
-      if (window.weatherAlert) {
-        weatherAlert.updateWaterLevelData(data);
+      // 更新降雨狀態面板
+      if (window.rainfallSystem) {
+        rainfallSystem.updateStatsDisplay();
       }
       
       // 顯示更新通知
-      showUpdateNotification(`水位資料已更新 (${stationCount} 站點)`);
+      const notification = `降雨資料已更新 (${stationCount} 站點, 平均 ${stats.averageHourly.toFixed(1)}mm/hr)`;
+      showUpdateNotification(notification);
+    });
+    
+    // 監聽氣溫資料更新事件
+    window.addEventListener('townshipForecastUpdated', function() {
+      const wxPanel = document.getElementById('weatherAlertPanel');
+      if (wxPanel?.classList.contains('show')) {
+        const avgRisk = calculateOverallRisk();
+        updateRiskDisplay(avgRisk);
+        if (typeof weatherAlert !== 'undefined') weatherAlert.updateAlertUI();
+      }
+    });
+
+    window.addEventListener('temperatureUpdated', function(event) {
+      const { data, stats, stationCount } = event.detail;
+      console.log(`🌡️ 氣溫資料已更新，共 ${stationCount} 個站點`);
+      
+      // 更新氣象警示系統的氣溫資料
+      if (window.weatherAlert && window.weatherAlert.weatherData) {
+        window.weatherAlert.weatherData.temperature = {
+          current: stats.averageTemp,
+          max: stats.maxTemp,
+          min: stats.minTemp,
+          humidity: stats.averageHumidity,
+          stations: data,
+          lastUpdate: new Date().toISOString()
+        };
+      }
+      
+      // 更新氣溫狀態面板
+      if (window.temperatureSystem) {
+        temperatureSystem.updateStatsDisplay();
+      }
+
+      const wxPanel = document.getElementById('weatherAlertPanel');
+      if (wxPanel?.classList.contains('show')) {
+        updateWeatherDisplay();
+      }
+      
+      // 顯示更新通知
+      const notification = `氣溫資料已更新 (${stationCount} 站點, 平均 ${stats.averageTemp.toFixed(1)}°C)`;
+      showUpdateNotification(notification);
+    });
+    
+    // 監聽水位資料更新事件
+    window.addEventListener('waterLevelUpdated', function(event) {
+      const { data, stats, stationCount } = event.detail || {};
+      if (!data) return;
+
+      const first = Object.values(data)[0];
+      if (first && (first.waterlevel != null || first.waterlevel === '')) {
+        window.realtimeWaterLevels = data;
+      } else {
+        window.realtimeWaterLevels = {};
+        Object.values(data).forEach((station) => {
+          window.realtimeWaterLevels[station.stationid] = {
+            waterlevel: station.waterLevel,
+            datetime: station.datetime,
+          };
+        });
+      }
+
+      if (window.weatherAlert?.updateWaterLevelData) {
+        weatherAlert.updateWaterLevelData(window.realtimeWaterLevels);
+      } else if (stats && window.weatherAlert?.weatherData) {
+        window.weatherAlert.weatherData.waterLevel = {
+          current: stats.averageLevel,
+          max: stats.maxLevel,
+          alertStations: stats.alertStations,
+          stations: data,
+          lastUpdate: new Date().toISOString(),
+        };
+      }
+
+      if (typeof waterLevelSystem?.updateStatsDisplay === 'function') {
+        waterLevelSystem.updateStatsDisplay();
+      } else if (typeof renderWaterLevelSidebar === 'function') {
+        renderWaterLevelSidebar(window.realtimeWaterLevels, window.__wlLastSource || '');
+      }
+
+      updateWaterLevelMarkers(window.realtimeWaterLevels);
+
+      const n = stationCount ?? Object.keys(window.realtimeWaterLevels).length;
+      console.log(`💧 水位資料已更新，共 ${n} 個站點`);
+      if (stats?.averageLevel != null) {
+        showUpdateNotification(`水位資料已更新 (${n} 站點, 平均 ${stats.averageLevel.toFixed(2)}m)`);
+      }
     });
     
     // 更新水位站標記的顯示資訊
@@ -1740,17 +2050,24 @@
           marker.setLabel(waterLevelMarkerLabel(realTimeData.waterlevel));
         }
         if (marker._infoWindowOpen && marker._feature) {
-          infoWindow.setContent(
-            buildWaterLevelPopupHtmlWithRealtime(marker._feature, realTimeData)
-          );
+          const feat = marker._feature;
+          const [lng, lat] = feat.geometry.coordinates;
+          const snap = typeof LocalWeatherDisplay !== 'undefined'
+            ? LocalWeatherDisplay.getSnapshotAt(lat, lng, { pinName: feat.properties?.name })
+            : null;
+          infoWindow.setContent(buildWaterLevelPopupHtmlWithRealtime(feat, realTimeData, snap));
         }
       });
     };
     
     // 修改水位站彈出視窗內容建立函數，使用即時資料
-    function buildWaterLevelPopupHtmlWithRealtime(feature, realTimeData = null) {
+    function buildWaterLevelPopupHtmlWithRealtime(feature, realTimeData = null, weatherSnap = null) {
       const p = feature.properties || {};
-      
+      const [lng, lat] = feature.geometry.coordinates;
+      const snap = weatherSnap || (typeof LocalWeatherDisplay !== 'undefined'
+        ? LocalWeatherDisplay.getSnapshotAt(lat, lng, { pinName: p.name })
+        : null);
+
       // 優先使用即時資料，否則使用快取資料
       const currentData = realTimeData || realtimeWaterLevels[p.stationid];
       
@@ -1789,8 +2106,9 @@
             <strong>即時水位:</strong><br>
             ${valueHtml}
           </div>
+          ${typeof LocalWeatherDisplay !== 'undefined' ? LocalWeatherDisplay.buildPopupWeatherHtml(snap) : ''}
           <div style="font-size:0.75rem;color:#666;margin-top:6px;text-align:center;">
-            資料來源：水利署 WRA | 即時更新
+            水位：水利署 WRA · 氣象：中央氣象署逐時觀測
           </div>
         </div>
       `;
