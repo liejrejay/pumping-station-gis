@@ -1018,7 +1018,9 @@
         marker._feature = feat;
         marker._kind = "pumping";
         marker.addListener("click", () => {
-          const snap = LocalWeatherDisplay.showWeatherForPoint(lat, lng, feat.properties?.name);
+          const snap = LocalWeatherDisplay.getSnapshotAt(lat, lng, {
+            pinName: feat.properties?.name,
+          });
           infoWindow.setContent(buildStationPopupHtml(feat, snap));
           infoWindow.open({ map, anchor: marker });
         });
