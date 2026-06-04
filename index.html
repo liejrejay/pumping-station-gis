@@ -644,6 +644,34 @@
     let lastUpdateTime = null;
     let updateInterval = null;
 
+    /** Bump when pumping-stations.geojson changes (cache-bust for mobile/CDN). */
+    const PUMPING_STATIONS_DATA_VERSION = "20260604a";
+
+    /** Prefer reference-table row when legacy plus_code duplicates the same station name. */
+    function dedupePumpingFeatures(features) {
+      const sourceRank = (props) => {
+        const s = props?.source || "";
+        if (s === "reference table") return 0;
+        if (s === "NTPC open data") return 1;
+        if (s === "legacy plus_code") return 9;
+        return 5;
+      };
+      const byName = new Map();
+      const unnamed = [];
+      for (const f of features) {
+        const name = (f.properties?.name || "").trim();
+        if (!name) {
+          unnamed.push(f);
+          continue;
+        }
+        const prev = byName.get(name);
+        if (!prev || sourceRank(f.properties) < sourceRank(prev.properties)) {
+          byName.set(name, f);
+        }
+      }
+      return [...byName.values(), ...unnamed];
+    }
+
     // 親水廊道（沿大漢溪流域 5 處親水園區 / 步道）
     const WATERFRONT_FEATURES = [
       { name: "大漢溪山豬湖生態親水園區", lat: 24.8876875, lng: 121.2863125, plus_code: "8QW3W833+GC", address: "桃園市大溪區" },
@@ -964,10 +992,13 @@
     }
 
     async function loadPumpingStations() {
-      const res = await fetch("data/pumping-stations.geojson", { cache: "no-store" });
+      const res = await fetch(
+        `data/pumping-stations.geojson?v=${PUMPING_STATIONS_DATA_VERSION}`,
+        { cache: "no-store" }
+      );
       if (!res.ok) throw new Error("pumping-stations.geojson HTTP " + res.status);
       const gj = await res.json();
-      const feats = (gj.features || []).map((f, i) => {
+      const feats = dedupePumpingFeatures(gj.features || []).map((f, i) => {
         const p = f.properties || {};
         if (p.id == null) p.id = i + 1;
         if (!p.construction_year && p.year_ce) p.construction_year = p.year_ce;
@@ -2232,8 +2263,12 @@
     async function exportData() {
       if (!currentUser || !currentUser.permissions.includes("export")) { alert("您沒有資料匯出權限"); return; }
       try {
-        const res = await fetch("data/pumping-stations.geojson", { cache: "no-store" });
+        const res = await fetch(
+          `data/pumping-stations.geojson?v=${PUMPING_STATIONS_DATA_VERSION}`,
+          { cache: "no-store" }
+        );
         const gj = await res.json();
+        gj.features = dedupePumpingFeatures(gj.features || []);
         const timestamp = new Date().toISOString().slice(0, 19).replace(/[:.]/g, "-");
         const payload = {
           exportTime: new Date().toISOString(),
