@@ -517,6 +517,21 @@
       <!-- 管理員區（依權限顯示） -->
       <section class="section" id="adminControls" style="display:none;">
         <h2>⚙️ 管理員功能</h2>
+        <div class="stat-grid" id="adminUserStatsGrid" style="margin-bottom:10px;">
+          <div class="stat-card">
+            <div class="label">👥 總用戶</div>
+            <div class="value" id="statTotalUsers">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">📝 註冊</div>
+            <div class="value" id="statRegisteredUsers">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">✅ 活躍</div>
+            <div class="value" id="statActiveUsers">—</div>
+          </div>
+        </div>
+        <div class="stat-sub" id="userStatsLiveHint" style="margin-bottom:8px;">用戶統計：載入中…</div>
         <button class="action-btn success" onclick="exportData()">📥 匯出抽水站資料</button>
         <button class="action-btn info"    onclick="exportUsers()">👥 匯出用戶資料</button>
         <button class="action-btn neutral" onclick="showUserStats()">📊 用戶統計</button>
@@ -616,7 +631,7 @@
     </div>
   </div>
 
-  <script src="js/userManager.js?v=20260602c"></script>
+  <script src="js/userManager.js?v=20260530h"></script>
   <script src="js/mobileOptimization.js?v=20260602c"></script>
   <script src="js/weatherApiConfig.js?v=20260602c"></script>
   <script src="js/realtimeRainfall.js?v=20260602c"></script>
@@ -2345,12 +2360,35 @@
       updateUserInterface();
       return true;
     }
+    function renderAdminUserStats(stats) {
+      const set = (id, v) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = v;
+      };
+      set("statTotalUsers", stats?.totalUsers ?? "—");
+      set("statRegisteredUsers", stats?.totalRegisteredUsers ?? "—");
+      set("statActiveUsers", stats?.activeUsers ?? "—");
+      const hint = document.getElementById("userStatsLiveHint");
+      if (hint && stats) {
+        const src = stats.source === "server" ? "後端即時" : "本機合併";
+        const t = stats.lastUpdated
+          ? new Date(stats.lastUpdated).toLocaleString("zh-TW")
+          : "—";
+        hint.textContent = `用戶統計（${src}）· 每 30 秒更新 · ${t}`;
+      }
+    }
+
     function updateUserInterface() {
       if (!currentUser) return;
       document.getElementById("userName").textContent = currentUser.name || currentUser.displayName || "訪客";
       document.getElementById("userRole").textContent = getRoleText(currentUser.role);
       if (currentUser.permissions && currentUser.permissions.includes("manage")) {
         document.getElementById("adminControls").style.display = "block";
+        if (window.userManager?.startStatsAutoRefresh) {
+          window.userManager.startStatsAutoRefresh(renderAdminUserStats, 30000);
+        }
+      } else if (window.userManager?.stopStatsAutoRefresh) {
+        window.userManager.stopStatsAutoRefresh();
       }
     }
     function getRoleText(role) {
@@ -2358,6 +2396,9 @@
     }
     function logout() {
       if (confirm("確定要登出系統嗎？")) {
+        if (window.userManager?.stopStatsAutoRefresh) {
+          window.userManager.stopStatsAutoRefresh();
+        }
         localStorage.removeItem("currentUser");
         window.location.href = "login.html";
       }
@@ -2412,10 +2453,10 @@
     async function showUserStats() {
       if (!currentUser || !currentUser.permissions.includes("manage")) { alert("您沒有查看用戶統計的權限"); return; }
       try {
-        await window.userManager.loadUsers();
-        const s = window.userManager.getUserStats();
+        const s = await window.userManager.fetchLiveStats();
         if (!s) { alert("無法取得用戶統計資料"); return; }
-        alert(`📊 用戶統計\n\n👥 總用戶數: ${s.totalUsers}\n🔧 系統用戶: ${s.totalSystemUsers}\n📝 註冊用戶: ${s.totalRegisteredUsers}\n✅ 活躍用戶: ${s.activeUsers}\n\n📅 最後更新: ${new Date(s.lastUpdated).toLocaleString("zh-TW")}`);
+        renderAdminUserStats(s);
+        alert(window.userManager.formatStatsMessage(s));
       } catch (e) { alert("取得用戶統計時發生錯誤：" + e.message); }
     }
     function openAdminPanel() {

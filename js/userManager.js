@@ -7,16 +7,39 @@ class UserManager {
     constructor() {
         this.usersFilePath = 'data/users.json';
         this.usersData = null;
+        this._statsRefreshTimer = null;
+    }
+
+    /** 合併本機瀏覽器的註冊用戶（GitHub Pages 無後端時以此為準） */
+    syncRegisteredFromLocalStorage() {
+        const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '{}');
+        if (!this.usersData) {
+            this.loadFromLocalStorage();
+            return;
+        }
+        this.usersData.registeredUsers = {
+            ...(this.usersData.registeredUsers || {}),
+            ...registeredUsers,
+        };
+        if (!this.usersData.metadata) this.usersData.metadata = {};
+        this.usersData.metadata.totalRegistered = Object.keys(
+            this.usersData.registeredUsers
+        ).length;
+        this.usersData.metadata.totalUsers =
+            Object.keys(this.usersData.systemUsers || {}).length +
+            this.usersData.metadata.totalRegistered;
+        this.usersData.metadata.lastUpdated = new Date().toISOString();
     }
 
     // 載入用戶資料
     async loadUsers() {
         try {
-            const response = await fetch(this.usersFilePath);
+            const response = await fetch(this.usersFilePath, { cache: 'no-store' });
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             this.usersData = await response.json();
+            this.syncRegisteredFromLocalStorage();
             return this.usersData;
         } catch (error) {
             console.warn('無法載入用戶檔案，使用 localStorage 備援:', error);
@@ -183,27 +206,103 @@ class UserManager {
         return JSON.stringify(exportData, null, 2);
     }
 
-    // 獲取用戶統計資料
+    // 獲取用戶統計資料（每次呼叫前同步本機註冊資料）
     getUserStats() {
         if (!this.usersData) return null;
+        this.syncRegisteredFromLocalStorage();
 
         const stats = {
             totalSystemUsers: Object.keys(this.usersData.systemUsers || {}).length,
             totalRegisteredUsers: Object.keys(this.usersData.registeredUsers || {}).length,
             totalUsers: 0,
             activeUsers: 0,
-            lastUpdated: this.usersData.metadata?.lastUpdated || 'Unknown'
+            lastUpdated: new Date().toISOString(),
+            source: 'local',
         };
 
         stats.totalUsers = stats.totalSystemUsers + stats.totalRegisteredUsers;
 
-        // 計算活躍用戶
         if (this.usersData.registeredUsers) {
             stats.activeUsers = Object.values(this.usersData.registeredUsers)
-                .filter(user => user.status === 'active').length;
+                .filter((user) => user.status === 'active').length;
         }
 
         return stats;
+    }
+
+    /**
+     * 取得最新用戶統計：本機有 server 時走 API，否則合併 users.json + localStorage
+     */
+    async fetchLiveStats() {
+        const isLocal =
+            location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+
+        if (isLocal) {
+            try {
+                const res = await fetch('http://localhost:3000/api/users/stats', {
+                    cache: 'no-store',
+                });
+                if (res.ok) {
+                    return { ...(await res.json()), source: 'server' };
+                }
+            } catch (e) {
+                console.warn('[用戶統計] 伺服器 API 不可用:', e.message);
+            }
+        }
+
+        if (window.apiClient?.isServerMode) {
+            try {
+                const serverStats = await window.apiClient.getUserStats();
+                if (serverStats) return { ...serverStats, source: 'server' };
+            } catch (e) {
+                console.warn('[用戶統計] apiClient 取得失敗:', e.message);
+            }
+        }
+
+        await this.loadUsers();
+        return this.getUserStats();
+    }
+
+    formatStatsMessage(stats) {
+        const src =
+            stats.source === 'server'
+                ? '後端即時'
+                : stats.source === 'local'
+                  ? '本機合併（users.json + 瀏覽器註冊）'
+                  : '資料檔';
+        const t = stats.lastUpdated
+            ? new Date(stats.lastUpdated).toLocaleString('zh-TW')
+            : '—';
+        return (
+            `📊 用戶統計（${src}）\n\n` +
+            `👥 總用戶數: ${stats.totalUsers}\n` +
+            `🔧 系統用戶: ${stats.totalSystemUsers}\n` +
+            `📝 註冊用戶: ${stats.totalRegisteredUsers}\n` +
+            `✅ 活躍用戶: ${stats.activeUsers}\n\n` +
+            `📅 最後更新: ${t}`
+        );
+    }
+
+    /** 管理員介面：定期刷新統計（預設 30 秒） */
+    startStatsAutoRefresh(onUpdate, intervalMs = 30000) {
+        this.stopStatsAutoRefresh();
+        const tick = async () => {
+            try {
+                const stats = await this.fetchLiveStats();
+                if (stats && typeof onUpdate === 'function') onUpdate(stats);
+            } catch (e) {
+                console.warn('[用戶統計] 自動刷新失敗:', e.message);
+            }
+        };
+        tick();
+        this._statsRefreshTimer = setInterval(tick, intervalMs);
+    }
+
+    stopStatsAutoRefresh() {
+        if (this._statsRefreshTimer) {
+            clearInterval(this._statsRefreshTimer);
+            this._statsRefreshTimer = null;
+        }
     }
 }
 

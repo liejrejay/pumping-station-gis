@@ -167,6 +167,7 @@
         <div class="stats" id="statsContainer">
             <!-- 統計卡片將由 JS 動態生成 -->
         </div>
+        <p id="statsUpdatedAt" style="text-align:center;color:#666;font-size:0.85rem;margin:0 0 16px;">統計更新中…</p>
 
         <div class="section">
             <h2>📊 快速操作</h2>
@@ -206,20 +207,35 @@
             }
 
             await refreshData();
+            window.userManager.startStatsAutoRefresh(onStatsRefreshed, 30000);
+        });
+
+        window.addEventListener('beforeunload', () => {
+            window.userManager?.stopStatsAutoRefresh();
         });
 
         async function refreshData() {
             try {
+                const stats = await window.userManager.fetchLiveStats();
                 await window.userManager.loadUsers();
-                const stats = window.userManager.getUserStats();
                 const allUsers = window.userManager.getAllUsers();
-                
-                updateStats(stats);
+                onStatsRefreshed(stats);
                 updateUsersList(allUsers);
-                
             } catch (error) {
                 console.error('刷新資料失敗:', error);
                 alert('刷新資料失敗: ' + error.message);
+            }
+        }
+
+        function onStatsRefreshed(stats) {
+            updateStats(stats);
+            const el = document.getElementById('statsUpdatedAt');
+            if (el && stats) {
+                const src = stats.source === 'server' ? '後端即時' : '本機合併';
+                const t = stats.lastUpdated
+                    ? new Date(stats.lastUpdated).toLocaleString('zh-TW')
+                    : '—';
+                el.textContent = `資料來源：${src} · 每 30 秒自動更新 · 最後更新 ${t}`;
             }
         }
 
