@@ -668,7 +668,9 @@
       { stationid: "1140H111", name: "新海大橋(即時)",  lat: 25.033318, lng: 121.454806, address: "新北市板橋區環河路" },
       { stationid: "1140H118", name: "柑園橋(即時)",   lat: 24.985300, lng: 121.381900, address: "新北市樹林區佳園路二段" },
     ];
-    // 即時水位改由 js/realtimeWaterLevel.js（FHY WraApi）提供
+    // 即時水位：WRA OpenData（與 lib/wraWaterLevel.js 一致）
+    const WL_REALTIME_API =
+      "https://opendata.wra.gov.tw/api/v2/73c4c3de-4045-4765-abeb-89f9f9cd5ff0?page=1&size=1000";
     const WL_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
     window.WATER_LEVEL_STATIONS = WATER_LEVEL_STATIONS;
     window.WL_REALTIME_API = WL_REALTIME_API;
