@@ -24,8 +24,23 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const USERS_FILE = path.join(__dirname, 'data', 'users.json');
 
-// 中介軟體
-app.use(cors());
+// 中介軟體（允許 GitHub Pages 前端跨域呼叫 API）
+const corsOrigins = (process.env.CORS_ORIGIN || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+app.use(
+    cors({
+        origin(origin, callback) {
+            if (!origin) return callback(null, true);
+            if (corsOrigins.length === 0 || corsOrigins.includes(origin)) {
+                return callback(null, true);
+            }
+            if (/\.github\.io$/i.test(origin)) return callback(null, true);
+            return callback(null, true);
+        },
+    })
+);
 app.use(express.json());
 
 // API 路由須在 static 之前，避免被靜態檔覆蓋
@@ -36,6 +51,7 @@ app.get('/api/config', (req, res) => {
     res.json({
         googleMapsApiKey: key,
         cwaApiConfigured: Boolean(cwaKey),
+        publicApiBaseUrl: process.env.PUBLIC_API_BASE_URL || null,
     });
 });
 

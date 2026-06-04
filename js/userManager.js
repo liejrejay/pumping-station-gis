@@ -234,29 +234,40 @@ class UserManager {
      * 取得最新用戶統計：本機有 server 時走 API，否則合併 users.json + localStorage
      */
     async fetchLiveStats() {
-        const isLocal =
-            location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+        const apiBase =
+            typeof window.getSharedApiBase === 'function'
+                ? window.getSharedApiBase()
+                : null;
 
-        if (isLocal) {
+        if (apiBase) {
             try {
-                const res = await fetch('http://localhost:3000/api/users/stats', {
+                const res = await fetch(`${apiBase}/users/stats`, {
                     cache: 'no-store',
                 });
                 if (res.ok) {
                     return { ...(await res.json()), source: 'server' };
                 }
             } catch (e) {
-                console.warn('[用戶統計] 伺服器 API 不可用:', e.message);
+                console.warn('[用戶統計] 共用後端不可用:', e.message);
+            }
+            if (window.apiClient) {
+                await window.apiClient.checkServerAvailability();
+                const viaClient = await window.apiClient.getUserStats();
+                if (viaClient?.source === 'server') return viaClient;
             }
         }
 
-        if (window.apiClient?.isServerMode) {
-            try {
-                const serverStats = await window.apiClient.getUserStats();
-                if (serverStats) return { ...serverStats, source: 'server' };
-            } catch (e) {
-                console.warn('[用戶統計] apiClient 取得失敗:', e.message);
-            }
+        if (window.requiresSharedBackend?.()) {
+            return {
+                totalUsers: '—',
+                totalSystemUsers: '—',
+                totalRegisteredUsers: '—',
+                activeUsers: '—',
+                lastUpdated: new Date().toISOString(),
+                source: 'unconfigured',
+                statusMessage:
+                    '請部署共用 API（Render）並在 GitHub Secret 設定 PUBLIC_API_BASE_URL',
+            };
         }
 
         await this.loadUsers();
@@ -264,11 +275,14 @@ class UserManager {
     }
 
     formatStatsMessage(stats) {
+        if (stats.source === 'unconfigured') {
+            return `📊 用戶統計\n\n⚠️ ${stats.statusMessage || '共用後端未設定'}`;
+        }
         const src =
             stats.source === 'server'
-                ? '後端即時'
+                ? '共用後端即時（全組）'
                 : stats.source === 'local'
-                  ? '本機合併（users.json + 瀏覽器註冊）'
+                  ? '本機合併（僅此瀏覽器）'
                   : '資料檔';
         const t = stats.lastUpdated
             ? new Date(stats.lastUpdated).toLocaleString('zh-TW')

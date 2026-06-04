@@ -631,7 +631,8 @@
     </div>
   </div>
 
-  <script src="js/userManager.js?v=20260530h"></script>
+  <script src="js/apiBase.js?v=20260530i"></script>
+  <script src="js/userManager.js?v=20260530i"></script>
   <script src="js/mobileOptimization.js?v=20260602c"></script>
   <script src="js/weatherApiConfig.js?v=20260602c"></script>
   <script src="js/realtimeRainfall.js?v=20260602c"></script>
@@ -2360,6 +2361,16 @@
       updateUserInterface();
       return true;
     }
+    async function ensureRuntimeConfig() {
+      if (window.__runtimeConfigLoaded) return;
+      try {
+        await loadScriptOnce("js/runtime-config.js");
+        window.__runtimeConfigLoaded = true;
+      } catch (e) {
+        console.warn("[Config] runtime-config.js 未載入:", e.message);
+      }
+    }
+
     function renderAdminUserStats(stats) {
       const set = (id, v) => {
         const el = document.getElementById(id);
@@ -2370,7 +2381,11 @@
       set("statActiveUsers", stats?.activeUsers ?? "—");
       const hint = document.getElementById("userStatsLiveHint");
       if (hint && stats) {
-        const src = stats.source === "server" ? "後端即時" : "本機合併";
+        if (stats.source === "unconfigured") {
+          hint.textContent = stats.statusMessage || "請設定共用後端 PUBLIC_API_BASE_URL";
+          return;
+        }
+        const src = stats.source === "server" ? "共用後端（全組）" : "僅本機瀏覽器";
         const t = stats.lastUpdated
           ? new Date(stats.lastUpdated).toLocaleString("zh-TW")
           : "—";
@@ -2384,9 +2399,11 @@
       document.getElementById("userRole").textContent = getRoleText(currentUser.role);
       if (currentUser.permissions && currentUser.permissions.includes("manage")) {
         document.getElementById("adminControls").style.display = "block";
-        if (window.userManager?.startStatsAutoRefresh) {
-          window.userManager.startStatsAutoRefresh(renderAdminUserStats, 30000);
-        }
+        ensureRuntimeConfig().then(() => {
+          if (window.userManager?.startStatsAutoRefresh) {
+            window.userManager.startStatsAutoRefresh(renderAdminUserStats, 30000);
+          }
+        });
       } else if (window.userManager?.stopStatsAutoRefresh) {
         window.userManager.stopStatsAutoRefresh();
       }

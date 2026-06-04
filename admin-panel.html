@@ -192,6 +192,9 @@
         </div>
     </div>
 
+    <script src="js/apiBase.js"></script>
+    <script src="js/runtime-config.js"></script>
+    <script src="js/apiClient.js"></script>
     <script src="js/userManager.js"></script>
     <script>
         let currentUsersData = null;
@@ -206,9 +209,25 @@
                 return;
             }
 
+            await loadRuntimeConfigScript();
+            if (window.apiClient) {
+                window.apiClient.baseUrl = window.getSharedApiBase?.() || window.apiClient.getApiBaseUrl();
+                await window.apiClient.checkServerAvailability();
+            }
             await refreshData();
             window.userManager.startStatsAutoRefresh(onStatsRefreshed, 30000);
         });
+
+        function loadRuntimeConfigScript() {
+            return new Promise((resolve) => {
+                if (window.__runtimeConfigLoaded) return resolve();
+                const s = document.createElement('script');
+                s.src = 'js/runtime-config.js';
+                s.onload = () => { window.__runtimeConfigLoaded = true; resolve(); };
+                s.onerror = () => resolve();
+                document.head.appendChild(s);
+            });
+        }
 
         window.addEventListener('beforeunload', () => {
             window.userManager?.stopStatsAutoRefresh();
@@ -231,7 +250,12 @@
             updateStats(stats);
             const el = document.getElementById('statsUpdatedAt');
             if (el && stats) {
-                const src = stats.source === 'server' ? '後端即時' : '本機合併';
+                const src =
+                    stats.source === 'server'
+                        ? '共用後端（全組）'
+                        : stats.source === 'unconfigured'
+                          ? '未設定後端'
+                          : '僅本機瀏覽器';
                 const t = stats.lastUpdated
                     ? new Date(stats.lastUpdated).toLocaleString('zh-TW')
                     : '—';

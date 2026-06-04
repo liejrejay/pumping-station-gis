@@ -466,16 +466,31 @@
         </div>
     </div>
 
-    <!-- 載入 API 客戶端 -->
+    <!-- 共用後端設定 + API 客戶端 -->
+    <script src="js/apiBase.js"></script>
+    <script src="js/runtime-config.js"></script>
     <script src="js/apiClient.js"></script>
     <script>
         // API 客戶端初始化
         let isInitialized = false;
 
+        function loadRuntimeConfigScript() {
+            return new Promise((resolve) => {
+                if (window.__runtimeConfigLoaded) return resolve();
+                const s = document.createElement('script');
+                s.src = 'js/runtime-config.js';
+                s.onload = () => { window.__runtimeConfigLoaded = true; resolve(); };
+                s.onerror = () => resolve();
+                document.head.appendChild(s);
+            });
+        }
+
         async function initializeApiClient() {
             if (isInitialized) return;
             
             try {
+                await loadRuntimeConfigScript();
+                window.apiClient.baseUrl = window.getSharedApiBase?.() || window.apiClient.getApiBaseUrl();
                 await window.apiClient.checkServerAvailability();
                 isInitialized = true;
                 console.log('API 客戶端初始化完成:', window.apiClient.getStatusMessage());

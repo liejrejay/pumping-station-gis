@@ -26,6 +26,7 @@ jobs:
         env:
           GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
           CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
+          PUBLIC_API_BASE_URL: ${{ secrets.PUBLIC_API_BASE_URL }}
         run: |
           set -e
           mkdir -p dist/js
@@ -56,8 +57,14 @@ jobs:
             echo "::error::未設定 GOOGLE_MAPS_API_KEY。請到 Settings → Secrets and variables → Actions 新增後再部署。"
             exit 1
           fi
-          node -e "const k=process.env.GOOGLE_MAPS_API_KEY; require('fs').writeFileSync('dist/js/runtime-config.js', 'window.GOOGLE_MAPS_API_KEY = '+JSON.stringify(k)+';\\n');"
+          node -e "const fs=require('fs');const k=process.env.GOOGLE_MAPS_API_KEY;const api=process.env.PUBLIC_API_BASE_URL||'';fs.writeFileSync('dist/js/runtime-config.js','window.GOOGLE_MAPS_API_KEY = '+JSON.stringify(k)+';\\nwindow.PUBLIC_API_BASE_URL = '+JSON.stringify(api)+';\\n');"
           echo "✅ runtime-config.js 已產生"
+          if [ -z "$PUBLIC_API_BASE_URL" ]; then
+            echo "::warning::未設定 PUBLIC_API_BASE_URL Secret，公開站無法全組共用註冊／統計（請部署 Render API）"
+          else
+            echo "✅ PUBLIC_API_BASE_URL 已注入前端"
+          fi
+          cp js/apiBase.js dist/js/
 
           echo "" > dist/.nojekyll
 

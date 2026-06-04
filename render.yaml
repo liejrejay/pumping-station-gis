@@ -1,0 +1,21 @@
+# Render 一鍵部署共用 API（用戶註冊／登入／統計）
+# 部署後將網址填入 GitHub Secret：PUBLIC_API_BASE_URL
+# 例：https://pumping-station-api.onrender.com
+
+services:
+  - type: web
+    name: pumping-station-api
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: CORS_ORIGIN
+        value: https://liejrejay.github.io
+      - key: GOOGLE_MAPS_API_KEY
+        sync: false
+      - key: CWA_API_KEY
+        sync: false
