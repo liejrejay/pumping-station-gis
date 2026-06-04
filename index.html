@@ -724,7 +724,7 @@
       }
       if (status) {
         if (n > 0) {
-          const snap = source === "WRA_SNAPSHOT" ? "（快照）" : "";
+          const snap = source === "WRA_SNAPSHOT" ? "（快照）" : source ? "（即時）" : "";
           status.className = "status-indicator success";
           status.textContent = `已更新 ${n}/${WATER_LEVEL_STATIONS.length} 站${snap}`;
         } else {
@@ -1156,21 +1156,8 @@
         source = "WRA";
       };
 
-      // GitHub Pages：先讀部署快照（穩定），再試即時 API
-      if (isGitHubPages()) {
-        try {
-          await loadSnapshot();
-        } catch (e) {
-          console.warn("[水位] 快照失敗:", e.message);
-        }
-        if (!Object.keys(next).length) {
-          try {
-            await loadWraLive();
-          } catch (e) {
-            console.warn("[水位] WRA 直連失敗:", e.message);
-          }
-        }
-      } else if (isLocalDevServer()) {
+      // 優先即時 API（警示需最新資料）；快照僅在 API 全部失敗時備援
+      if (isLocalDevServer()) {
         try {
           const r = await fetch("/api/water-level/current", { cache: "no-store" });
           if (r.ok) {
@@ -1183,25 +1170,21 @@
         } catch (e) {
           console.warn("[水位] 本機 API 失敗:", e.message);
         }
-        if (!Object.keys(next).length) {
-          try {
-            await loadWraLive();
-          } catch (e) {
-            console.warn("[水位] WRA 直連失敗:", e.message);
-          }
-        }
-      } else {
+      }
+
+      if (!Object.keys(next).length) {
         try {
           await loadWraLive();
         } catch (e) {
           console.warn("[水位] WRA 直連失敗:", e.message);
         }
-        if (!Object.keys(next).length) {
-          try {
-            await loadSnapshot();
-          } catch (e) {
-            console.warn("[水位] 快照失敗:", e.message);
-          }
+      }
+
+      if (!Object.keys(next).length) {
+        try {
+          await loadSnapshot();
+        } catch (e) {
+          console.warn("[水位] 快照失敗:", e.message);
         }
       }
 
@@ -1217,6 +1200,11 @@
 
       if (window.weatherAlert?.updateWaterLevelData) {
         weatherAlert.updateWaterLevelData(next);
+      }
+      if (n > 0 && window.weatherAlert?.checkAlerts) {
+        weatherAlert.checkAlerts().catch((e) =>
+          console.warn("[警示] 水位更新後檢查失敗:", e.message)
+        );
       }
       return next;
     }
