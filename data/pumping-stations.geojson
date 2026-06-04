@@ -419,7 +419,6 @@
         "geocode_quality": "reference"
       }
     },
-    
     {
       "type": "Feature",
       "geometry": {
@@ -543,6 +542,144 @@
         "district": "新北市新莊區",
         "id": 26,
         "label": "農業部農田水利署桃園管理處新莊工作站"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.2528,
+          24.8233
+        ]
+      },
+      "properties": {
+        "id": 27,
+        "name": "第二原水抽水站",
+        "label": "第二原水抽水站",
+        "address": "桃園市龍潭區大坪里石門水庫後池左岸",
+        "river": "大漢溪",
+        "pump_type": "原水抽水",
+        "year_ce": null,
+        "year_ce_range": null,
+        "source": "水利署石門水庫供水系統",
+        "geocode_quality": "reference",
+        "county": "桃園市"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.2158,
+          24.8642
+        ]
+      },
+      "properties": {
+        "id": 28,
+        "name": "三坑抽水站",
+        "label": "三坑抽水站",
+        "address": "桃園市龍潭區三坑里（台水龍潭給水廠三坑原水站）",
+        "river": "大漢溪",
+        "pump_type": "原水抽水",
+        "year_ce": null,
+        "year_ce_range": null,
+        "source": "台灣自來水公司／石門水庫後池供水",
+        "geocode_quality": "reference",
+        "county": "桃園市"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.367,
+          24.8003
+        ]
+      },
+      "properties": {
+        "id": 29,
+        "name": "羅浮橋抽水站",
+        "label": "羅浮橋抽水站",
+        "address": "桃園市復興區羅浮里",
+        "river": "大漢溪",
+        "pump_type": "污水抽水",
+        "year_ce": null,
+        "year_ce_range": null,
+        "source": "桃園市水務局復興水資源回收中心",
+        "geocode_quality": "reference",
+        "county": "桃園市"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.363,
+          24.795
+        ]
+      },
+      "properties": {
+        "id": 30,
+        "name": "壽山宮抽水站",
+        "label": "壽山宮抽水站",
+        "address": "桃園市復興區羅浮里",
+        "river": "大漢溪",
+        "pump_type": "污水抽水",
+        "year_ce": null,
+        "year_ce_range": null,
+        "source": "桃園市水務局復興水資源回收中心",
+        "geocode_quality": "reference",
+        "county": "桃園市"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.375,
+          24.788
+        ]
+      },
+      "properties": {
+        "id": 31,
+        "name": "蝶木窩抽水站",
+        "label": "蝶木窩抽水站",
+        "address": "桃園市復興區羅浮里（蝶木窩露營休閒坊）",
+        "river": "大漢溪",
+        "pump_type": "污水抽水",
+        "year_ce": null,
+        "year_ce_range": null,
+        "source": "桃園市水務局復興水資源回收中心",
+        "geocode_quality": "reference",
+        "county": "桃園市"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.2919,
+          24.89828
+        ]
+      },
+      "properties": {
+        "id": 32,
+        "name": "瑞興濕地進流抽水站",
+        "label": "瑞興濕地進流抽水站",
+        "address": "桃園市大溪區瑞興里（埔頂排水水環境改善）",
+        "river": "大漢溪",
+        "pump_type": "污水抽水",
+        "year_ce": null,
+        "year_ce_range": null,
+        "source": "環境部水環境建設／桃園市水務局",
+        "geocode_quality": "reference",
+        "county": "桃園市"
       }
     }
   ]

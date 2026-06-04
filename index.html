@@ -649,7 +649,7 @@
     let updateInterval = null;
 
     /** Bump when pumping-stations.geojson changes (cache-bust for mobile/CDN). */
-    const PUMPING_STATIONS_DATA_VERSION = "3464da1";
+    const PUMPING_STATIONS_DATA_VERSION = "20260604a";
 
     /** Prefer reference-table row when legacy plus_code duplicates the same station name. */
     function dedupePumpingFeatures(features) {
@@ -1065,6 +1065,10 @@
       const dahanCount = feats.filter((f) =>
         ((f.properties?.river || "").trim().includes("大漢"))
       ).length;
+      const taoyuanCount = feats.filter((f) =>
+        (f.properties?.address || "").includes("桃園") ||
+        (f.properties?.county || "") === "桃園市"
+      ).length;
       clearMarkers(pumpingMarkers);
       const bounds = new google.maps.LatLngBounds();
       feats.forEach((feat) => {
@@ -1078,9 +1082,11 @@
         marker._feature = feat;
         marker._kind = "pumping";
         marker.addListener("click", () => {
-          const snap = LocalWeatherDisplay.getSnapshotAt(lat, lng, {
-            pinName: feat.properties?.name,
-          });
+          const snap = LocalWeatherDisplay.showWeatherForPoint(
+            lat,
+            lng,
+            feat.properties?.name || "抽水站"
+          );
           infoWindow.setContent(buildStationPopupHtml(feat, snap));
           infoWindow.open({ map, anchor: marker });
         });
@@ -1092,7 +1098,7 @@
       const otherCount = feats.length - dahanCount;
       const detailEl = document.getElementById("countPumpingDetail");
       if (detailEl) {
-        detailEl.textContent = `大漢溪 ${dahanCount} · 其他河系 ${otherCount}`;
+        detailEl.textContent = `大漢溪 ${dahanCount} · 桃園 ${taoyuanCount} · 其他 ${otherCount}`;
       }
     }
 

@@ -180,9 +180,6 @@ const LocalWeatherDisplay = {
       window.applyWeatherSnapshotToPanel(snap);
     }
 
-    const resetBtn = document.getElementById('weatherResetPinBtn');
-    if (resetBtn) resetBtn.style.display = 'none';
-
     return snap;
   },
 
