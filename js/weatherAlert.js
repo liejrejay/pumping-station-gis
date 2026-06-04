@@ -11,6 +11,8 @@ class WeatherAlertSystem {
         this.pumpingStations = {};
         this.alertRules = this.initAlertRules();
         this.isMonitoring = false;
+        /** 已推播過的警示簽章（stationId → signature），避免同一條件重複通知 */
+        this._notifiedSignatures = new Map();
         
         // 通知權限
         this.initNotificationPermission();
@@ -317,13 +319,35 @@ class WeatherAlertSystem {
     
     
     /**
+     * 是否為儀器故障／缺值
+     */
+    isErrorWaterLevel(value) {
+        const v = parseFloat(value);
+        if (value == null || Number.isNaN(v)) return true;
+        if (v < -100) return true;
+        if (v < 0) return true;
+        return false;
+    }
+
+    /**
+     * 是否為可套用河川警戒的即時水位（公尺，約 0–15）
+     * 更高數值多為水庫高程或基準面，不應觸發河川暴漲警示
+     */
+    isRiverStageWaterLevel(value) {
+        const v = parseFloat(value);
+        if (this.isErrorWaterLevel(v)) return false;
+        return v <= 15;
+    }
+
+    /**
      * 依降雨／鄰近水位產生警示（不做綜合風險評分）
      */
     buildStationAlert(station) {
         const parts = [];
         let level = 'medium';
         const rainfall = this.weatherData.rainfall?.current || 0;
-        const wl = station.waterLevel || 0;
+        const wlRaw = station.waterLevel;
+        const wl = this.isRiverStageWaterLevel(wlRaw) ? parseFloat(wlRaw) : null;
         const wlRules = this.alertRules.waterLevel;
 
         if (rainfall >= 50) {
@@ -333,13 +357,13 @@ class WeatherAlertSystem {
             parts.push(`降雨 ${rainfall.toFixed(1)} mm/hr`);
         }
 
-        if (wl > wlRules.danger) {
+        if (wl != null && wl > wlRules.danger) {
             parts.push(`鄰近水位 ${wl.toFixed(2)} m`);
             level = 'critical';
-        } else if (wl > wlRules.warning) {
+        } else if (wl != null && wl > wlRules.warning) {
             parts.push(`鄰近水位 ${wl.toFixed(2)} m`);
             if (level !== 'critical') level = 'high';
-        } else if (wl > wlRules.attention) {
+        } else if (wl != null && wl > wlRules.attention) {
             parts.push(`鄰近水位 ${wl.toFixed(2)} m`);
         }
 
@@ -348,6 +372,7 @@ class WeatherAlertSystem {
         return {
             level,
             message: `${station.name}：${parts.join('、')}`,
+            signature: `${level}|${parts.join('、')}`,
         };
     }
 
@@ -359,50 +384,59 @@ class WeatherAlertSystem {
 
         await this.fetchWeatherData();
 
-        const newAlerts = [];
-        const seen = new Set();
+        const activeAlerts = [];
+        const toNotify = [];
 
         Object.values(this.pumpingStations).forEach((station) => {
             const info = this.buildStationAlert(station);
-            if (!info) return;
+            if (!info) {
+                this._notifiedSignatures.delete(station.id);
+                return;
+            }
 
-            const key = `${station.id}_${info.level}`;
-            if (seen.has(key)) return;
-            seen.add(key);
-
-            newAlerts.push({
-                id: `alert_${station.id}_${Date.now()}`,
+            const signature = `${station.id}|${info.signature}`;
+            const alert = {
+                id: `alert_${station.id}`,
                 stationId: station.id,
                 stationName: station.name,
                 type: 'weather_notice',
                 level: info.level,
                 message: info.message,
+                signature,
                 timestamp: new Date().toISOString(),
                 acknowledged: false,
-            });
+            };
+
+            activeAlerts.push(alert);
+
+            if (this._notifiedSignatures.get(station.id) !== signature) {
+                toNotify.push(alert);
+                this._notifiedSignatures.set(station.id, signature);
+            }
         });
 
-        this.alerts = [...newAlerts, ...this.alerts.filter((a) => !a.acknowledged)];
+        const acknowledged = this.alerts.filter((a) => a.acknowledged);
+        this.alerts = [...activeAlerts, ...acknowledged];
 
-        newAlerts.forEach((alert) => this.sendNotification(alert));
+        toNotify.forEach((alert) => this.sendNotification(alert));
         this.updateAlertUI();
         if (typeof window.updateAlertToggleBadge === 'function') {
             window.updateAlertToggleBadge();
         }
 
-        return newAlerts;
+        return activeAlerts;
     }
     
     /**
      * 發送通知
      */
     sendNotification(alert) {
-        // 1. 瀏覽器通知
+        // 1. 瀏覽器通知（以 stationId 為 tag，同站不重複彈窗）
         if ('Notification' in window && Notification.permission === 'granted') {
             const notification = new Notification(`🚨 ${alert.level.toUpperCase()} 警示`, {
                 body: alert.message,
                 icon: '/favicon.ico',
-                tag: alert.id,
+                tag: `pumping-alert-${alert.stationId}`,
                 requireInteraction: alert.level === 'critical'
             });
             
@@ -587,12 +621,16 @@ class WeatherAlertSystem {
     updateWaterLevelData(waterLevelData) {
         this.waterLevelData = waterLevelData;
         
-        // 更新抽水站的水位資訊
+        // 更新抽水站的水位資訊（僅採用合理河川水位，排除高程／異常值）
         Object.values(this.pumpingStations).forEach(station => {
+            station.waterLevel = null;
             if (station.nearestWaterStation) {
                 const wlData = waterLevelData[station.nearestWaterStation.stationid];
                 if (wlData) {
-                    station.waterLevel = parseFloat(wlData.waterlevel) || 0;
+                    const v = parseFloat(wlData.waterlevel);
+                    if (this.isRiverStageWaterLevel(v)) {
+                        station.waterLevel = v;
+                    }
                 }
             }
         });
