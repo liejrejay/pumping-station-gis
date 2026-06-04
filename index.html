@@ -509,6 +509,7 @@
           <label><input type="checkbox" id="layerWlInactive">        <span class="layer-swatch" style="background:#95a5a6"></span> 💧 水位站（已廢）</label>
           <label><input type="checkbox" id="layerRiver"      checked> <span class="layer-swatch" style="background:#0b8fe6"></span> 🌊 大漢溪河道</label>
           <label><input type="checkbox" id="layerWaterfront">         <span class="layer-swatch" style="background:#27ae60"></span> 🌿 親水廊道</label>
+          <label><input type="checkbox" id="layerTaoyuan" checked>   <span class="layer-swatch" style="background:#9b59b6"></span> 🌊 大漢溪設施</label>
         </div>
       </section>
 
@@ -556,6 +557,8 @@
     <div class="legend-row"><span class="swatch" style="background:#27ae60"></span>親水園區</div>
     <div class="legend-row"><span class="swatch-line" style="background:#27ae60"></span>親水廊道（河濱自行車道）</div>
     <div class="legend-row"><span class="swatch-line" style="background:#0b8fe6"></span>大漢溪河道</div>
+    <div class="legend-row"><span class="swatch" style="background:#9b59b6"></span>大漢溪設施（桃園水位／景點）</div>
+    <div class="legend-row"><span class="swatch" style="background:#e74c3c"></span>大漢溪抽水站（河系大漢溪）</div>
   </div>
 
   <div id="weatherAlertPanel" class="weather-alert-panel" role="dialog" aria-label="氣象警示">
@@ -637,6 +640,7 @@
     const pumpingMarkers = [];        // 抽水站 markers
     const wlActiveMarkers = [];       // 水位站（現存）
     const wlInactiveMarkers = [];     // 水位站（已廢，預設關閉）
+    const taoyuanMarkers = [];        // 桃園市大漢溪設施（水利署 + 親水景點）
     const waterfrontMarkers = [];     // 親水園區（點）
     const waterfrontPolylines = [];   // 親水廊道（線，沿大漢溪河濱自行車道）
     let riverPolylines = [];       // 大漢溪河道（多條 LineString）
@@ -872,6 +876,7 @@
           loadRiver(),
         ]);
         await loadWaterfront();
+        await loadTaoyuanDahanFacilities();
         if (!silentStatus) updateStatus("資料載入完成", false, true);
       } catch (e) {
         console.error(e);
@@ -991,6 +996,63 @@
       console.log(`[親水廊道] 園區 ${parks} 處、河濱道線段 ${pathCount} 段`);
     }
 
+    async function loadTaoyuanDahanFacilities() {
+      const res = await fetch("data/taoyuan-dahan-facilities.geojson", { cache: "no-store" });
+      if (!res.ok) throw new Error("taoyuan-dahan-facilities.geojson HTTP " + res.status);
+      const gj = await res.json();
+      clearMarkers(taoyuanMarkers);
+      const show = document.getElementById("layerTaoyuan")?.checked;
+      (gj.features || []).forEach((feat) => {
+        const [lng, lat] = feat.geometry.coordinates;
+        const p = feat.properties || {};
+        const sid = p.stationid;
+        const rt0 = sid ? realtimeWaterLevels[sid] : null;
+        const isWl = p.facility_type === "水位站";
+        const isPump = p.facility_type === "抽水站";
+        if (isPump) {
+          p.nearest_wl = findNearestWaterStation(lat, lng);
+        }
+        const marker = new google.maps.Marker({
+          map: show ? map : null,
+          position: { lat, lng },
+          icon: taoyuanFacilityIcon({ isWl, isPump, active: p.status === "現存" }),
+          title: p.name,
+          label: isWl && p.status === "現存" && rt0 ? waterLevelMarkerLabel(rt0.waterlevel) : null,
+          zIndex: isPump ? 60 : 55,
+        });
+        if (rt0) marker._realTimeData = rt0;
+        marker._feature = feat;
+        marker._kind = isPump ? "taoyuan-pump" : "taoyuan";
+        marker.addListener("click", () => {
+          const realTimeData = marker._realTimeData || (sid ? realtimeWaterLevels[sid] : null) || null;
+          const snap = LocalWeatherDisplay.showWeatherForPoint(lat, lng, p.name || "大漢溪設施");
+          if (isWl) {
+            infoWindow.setContent(buildWaterLevelPopupHtmlWithRealtime(feat, realTimeData, snap));
+          } else if (isPump) {
+            infoWindow.setContent(buildStationPopupHtml(feat, snap));
+          } else {
+            infoWindow.setContent(`
+              <div style="min-width:240px;">
+                <h3 style="margin:0 0 8px 0;color:#7d3c98;font-size:1.05rem;">🌿 ${p.name}</h3>
+                <div style="margin-bottom:6px;"><strong>類型:</strong> ${p.facility_type || "景點"}</div>
+                <div style="margin-bottom:6px;"><strong>地址:</strong> ${p.address || ""}</div>
+                <div style="margin-bottom:6px;"><strong>河川:</strong> ${p.river || "大漢溪"}</div>
+                ${LocalWeatherDisplay.buildPopupWeatherHtml(snap)}
+                <hr style="margin:8px 0;border:none;border-top:1px solid #eee;">
+                <div style="font-size:0.78rem;color:#666;">資料來源: ${p.source || "親水廊道清冊"}</div>
+              </div>
+            `);
+          }
+          infoWindow.open({ map, anchor: marker });
+        });
+        taoyuanMarkers.push(marker);
+      });
+      const n = taoyuanMarkers.length;
+      const wl = (gj.features || []).filter((f) => f.properties?.facility_type === "水位站").length;
+      const pump = (gj.features || []).filter((f) => f.properties?.facility_type === "抽水站").length;
+      console.log(`[大漢溪設施] 已標示 ${n} 處（抽水站 ${pump}、水位站 ${wl}、景點 ${n - wl - pump}）`);
+    }
+
     async function loadPumpingStations() {
       const res = await fetch(
         `data/pumping-stations.geojson?v=${PUMPING_STATIONS_DATA_VERSION}`,
@@ -998,7 +1060,10 @@
       );
       if (!res.ok) throw new Error("pumping-stations.geojson HTTP " + res.status);
       const gj = await res.json();
-      const feats = dedupePumpingFeatures(gj.features || []).map((f, i) => {
+      // 河系為大漢溪者改由「大漢溪設施」圖層標示，避免重複
+      const feats = dedupePumpingFeatures(gj.features || [])
+        .filter((f) => !((f.properties?.river || "").trim().includes("大漢")))
+        .map((f, i) => {
         const p = f.properties || {};
         if (p.id == null) p.id = i + 1;
         if (!p.construction_year && p.year_ce) p.construction_year = p.year_ce;
@@ -1111,8 +1176,25 @@
       waterActive: "#2980b9",     // 🔵 水位站（現存）
       waterInactive: "#95a5a6",   // ⚪ 水位站（已廢）
       waterfront: "#27ae60",      // 🟢 親水廊道
+      taoyuan: "#9b59b6",         // 🟣 桃園大漢溪設施
       river: "#0b8fe6",           // 大漢溪河道線色
     };
+
+    function taoyuanFacilityIcon({ isWl, isPump, active }) {
+      if (isPump) return pumpingStationIcon();
+      const fill = isWl
+        ? (active ? COLORS.waterActive : COLORS.waterInactive)
+        : COLORS.taoyuan;
+      return {
+        path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
+        scale: 6,
+        fillColor: fill,
+        fillOpacity: 0.95,
+        strokeColor: "#ffffff",
+        strokeWeight: 2,
+        rotation: 180,
+      };
+    }
 
     function pumpingStationIcon() {
       return {
@@ -1365,6 +1447,7 @@
         toggle(waterfrontMarkers, on);
         toggle(waterfrontPolylines, on);
       });
+      document.getElementById("layerTaoyuan").addEventListener("change", (e) => toggle(taoyuanMarkers, e.target.checked));
 
       // 我的位置
       let locateMarker = null, locateCircle = null;
@@ -1498,6 +1581,18 @@
         const p = (m._feature.properties) || {};
         const text = `${p.name || ""} ${p.address || ""}`.toLowerCase();
         if (text.includes(q)) hits.push({ kind: "親水園區", name: p.name, sub: p.address || "", marker: m });
+      });
+      taoyuanMarkers.forEach((m) => {
+        const p = (m._feature.properties) || {};
+        const text = `${p.name || ""} ${p.address || ""} ${p.facility_type || ""} ${p.river || ""} 大漢溪`.toLowerCase();
+        if (text.includes(q)) {
+          hits.push({
+            kind: p.facility_type === "抽水站" ? "抽水站·大漢溪" : `大漢溪·${p.facility_type || "設施"}`,
+            name: p.name,
+            sub: p.address || "",
+            marker: m,
+          });
+        }
       });
       waterfrontPolylines.forEach((pl) => {
         const p = (pl._feature.properties) || {};
@@ -2061,13 +2156,16 @@
     
     // 更新水位站標記的顯示資訊
     window.updateWaterLevelMarkers = function(waterLevelData) {
-      [...wlActiveMarkers, ...wlInactiveMarkers].forEach((marker) => {
+      const wlMarkers = [...wlActiveMarkers, ...wlInactiveMarkers, ...taoyuanMarkers.filter(
+        (m) => m._feature?.properties?.facility_type === "水位站"
+      )];
+      wlMarkers.forEach((marker) => {
         const stationId = marker._feature?.properties?.stationid;
         if (!stationId || !waterLevelData[stationId]) return;
         const realTimeData = waterLevelData[stationId];
         marker._realTimeData = realTimeData;
         const wl = parseFloat(realTimeData.waterlevel);
-        if (!Number.isNaN(wl) && marker._kind === "wl-active") {
+        if (!Number.isNaN(wl) && (marker._kind === "wl-active" || (marker._kind === "taoyuan" && marker._feature?.properties?.status === "現存"))) {
           const baseName = marker._feature?.properties?.name || stationId;
           marker.setTitle(`${baseName} · ${wl.toFixed(2)} m`);
           marker.setLabel(waterLevelMarkerLabel(realTimeData.waterlevel));
