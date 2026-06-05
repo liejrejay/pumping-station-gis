@@ -192,11 +192,11 @@
         </div>
     </div>
 
-    <script src="js/apiBase.js"></script>
-    <script src="js/runtime-config.js"></script>
-    <script src="js/api-endpoint.js"></script>
-    <script src="js/apiClient.js"></script>
-    <script src="js/userManager.js"></script>
+    <script src="js/apiBase.js?v=ADMIN_PANEL_JS_VER"></script>
+    <script src="js/runtime-config.js?v=ADMIN_PANEL_JS_VER"></script>
+    <script src="js/api-endpoint.js?v=ADMIN_PANEL_JS_VER"></script>
+    <script src="js/apiClient.js?v=ADMIN_PANEL_JS_VER"></script>
+    <script src="js/userManager.js?v=ADMIN_PANEL_JS_VER"></script>
     <script>
         let currentUsersData = null;
 
@@ -218,8 +218,7 @@
             await refreshData();
             window.userManager.startStatsAutoRefresh(async (stats) => {
                 onStatsRefreshed(stats);
-                const usersData = await window.userManager.fetchLiveUsersData();
-                updateUsersList(usersData);
+                updateUsersList(await fetchUsersForList());
             }, 30000);
         });
 
@@ -238,11 +237,38 @@
             window.userManager?.stopStatsAutoRefresh();
         });
 
+        async function fetchUsersForList() {
+            if (typeof window.userManager.fetchLiveUsersData === 'function') {
+                return window.userManager.fetchLiveUsersData();
+            }
+            const apiBase = window.getSharedApiBase?.();
+            if (apiBase) {
+                try {
+                    const res = await fetch(`${apiBase}/users`, { cache: 'no-store' });
+                    if (res.ok) {
+                        const data = await res.json();
+                        window.userManager.usersData = data;
+                        return { ...data, source: 'server' };
+                    }
+                } catch (e) {
+                    console.warn('[用戶列表] 備援 fetch 失敗:', e.message);
+                }
+            }
+            if (window.apiClient?.isServerMode && window.apiClient.getUsers) {
+                const data = await window.apiClient.getUsers();
+                if (data?.registeredUsers) {
+                    window.userManager.usersData = data;
+                    return { ...data, source: 'server' };
+                }
+            }
+            return null;
+        }
+
         async function refreshData() {
             try {
                 const [stats, usersData] = await Promise.all([
                     window.userManager.fetchLiveStats(),
-                    window.userManager.fetchLiveUsersData(),
+                    fetchUsersForList(),
                 ]);
                 onStatsRefreshed(stats);
                 updateUsersList(usersData);
@@ -338,7 +364,7 @@
 
         async function generateUsersJson() {
             try {
-                const usersData = await window.userManager.fetchLiveUsersData();
+                const usersData = await fetchUsersForList();
                 if (!usersData) {
                     alert('無法從共用後端取得用戶資料');
                     return;

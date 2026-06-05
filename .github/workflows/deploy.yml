@@ -53,6 +53,11 @@ jobs:
           fi
           echo "${SHORT_SHA}" > dist/data/pumping-data-version.txt
 
+          if grep -q 'ADMIN_PANEL_JS_VER' dist/admin-panel.html; then
+            sed -i "s/ADMIN_PANEL_JS_VER/${SHORT_SHA}/g" dist/admin-panel.html
+            echo "✅ admin-panel.js cache bust → ${SHORT_SHA}"
+          fi
+
           if [ -z "$GOOGLE_MAPS_API_KEY" ]; then
             echo "::error::未設定 GOOGLE_MAPS_API_KEY。請到 Settings → Secrets and variables → Actions 新增後再部署。"
             exit 1
