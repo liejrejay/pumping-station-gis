@@ -123,7 +123,29 @@
     }
     .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #ccc; }
 
-    /* ---- search ---- */
+    /* ---- search（地圖上方中央） ---- */
+    .gis-search-bar {
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1001;
+      width: min(460px, calc(100vw - 380px));
+      background: rgba(255, 255, 255, 0.98);
+      border-radius: 12px;
+      padding: 8px 12px 10px;
+      box-shadow: 0 4px 18px rgba(20, 50, 90, 0.16);
+      backdrop-filter: blur(6px);
+    }
+    .gis-search-bar .gis-search-label {
+      display: block;
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 1.1px;
+      color: #7f8c9b;
+      margin-bottom: 6px;
+      font-weight: 700;
+    }
     .search-input {
       width: 100%;
       padding: 8px 10px;
@@ -138,13 +160,14 @@
 
     .gis-search-result {
       display: none;
-      max-height: 220px;
+      max-height: 260px;
       overflow-y: auto;
       background: #fff;
       border: 1px solid #e0e6ed;
       border-radius: 8px;
       font-size: 12px;
       margin-top: 6px;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
     }
     .gis-search-result .hit { padding: 7px 10px; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: background .12s; }
     .gis-search-result .hit:last-child { border-bottom: none; }
@@ -403,6 +426,12 @@
       .sidebar.collapsed ~ .sidebar-toggle { left: 4px; }
       .hud-top-right { top: 8px; right: 8px; max-width: calc(100vw - 20px); }
       .user-panel { max-width: 140px; padding: 6px 10px; }
+      .gis-search-bar {
+        top: 56px;
+        width: calc(100vw - 16px);
+        max-width: none;
+        padding: 8px 10px;
+      }
       .legend { right: 8px; bottom: 8px; font-size: 11px; min-width: 130px; max-width: calc(100vw - 24px); }
     }
   </style>
@@ -424,6 +453,13 @@
   </div>
 
   <div id="map"></div>
+
+  <!-- 屬性查詢（地圖上方中央） -->
+  <div class="gis-search-bar" id="gisSearchBar">
+    <span class="gis-search-label">屬性查詢</span>
+    <input type="search" class="search-input" id="gisSearchInput" placeholder="🔎 搜尋抽水站 / 水位站 / 親水廊道" />
+    <div id="gisSearchResult" class="gis-search-result"></div>
+  </div>
 
   <!-- ============================================================
        Sidebar：左側統一面板
@@ -469,13 +505,6 @@
             <div class="status-hint">資料來源：水利署 WRA · 版次 20260602c</div>
           </div>
         </div>
-      </section>
-
-      <!-- 屬性查詢 -->
-      <section class="section">
-        <h2>屬性查詢</h2>
-        <input type="search" class="search-input" id="gisSearchInput" placeholder="🔎 搜尋抽水站 / 水位站 / 親水廊道" />
-        <div id="gisSearchResult" class="gis-search-result"></div>
       </section>
 
       <!-- 地圖工具 -->
@@ -1546,9 +1575,10 @@
       // 屬性搜尋
       const input = document.getElementById("gisSearchInput");
       const out = document.getElementById("gisSearchResult");
+      const searchBar = document.getElementById("gisSearchBar");
       input.addEventListener("input", (e) => gisSearch(e.target.value, out));
       document.addEventListener("click", (e) => {
-        if (!out.contains(e.target) && e.target !== input) out.style.display = "none";
+        if (searchBar && !searchBar.contains(e.target)) out.style.display = "none";
       });
     }
 
