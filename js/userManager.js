@@ -242,6 +242,41 @@ class UserManager {
         return stats;
     }
 
+    /** 從共用後端或 users.json 載入完整用戶資料（管理面板列表用） */
+    async fetchLiveUsersData() {
+        const apiBase =
+            typeof window.getSharedApiBase === 'function'
+                ? window.getSharedApiBase()
+                : null;
+
+        if (apiBase) {
+            try {
+                const res = await fetch(`${apiBase}/users`, { cache: 'no-store' });
+                if (res.ok) {
+                    const data = await res.json();
+                    this.usersData = data;
+                    return { ...data, source: 'server' };
+                }
+            } catch (e) {
+                console.warn('[用戶列表] 共用後端不可用:', e.message);
+            }
+            if (window.apiClient?.isServerMode) {
+                const viaClient = await window.apiClient.getUsers();
+                if (viaClient?.registeredUsers) {
+                    this.usersData = viaClient;
+                    return { ...viaClient, source: 'server' };
+                }
+            }
+        }
+
+        if (window.requiresSharedBackend?.()) {
+            return null;
+        }
+
+        await this.loadUsers();
+        return { ...this.usersData, source: 'local' };
+    }
+
     /**
      * 取得最新用戶統計：本機有 server 時走 API，否則合併 users.json + localStorage
      */

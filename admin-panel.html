@@ -216,7 +216,11 @@
                 await window.apiClient.checkServerAvailability();
             }
             await refreshData();
-            window.userManager.startStatsAutoRefresh(onStatsRefreshed, 30000);
+            window.userManager.startStatsAutoRefresh(async (stats) => {
+                onStatsRefreshed(stats);
+                const usersData = await window.userManager.fetchLiveUsersData();
+                updateUsersList(usersData);
+            }, 30000);
         });
 
         function loadRuntimeConfigScript() {
@@ -236,11 +240,12 @@
 
         async function refreshData() {
             try {
-                const stats = await window.userManager.fetchLiveStats();
-                await window.userManager.loadUsers();
-                const allUsers = window.userManager.getAllUsers();
+                const [stats, usersData] = await Promise.all([
+                    window.userManager.fetchLiveStats(),
+                    window.userManager.fetchLiveUsersData(),
+                ]);
                 onStatsRefreshed(stats);
-                updateUsersList(allUsers);
+                updateUsersList(usersData);
             } catch (error) {
                 console.error('刷新資料失敗:', error);
                 alert('刷新資料失敗: ' + error.message);
@@ -289,76 +294,67 @@
             `;
         }
 
-        function updateUsersList(allUsers) {
+        function updateUsersList(usersPayload) {
             const container = document.getElementById('usersList');
-            let html = '';
+            if (!usersPayload) {
+                container.innerHTML =
+                    '<div style="text-align: center; color: #c0392b;">無法從共用後端載入用戶列表（Render 可能休眠中，請稍後按「刷新資料」）</div>';
+                return;
+            }
+            const registeredUsers = usersPayload.registeredUsers || {};
+            const source = usersPayload?.source === 'server' ? '共用後端' : '本機';
+            const keys = Object.keys(registeredUsers);
 
-            // 只顯示註冊用戶
-            const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '{}');
-            
-            if (Object.keys(registeredUsers).length === 0) {
-                html = '<div style="text-align: center; color: #666;">目前沒有註冊用戶</div>';
-            } else {
-                for (let username in registeredUsers) {
-                    const user = registeredUsers[username];
-                    html += `
-                        <div class="user-item">
-                            <strong>${user.name}</strong> (@${username})
-                            <br><small>📧 ${user.email} | 📞 ${user.phone}</small>
-                            <br><small>📅 註冊時間: ${new Date(user.registrationDate).toLocaleString('zh-TW')}</small>
-                        </div>
-                    `;
-                }
+            if (keys.length === 0) {
+                container.innerHTML =
+                    '<div style="text-align: center; color: #666;">目前沒有註冊用戶</div>';
+                return;
             }
 
-            container.innerHTML = html;
+            const items = keys
+                .map((username) => {
+                    const user = registeredUsers[username];
+                    const reg = user.registrationDate
+                        ? new Date(user.registrationDate).toLocaleString('zh-TW')
+                        : '—';
+                    const status = user.status || 'active';
+                    return `
+                        <div class="user-item">
+                            <strong>${user.name || username}</strong> (@${username})
+                            <br><small>📧 ${user.email || '—'} | 📞 ${user.phone || '—'}</small>
+                            <br><small>📅 註冊: ${reg} | 狀態: ${status}</small>
+                        </div>
+                    `;
+                })
+                .join('');
+
+            container.innerHTML = `
+                <div style="margin-bottom:8px;color:#666;font-size:0.85rem;">
+                    共 ${keys.length} 人（資料來源：${source}）
+                </div>
+                ${items}
+            `;
         }
 
         async function generateUsersJson() {
             try {
-                await window.userManager.loadUsers();
-                
-                // 獲取當前的 users.json 結構
-                const systemUsers = {
-                    "admin": {
-                        "password": "admin123",
-                        "role": "administrator",
-                        "name": "系統管理員",
-                        "permissions": ["view", "edit", "manage", "export"],
-                        "createdDate": "2026-01-01T00:00:00.000Z",
-                        "type": "system"
-                    },
-                    "operator": {
-                        "password": "op123",
-                        "role": "operator", 
-                        "name": "系統操作員",
-                        "permissions": ["view", "edit"],
-                        "createdDate": "2026-01-01T00:00:00.000Z",
-                        "type": "system"
-                    },
-                    "viewer": {
-                        "password": "view123",
-                        "role": "viewer",
-                        "name": "資料查看員", 
-                        "permissions": ["view"],
-                        "createdDate": "2026-01-01T00:00:00.000Z",
-                        "type": "system"
-                    }
-                };
+                const usersData = await window.userManager.fetchLiveUsersData();
+                if (!usersData) {
+                    alert('無法從共用後端取得用戶資料');
+                    return;
+                }
 
-                // 獲取註冊用戶
-                const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '{}');
-                
-                // 組合完整的 users.json
                 const usersJson = {
-                    "systemUsers": systemUsers,
-                    "registeredUsers": registeredUsers,
-                    "metadata": {
-                        "totalUsers": Object.keys(systemUsers).length + Object.keys(registeredUsers).length,
-                        "totalRegistered": Object.keys(registeredUsers).length,
-                        "lastUpdated": new Date().toISOString(),
-                        "version": "1.0"
-                    }
+                    systemUsers: usersData.systemUsers || {},
+                    registeredUsers: usersData.registeredUsers || {},
+                    metadata: usersData.metadata || {
+                        totalUsers:
+                            Object.keys(usersData.systemUsers || {}).length +
+                            Object.keys(usersData.registeredUsers || {}).length,
+                        totalRegistered: Object.keys(usersData.registeredUsers || {}).length,
+                        lastUpdated: new Date().toISOString(),
+                        version: '1.0',
+                    },
                 };
 
                 currentUsersData = usersJson;

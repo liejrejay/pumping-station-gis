@@ -2402,7 +2402,9 @@
     async function exportUsers() {
       if (!currentUser || !currentUser.permissions.includes("export")) { alert("您沒有用戶資料匯出權限"); return; }
       try {
-        await window.userManager.loadUsers();
+        const usersData = await window.userManager.fetchLiveUsersData();
+        if (!usersData) { alert("無法從共用後端取得用戶資料"); return; }
+        window.userManager.usersData = usersData;
         const userData = window.userManager.exportRegisteredUsers();
         if (!userData) { alert("沒有可匯出的用戶資料"); return; }
         const timestamp = new Date().toISOString().slice(0, 19).replace(/[:.]/g, "-");
