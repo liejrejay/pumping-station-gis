@@ -66,6 +66,28 @@ class ApiClient {
         );
     }
 
+    usesSharedBackend() {
+        return (
+            window.requiresSharedBackend?.() && !!this.getApiBaseUrl()
+        );
+    }
+
+    resolveBaseUrl() {
+        return this.getApiBaseUrl() || this.baseUrl;
+    }
+
+    async postJson(path, body) {
+        const base = this.resolveBaseUrl();
+        if (!base) throw new Error('API 未設定');
+        const response = await fetch(`${base}${path}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            cache: 'no-store',
+            body: JSON.stringify(body),
+        });
+        return response;
+    }
+
     async getUsers() {
         if (this.isServerMode) {
             try {
@@ -135,26 +157,28 @@ class ApiClient {
             };
         }
 
-        if (this.isServerMode) {
+        const tryServer = this.usesSharedBackend() || this.isServerMode;
+        if (tryServer) {
             try {
-                const response = await fetch(`${this.baseUrl}/users/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ loginInput, password }),
+                const response = await this.postJson('/users/login', {
+                    loginInput,
+                    password,
                 });
 
                 if (response.ok) {
                     const result = await response.json();
+                    this.isServerMode = true;
                     return { success: true, user: result.user };
                 }
                 const error = await response.json();
                 return { success: false, error: error.error };
             } catch (error) {
                 console.warn('伺服器登入失敗:', error);
-                if (window.requiresSharedBackend?.()) {
+                if (this.usesSharedBackend()) {
                     return {
                         success: false,
-                        error: '無法連線共用後端，請稍後再試',
+                        error:
+                            '無法連線共用後端（Render 可能休眠中，請等 30 秒再試）',
                     };
                 }
             }
@@ -212,29 +236,35 @@ class ApiClient {
             };
         }
 
-        if (this.isServerMode) {
+        const tryServer = this.usesSharedBackend() || this.isServerMode;
+        if (tryServer) {
             try {
-                const response = await fetch(`${this.baseUrl}/users/register`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(userData),
-                });
+                const response = await this.postJson('/users/register', userData);
 
                 if (response.ok) {
+                    this.isServerMode = true;
                     console.log('✅ 用戶已寫入共用後端');
-                    return { success: true };
+                    return { success: true, savedTo: 'server' };
                 }
                 const error = await response.json();
                 return { success: false, error: error.error };
             } catch (error) {
                 console.warn('伺服器註冊失敗:', error);
-                if (window.requiresSharedBackend?.()) {
+                if (this.usesSharedBackend()) {
                     return {
                         success: false,
-                        error: '無法連線共用後端，請稍後再試',
+                        error:
+                            '無法連線共用後端（Render 可能休眠中，請等 30 秒再試）',
                     };
                 }
             }
+        }
+
+        if (this.usesSharedBackend()) {
+            return {
+                success: false,
+                error: '無法連線共用後端，註冊未寫入全組資料庫',
+            };
         }
 
         return this.registerWithLocalStorage(userData);
@@ -276,18 +306,28 @@ class ApiClient {
     }
 
     async getUserStats() {
-        if (this.isServerMode) {
+        const base = this.resolveBaseUrl();
+        if (base && (this.usesSharedBackend() || this.isServerMode)) {
             try {
-                const response = await fetch(`${this.baseUrl}/users/stats`, {
+                const response = await fetch(`${base}/users/stats`, {
                     cache: 'no-store',
                 });
                 if (response.ok) {
+                    this.isServerMode = true;
                     const stats = await response.json();
-                    return { ...stats, source: 'server' };
+                    return {
+                        ...stats,
+                        source: 'server',
+                        queriedAt: new Date().toISOString(),
+                    };
                 }
             } catch (error) {
                 console.warn('從伺服器獲取統計失敗:', error);
             }
+        }
+
+        if (this.usesSharedBackend()) {
+            return null;
         }
 
         const usersData = this.getUsersFromLocalStorage();

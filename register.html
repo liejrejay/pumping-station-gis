@@ -676,7 +676,11 @@
             const registerResult = await window.apiClient.register(userData);
 
             if (registerResult.success) {
-                showMessage('註冊成功！即將跳轉到登入頁面...', 'success');
+                const hint =
+                    registerResult.savedTo === 'server'
+                        ? '（已寫入全組共用後端）'
+                        : '（僅本機瀏覽器，其他組員看不到）';
+                showMessage('註冊成功' + hint + '！即將跳轉到登入頁面...', 'success');
 
                 // 延遲跳轉
                 setTimeout(() => {

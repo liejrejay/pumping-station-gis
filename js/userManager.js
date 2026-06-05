@@ -257,7 +257,11 @@ class UserManager {
                     cache: 'no-store',
                 });
                 if (res.ok) {
-                    return { ...(await res.json()), source: 'server' };
+                    return {
+                        ...(await res.json()),
+                        source: 'server',
+                        queriedAt: new Date().toISOString(),
+                    };
                 }
             } catch (e) {
                 console.warn('[用戶統計] 共用後端不可用:', e.message);
