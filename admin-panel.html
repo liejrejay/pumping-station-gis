@@ -257,10 +257,13 @@
                         : stats.source === 'unconfigured'
                           ? '未設定後端'
                           : '僅本機瀏覽器';
-                const t = stats.lastUpdated
+                const queried = stats.lastUpdated
                     ? new Date(stats.lastUpdated).toLocaleString('zh-TW')
                     : '—';
-                el.textContent = `資料來源：${src} · 每 30 秒自動更新 · 最後更新 ${t}`;
+                const modified = stats.dataLastModified
+                    ? new Date(stats.dataLastModified).toLocaleString('zh-TW')
+                    : queried;
+                el.textContent = `資料來源：${src} · 每 30 秒更新 · 查詢 ${queried} · 資料異動 ${modified}`;
             }
         }
 

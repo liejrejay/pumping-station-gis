@@ -145,6 +145,27 @@ async function readUsers() {
     }
 }
 
+function buildUserStats(usersData) {
+    const registered = usersData.registeredUsers || {};
+    const regDates = Object.values(registered)
+        .map((u) => u.registrationDate)
+        .filter(Boolean);
+    const dataLastModified = [usersData.metadata?.lastUpdated, ...regDates]
+        .filter(Boolean)
+        .sort()
+        .reverse()[0] || new Date().toISOString();
+
+    const stats = {
+        totalSystemUsers: Object.keys(usersData.systemUsers || {}).length,
+        totalRegisteredUsers: Object.keys(registered).length,
+        activeUsers: Object.values(registered).filter((u) => u.status === 'active').length,
+        dataLastModified,
+        lastUpdated: new Date().toISOString(),
+    };
+    stats.totalUsers = stats.totalSystemUsers + stats.totalRegisteredUsers;
+    return stats;
+}
+
 // 寫入用戶資料
 async function writeUsers(data) {
     try {
@@ -274,15 +295,7 @@ app.post('/api/users/login', async (req, res) => {
 app.get('/api/users/stats', async (req, res) => {
     try {
         const usersData = await readUsers();
-        const stats = {
-            totalSystemUsers: Object.keys(usersData.systemUsers).length,
-            totalRegisteredUsers: Object.keys(usersData.registeredUsers).length,
-            activeUsers: Object.values(usersData.registeredUsers).filter(u => u.status === 'active').length,
-            lastUpdated: usersData.metadata.lastUpdated
-        };
-        stats.totalUsers = stats.totalSystemUsers + stats.totalRegisteredUsers;
-        
-        res.json(stats);
+        res.json(buildUserStats(usersData));
     } catch (error) {
         res.status(500).json({ error: '獲取統計資料失敗' });
     }

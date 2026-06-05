@@ -211,11 +211,23 @@ class UserManager {
         if (!this.usersData) return null;
         this.syncRegisteredFromLocalStorage();
 
+        const regDates = Object.values(this.usersData.registeredUsers || {})
+            .map((u) => u.registrationDate)
+            .filter(Boolean);
+        const dataLastModified = [
+            this.usersData.metadata?.lastUpdated,
+            ...regDates,
+        ]
+            .filter(Boolean)
+            .sort()
+            .reverse()[0];
+
         const stats = {
             totalSystemUsers: Object.keys(this.usersData.systemUsers || {}).length,
             totalRegisteredUsers: Object.keys(this.usersData.registeredUsers || {}).length,
             totalUsers: 0,
             activeUsers: 0,
+            dataLastModified: dataLastModified || new Date().toISOString(),
             lastUpdated: new Date().toISOString(),
             source: 'local',
         };
@@ -284,16 +296,20 @@ class UserManager {
                 : stats.source === 'local'
                   ? '本機合併（僅此瀏覽器）'
                   : '資料檔';
-        const t = stats.lastUpdated
+        const queried = stats.lastUpdated
             ? new Date(stats.lastUpdated).toLocaleString('zh-TW')
             : '—';
+        const modified = stats.dataLastModified
+            ? new Date(stats.dataLastModified).toLocaleString('zh-TW')
+            : queried;
         return (
             `📊 用戶統計（${src}）\n\n` +
             `👥 總用戶數: ${stats.totalUsers}\n` +
             `🔧 系統用戶: ${stats.totalSystemUsers}\n` +
             `📝 註冊用戶: ${stats.totalRegisteredUsers}\n` +
             `✅ 活躍用戶: ${stats.activeUsers}\n\n` +
-            `📅 最後更新: ${t}`
+            `📅 資料最後異動: ${modified}\n` +
+            `🕐 統計查詢時間: ${queried}`
         );
     }
 

@@ -291,6 +291,10 @@ class ApiClient {
         }
 
         const usersData = this.getUsersFromLocalStorage();
+        const regDates = Object.values(usersData.registeredUsers)
+            .map((u) => u.registrationDate)
+            .filter(Boolean);
+        const dataLastModified = regDates.sort().reverse()[0] || null;
         return {
             totalSystemUsers: Object.keys(usersData.systemUsers).length,
             totalRegisteredUsers: Object.keys(usersData.registeredUsers).length,
@@ -300,7 +304,8 @@ class ApiClient {
             totalUsers:
                 Object.keys(usersData.systemUsers).length +
                 Object.keys(usersData.registeredUsers).length,
-            lastUpdated: usersData.metadata.lastUpdated,
+            dataLastModified,
+            lastUpdated: new Date().toISOString(),
             source: 'localStorage',
         };
     }
