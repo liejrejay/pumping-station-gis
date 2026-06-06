@@ -29,7 +29,27 @@ GitHub Pages **只能放靜態網頁**，無法讓 A、B 兩位組員的註冊�
    `https://pumping-station-api.onrender.com/api/health`  
    應回傳 `{"status":"OK",...}`
 
-> **注意**：Render 免費方案若久未連線會休眠，首次開啟可能需等約 30 秒。用戶資料存在伺服器檔案 `data/users.json`，重新部署可能清空，正式展示前請備份。
+> **注意**：Render 免費方案若久未連線會休眠，首次開啟可能需等約 30 秒。  
+> **用戶資料**：未設定 `MONGODB_URI` 時，資料只存在伺服器暫存檔 `data/users.json`，**每次重新部署都會還原成 repo 內的示範資料**（例如只剩 5/21 的 demo_user）。  
+> 正式使用請依下方「步驟一-B」設定 **MongoDB Atlas 免費資料庫**，部署後註冊資料才會保留。
+
+---
+
+## 步驟一-B：MongoDB Atlas（強烈建議，免費）
+
+1. 至 [MongoDB Atlas](https://www.mongodb.com/cloud/atlas/register) 註冊 → 建立 **M0 Free** 叢集。
+2. **Database Access** → 新增 Database User（記住帳密）。
+3. **Network Access** → Add IP Address → **Allow Access from Anywhere**（`0.0.0.0/0`，Render 需要）。
+4. **Connect** → Drivers → 複製連線字串，例如：  
+   `mongodb+srv://USER:PASSWORD@cluster0.xxxxx.mongodb.net/?retryWrites=true&w=majority`
+5. Render 後台 → 你的 Web Service → **Environment** → 新增：  
+   - `MONGODB_URI` = 上述連線字串（把 `<password>` 換成真實密碼）  
+   - （選用）`MONGODB_DB` = `pumping_station_gis`
+6. **Manual Deploy** 或 push 到 main 觸發重新部署。
+7. 開啟 `https://你的服務.onrender.com/api/health`，應看到：  
+   `"storage":"mongo","persistent":true`
+
+設定完成後，組員重新註冊一次即可；之後 push 前端或重新部署都不會再清空。
 
 ---
 

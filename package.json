@@ -13,12 +13,18 @@
     "build:copy": "mkdir dist 2>nul & xcopy *.html dist\\ /y & xcopy css dist\\css\\ /e /y & xcopy js dist\\js\\ /e /y & xcopy data dist\\data\\ /e /y",
     "build:config": "node build-config.js"
   },
-  "keywords": ["gis", "pumping-station", "taiwan", "water-management"],
+  "keywords": [
+    "gis",
+    "pumping-station",
+    "taiwan",
+    "water-management"
+  ],
   "author": "GIS Team",
   "license": "MIT",
   "dependencies": {
+    "cors": "^2.8.5",
     "express": "^4.18.2",
-    "cors": "^2.8.5"
+    "mongodb": "^6.21.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"

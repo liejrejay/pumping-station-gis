@@ -5,6 +5,7 @@ const path = require('path');
 const cors = require('cors');
 const { buildDahanWeatherSummary } = require('./lib/cwaWeather');
 const { buildDahanWaterLevelSummary } = require('./lib/wraWaterLevel');
+const userStore = require('./lib/userStore');
 
 // 讀取 .env（不入 git）
 try {
@@ -22,7 +23,6 @@ try {
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const USERS_FILE = path.join(__dirname, 'data', 'users.json');
 
 // 中介軟體（允許 GitHub Pages 前端跨域呼叫 API）
 const corsOrigins = (process.env.CORS_ORIGIN || '')
@@ -123,26 +123,12 @@ const SYSTEM_USERS = {
     }
 };
 
-// 讀取用戶資料
 async function readUsers() {
-    try {
-        const data = await fs.readFile(USERS_FILE, 'utf8');
-        return JSON.parse(data);
-    } catch (error) {
-        // 如果檔案不存在，創建預設資料
-        const defaultData = {
-            systemUsers: SYSTEM_USERS,
-            registeredUsers: {},
-            metadata: {
-                totalUsers: 3,
-                totalRegistered: 0,
-                lastUpdated: new Date().toISOString(),
-                version: "1.0"
-            }
-        };
-        await writeUsers(defaultData);
-        return defaultData;
-    }
+    return userStore.readUsers(SYSTEM_USERS);
+}
+
+async function writeUsers(data) {
+    return userStore.writeUsers(data, SYSTEM_USERS);
 }
 
 function buildUserStats(usersData) {
@@ -164,20 +150,6 @@ function buildUserStats(usersData) {
     };
     stats.totalUsers = stats.totalSystemUsers + stats.totalRegisteredUsers;
     return stats;
-}
-
-// 寫入用戶資料
-async function writeUsers(data) {
-    try {
-        // 確保目錄存在
-        await fs.mkdir(path.dirname(USERS_FILE), { recursive: true });
-        await fs.writeFile(USERS_FILE, JSON.stringify(data, null, 2), 'utf8');
-        console.log('✅ 用戶資料已更新:', new Date().toLocaleString());
-        return true;
-    } catch (error) {
-        console.error('❌ 寫入用戶資料失敗:', error);
-        throw error;
-    }
 }
 
 // API 路由
@@ -321,19 +293,28 @@ app.get('/api/users/export', async (req, res) => {
 
 // 健康檢查
 app.get('/api/health', (req, res) => {
-    res.json({ 
-        status: 'OK', 
+    res.json({
+        status: 'OK',
         timestamp: new Date().toISOString(),
-        service: '雙北大漢溪抽水站用戶管理系統'
+        service: '雙北大漢溪抽水站用戶管理系統',
+        storage: userStore.getStorageMode(),
+        persistent: userStore.isPersistentStorage(),
     });
 });
 
-// 啟動伺服器
-app.listen(PORT, () => {
-    console.log(`
+async function startServer() {
+    await userStore.initUserStore(SYSTEM_USERS);
+
+    app.listen(PORT, () => {
+        const mode = userStore.getStorageMode();
+        const persistHint =
+            mode === 'mongo'
+                ? 'MongoDB（部署後保留）'
+                : '本機檔案（Render 重新部署會還原 repo，請設定 MONGODB_URI）';
+        console.log(`
 🚀 伺服器已啟動！
 🌐 網址: http://localhost:${PORT}
-📁 用戶資料檔案: ${USERS_FILE}
+📁 用戶儲存: ${persistHint}
 ⏰ 啟動時間: ${new Date().toLocaleString()}
 
 📋 API 端點:
@@ -348,6 +329,12 @@ app.listen(PORT, () => {
 - GET  /api/water-level/current - 大漢溪 8 站即時水位（WRA OpenData）
 - GET  /api/health       - 健康檢查
     `);
+    });
+}
+
+startServer().catch((err) => {
+    console.error('伺服器啟動失敗:', err);
+    process.exit(1);
 });
 
 // 優雅關閉
