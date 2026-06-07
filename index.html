@@ -8,7 +8,7 @@
   <title>大漢溪抽水站 Web GIS</title>
   <link rel="stylesheet" href="css/animations.css?v=20260602c" />
   <link rel="stylesheet" href="css/responsive.css?v=20260602c" />
-  <link rel="stylesheet" href="css/weatherAlert.css?v=20260602f" />
+  <link rel="stylesheet" href="css/weatherAlert.css?v=20260607a" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: "PingFang TC", "Noto Sans TC", system-ui, sans-serif; color: #2d3436; }
@@ -145,6 +145,15 @@
       color: #7f8c9b;
       margin-bottom: 6px;
       font-weight: 700;
+    }
+    .gis-search-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .gis-search-row .search-input {
+      flex: 1;
+      min-width: 0;
     }
     .search-input {
       width: 100%;
@@ -457,7 +466,13 @@
   <!-- 屬性查詢（地圖上方中央） -->
   <div class="gis-search-bar" id="gisSearchBar">
     <span class="gis-search-label">屬性查詢</span>
-    <input type="search" class="search-input" id="gisSearchInput" placeholder="🔎 搜尋抽水站 / 水位站 / 親水廊道" />
+    <div class="gis-search-row">
+      <input type="search" class="search-input" id="gisSearchInput" placeholder="🔎 搜尋抽水站 / 水位站 / 親水廊道" />
+      <button id="alertToggleBtn" class="alert-toggle-btn alert-toggle-btn--inline" onclick="toggleAlertPanel()" title="氣象警示" type="button">
+        🌦️
+        <span id="alertBadge" class="alert-badge" style="display: none;">0</span>
+      </button>
+    </div>
     <div id="gisSearchResult" class="gis-search-result"></div>
   </div>
 
@@ -569,10 +584,6 @@
       </div>
       <button onclick="logout()" class="logout-btn">登出</button>
     </div>
-    <button id="alertToggleBtn" class="alert-toggle-btn alert-toggle-btn--compact" onclick="toggleAlertPanel()" title="氣象警示">
-      🌦️
-      <span id="alertBadge" class="alert-badge" style="display: none;">0</span>
-    </button>
   </div>
 
   <div class="coord-box" id="coordBox">緯度 — / 經度 —</div>
@@ -647,7 +658,8 @@
 
   <script src="js/apiBase.js?v=20260604a"></script>
   <script src="js/api-endpoint.js?v=20260604a"></script>
-  <script src="js/userManager.js?v=20260605a"></script>
+  <script src="js/userRoles.js?v=20260607a"></script>
+  <script src="js/userManager.js?v=20260607a"></script>
   <script src="js/mobileOptimization.js?v=20260602c"></script>
   <script src="js/weatherApiConfig.js?v=20260602c"></script>
   <script src="js/realtimeRainfall.js?v=20260602c"></script>
@@ -2351,44 +2363,36 @@
     // 用戶 / 權限
     // ============================================================
     function checkAuth() {
-      // 簡化版本：直接允許訪問，不需要登入
       const userData = localStorage.getItem("currentUser");
-      if (userData) {
-        try {
-          currentUser = JSON.parse(userData);
-          updateUserInterface();
-        } catch (err) {
-          console.log("用戶資料解析失敗，使用預設使用者");
-          // 設定預設使用者
-          currentUser = {
-            username: "guest",
-            role: "viewer",
-            displayName: "訪客使用者"
-          };
-        }
-      } else {
-        // 設定預設使用者
-        currentUser = {
-          username: "guest",
-          role: "viewer", 
-          displayName: "訪客使用者"
-        };
+      if (!userData) {
+        window.location.href = "login.html";
+        return false;
       }
-      updateUserInterface();
-      return true;
+      try {
+        currentUser = JSON.parse(userData);
+        if (!window.isAllowedRole?.(currentUser.role)) {
+          localStorage.removeItem("currentUser");
+          window.location.href = "login.html";
+          return false;
+        }
+        updateUserInterface();
+        return true;
+      } catch (err) {
+        console.warn("用戶資料解析失敗:", err);
+        localStorage.removeItem("currentUser");
+        window.location.href = "login.html";
+        return false;
+      }
     }
     function updateUserInterface() {
       if (!currentUser) return;
-      document.getElementById("userName").textContent = currentUser.name || currentUser.displayName || "訪客";
-      document.getElementById("userRole").textContent = getRoleText(currentUser.role);
+      document.getElementById("userName").textContent = currentUser.name || currentUser.displayName || "使用者";
+      document.getElementById("userRole").textContent = window.getRoleText?.(currentUser.role) || "註冊民眾";
       if (currentUser.permissions && currentUser.permissions.includes("manage")) {
         document.getElementById("adminControls").style.display = "block";
       } else if (window.userManager?.stopStatsAutoRefresh) {
         window.userManager.stopStatsAutoRefresh();
       }
-    }
-    function getRoleText(role) {
-      return { administrator: "系統管理員", operator: "系統操作員", viewer: "資料查看員", citizen: "註冊民眾" }[role] || "一般用戶";
     }
     function logout() {
       if (confirm("確定要登出系統嗎？")) {

@@ -6,6 +6,7 @@ const cors = require('cors');
 const { buildDahanWeatherSummary } = require('./lib/cwaWeather');
 const { buildDahanWaterLevelSummary } = require('./lib/wraWaterLevel');
 const userStore = require('./lib/userStore');
+const { SYSTEM_USERS, normalizeUsersData } = require('./lib/userRoles');
 
 // 讀取 .env（不入 git）
 try {
@@ -95,40 +96,13 @@ app.get('/api/config.js', (req, res) => {
 
 app.use(express.static('.')); // 提供靜態檔案服務
 
-// 預設系統用戶
-const SYSTEM_USERS = {
-    "admin": {
-        "password": "admin123",
-        "role": "administrator",
-        "name": "系統管理員",
-        "permissions": ["view", "edit", "manage", "export"],
-        "createdDate": "2026-01-01T00:00:00.000Z",
-        "type": "system"
-    },
-    "operator": {
-        "password": "op123",
-        "role": "operator", 
-        "name": "系統操作員",
-        "permissions": ["view", "edit"],
-        "createdDate": "2026-01-01T00:00:00.000Z",
-        "type": "system"
-    },
-    "viewer": {
-        "password": "view123",
-        "role": "viewer",
-        "name": "資料查看員", 
-        "permissions": ["view"],
-        "createdDate": "2026-01-01T00:00:00.000Z",
-        "type": "system"
-    }
-};
-
 async function readUsers() {
-    return userStore.readUsers(SYSTEM_USERS);
+    const data = normalizeUsersData(await userStore.readUsers(SYSTEM_USERS));
+    return data;
 }
 
 async function writeUsers(data) {
-    return userStore.writeUsers(data, SYSTEM_USERS);
+    return userStore.writeUsers(normalizeUsersData(data), SYSTEM_USERS);
 }
 
 function buildUserStats(usersData) {
@@ -304,6 +278,11 @@ app.get('/api/health', (req, res) => {
 
 async function startServer() {
     await userStore.initUserStore(SYSTEM_USERS);
+    try {
+        await writeUsers(await readUsers());
+    } catch (e) {
+        console.warn('[userRoles] 啟動時同步身分設定略過:', e.message);
+    }
 
     app.listen(PORT, () => {
         const mode = userStore.getStorageMode();

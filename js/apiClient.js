@@ -106,26 +106,12 @@ class ApiClient {
     }
 
     getUsersFromLocalStorage() {
-        const systemUsers = {
+        const systemUsers = window.DEFAULT_SYSTEM_USERS || {
             admin: {
                 password: 'admin123',
                 role: 'administrator',
                 name: '系統管理員',
                 permissions: ['view', 'edit', 'manage', 'export'],
-                type: 'system',
-            },
-            operator: {
-                password: 'op123',
-                role: 'operator',
-                name: '系統操作員',
-                permissions: ['view', 'edit'],
-                type: 'system',
-            },
-            viewer: {
-                password: 'view123',
-                role: 'viewer',
-                name: '資料查看員',
-                permissions: ['view'],
                 type: 'system',
             },
         };

@@ -49,29 +49,16 @@ class UserManager {
 
     // 從 localStorage 載入 (備援方案)
     loadFromLocalStorage() {
-        const systemUsers = {
-            'admin': {
-                password: 'admin123',
-                role: 'administrator',
-                name: '系統管理員',
-                permissions: ['view', 'edit', 'manage', 'export'],
-                type: 'system'
-            },
-            'operator': {
-                password: 'op123',
-                role: 'operator',
-                name: '系統操作員',
-                permissions: ['view', 'edit'],
-                type: 'system'
-            },
-            'viewer': {
-                password: 'view123',
-                role: 'viewer',
-                name: '資料查看員',
-                permissions: ['view'],
-                type: 'system'
-            }
-        };
+        const systemUsers =
+            window.DEFAULT_SYSTEM_USERS || {
+                admin: {
+                    password: 'admin123',
+                    role: 'administrator',
+                    name: '系統管理員',
+                    permissions: ['view', 'edit', 'manage', 'export'],
+                    type: 'system',
+                },
+            };
 
         const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '{}');
         
@@ -344,8 +331,8 @@ class UserManager {
         return (
             `📊 用戶統計（${src}）\n\n` +
             `👥 總用戶數: ${stats.totalUsers}\n` +
-            `🔧 系統用戶: ${stats.totalSystemUsers}\n` +
-            `📝 註冊用戶: ${stats.totalRegisteredUsers}\n` +
+            `🔧 系統管理員: ${stats.totalSystemUsers}\n` +
+            `📝 註冊民眾: ${stats.totalRegisteredUsers}\n` +
             `✅ 活躍用戶: ${stats.activeUsers}\n\n` +
             `📅 資料最後異動: ${modified}\n` +
             `🕐 統計查詢時間: ${queried}`
