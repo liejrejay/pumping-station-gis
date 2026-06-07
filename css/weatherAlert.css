@@ -95,14 +95,21 @@
     margin-top: 2px;
 }
 
-.alert-toggle-btn--inline {
-    position: relative;
+.alert-toggle-btn--inline,
+.gis-search-row .alert-toggle-btn {
+    position: static;
+    top: auto;
+    right: auto;
+    left: auto;
     width: 40px;
     height: 40px;
     font-size: 18px;
     flex-shrink: 0;
-    margin-top: 0;
+    margin: 0;
     padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .alert-toggle-btn:hover {
