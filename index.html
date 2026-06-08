@@ -499,7 +499,7 @@
           <div class="stat-card">
             <div class="label">🏢 抽水站</div>
             <div class="value" id="countPumping">—</div>
-            <div class="stat-sub" id="countPumpingDetail">大漢溪 — · 其他 —</div>
+            <div class="stat-sub" id="countPumpingDetail">大漢溪 —（桃園 — · 新北等 —）· 其他 —</div>
           </div>
           <div class="stat-card wl">
             <div class="label">💧 水位站</div>
@@ -1055,13 +1055,13 @@
         p.nearest_wl = findNearestWaterStation(f.geometry.coordinates[1], f.geometry.coordinates[0]);
         return f;
       });
-      const dahanCount = feats.filter((f) =>
-        ((f.properties?.river || "").trim().includes("大漢"))
-      ).length;
-      const taoyuanCount = feats.filter((f) =>
+      const isDahanRiver = (f) => ((f.properties?.river || "").trim().includes("大漢"));
+      const isTaoyuanSite = (f) =>
         (f.properties?.address || "").includes("桃園") ||
-        (f.properties?.county || "") === "桃園市"
-      ).length;
+        (f.properties?.county || "") === "桃園市";
+      const dahanCount = feats.filter(isDahanRiver).length;
+      const taoyuanCount = feats.filter((f) => isDahanRiver(f) && isTaoyuanSite(f)).length;
+      const otherCount = feats.length - dahanCount;
       clearMarkers(pumpingMarkers);
       const bounds = new google.maps.LatLngBounds();
       feats.forEach((feat) => {
@@ -1088,10 +1088,10 @@
       });
       if (feats.length) map.fitBounds(bounds);
       document.getElementById("countPumping").textContent = feats.length;
-      const otherCount = feats.length - dahanCount;
       const detailEl = document.getElementById("countPumpingDetail");
       if (detailEl) {
-        detailEl.textContent = `大漢溪 ${dahanCount} · 桃園 ${taoyuanCount} · 其他 ${otherCount}`;
+        const dahanOther = dahanCount - taoyuanCount;
+        detailEl.textContent = `大漢溪 ${dahanCount}（桃園 ${taoyuanCount} · 新北等 ${dahanOther}）· 其他 ${otherCount}`;
       }
     }
 
