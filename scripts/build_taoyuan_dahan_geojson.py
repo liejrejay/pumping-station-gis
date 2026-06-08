@@ -185,25 +185,7 @@ def main() -> None:
         print(f"[taoyuan-dahan] WRA API failed ({e}); using local water-level-stations.geojson")
         features = features_from_local_wl()
 
-    for w in WATERFRONT_TAOYUAN:
-        features.append(
-            {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [w["lng"], w["lat"]],
-                },
-                "properties": {
-                    "facility_type": w["category"],
-                    "name": w["name"],
-                    "river": "大漢溪",
-                    "status": "景點",
-                    "address": w["address"],
-                    "county": "桃園市",
-                    "source": "親水廊道清冊",
-                },
-            }
-        )
+    # 親水園區／景點由前台「親水廊道」圖層統一標示，此處不再重複輸出
 
     features.extend(features_from_pumping_dahan())
 
@@ -211,7 +193,7 @@ def main() -> None:
     collection = {
         "type": "FeatureCollection",
         "name": "taoyuan-dahan-facilities",
-        "description": "大漢溪流域設施（桃園水位站、親水景點、河系大漢溪抽水站）",
+        "description": "大漢溪流域設施（桃園水位站、河系大漢溪抽水站；親水景點見親水廊道圖層）",
         "features": features,
     }
     with OUT.open("w", encoding="utf-8") as f:
