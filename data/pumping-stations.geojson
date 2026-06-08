@@ -419,56 +419,7 @@
         "geocode_quality": "reference"
       }
     },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          121.5004375,
-          25.057187499999998
-        ]
-      },
-      "properties": {
-        "name": "新北市政府水利局同安抽水站",
-        "address": "新北市三重區同慶里",
-        "river": "大漢溪",
-        "pump_type": null,
-        "year_ce": null,
-        "year_ce_range": null,
-        "source": "legacy plus_code",
-        "geocode_quality": "plus_code",
-        "plus_code": "3G42+V5",
-        "village": "同慶里",
-        "district": "新北市三重區",
-        "id": 22,
-        "label": "新北市政府水利局同安抽水站"
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          121.4863125,
-          25.017812499999998
-        ]
-      },
-      "properties": {
-        "name": "自來水光復抽水加壓站",
-        "address": "新北市板橋區光復里環河西路四段55號",
-        "river": "大漢溪",
-        "pump_type": null,
-        "year_ce": null,
-        "year_ce_range": null,
-        "source": "legacy plus_code",
-        "geocode_quality": "plus_code",
-        "plus_code": "2F9P+4G",
-        "village": "光復里",
-        "district": "新北市板橋區",
-        "id": 23,
-        "label": "自來水光復抽水加壓站"
-      }
-    },
+   
     {
       "type": "Feature",
       "geometry": {
