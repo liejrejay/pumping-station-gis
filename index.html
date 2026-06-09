@@ -1459,6 +1459,17 @@
       let measureLine = null;
       let measureMarkers = [];
 
+      const formatMeasureDistance = (totalM) =>
+        totalM >= 1000 ? `${(totalM / 1000).toFixed(3)} 公里` : `${Math.round(totalM)} 公尺`;
+
+      const getMeasureTotalM = () => {
+        let totalM = 0;
+        for (let i = 1; i < measurePts.length; i++) {
+          totalM += google.maps.geometry.spherical.computeDistanceBetween(measurePts[i - 1], measurePts[i]);
+        }
+        return totalM;
+      };
+
       const clearMeasure = () => {
         if (measureLine) { measureLine.setMap(null); measureLine = null; }
         measureMarkers.forEach((m) => m.setMap(null));
@@ -1491,18 +1502,32 @@
         measureLine = new google.maps.Polyline({
           map, path: measurePts, strokeColor: "#e74c3c", strokeOpacity: 0.9, strokeWeight: 3,
         });
-        let totalM = 0;
-        for (let i = 1; i < measurePts.length; i++) {
-          totalM += google.maps.geometry.spherical.computeDistanceBetween(measurePts[i - 1], measurePts[i]);
-        }
-        const txt = totalM >= 1000 ? `${(totalM / 1000).toFixed(3)} 公里` : `${Math.round(totalM)} 公尺`;
+        const totalM = getMeasureTotalM();
+        const txt = formatMeasureDistance(totalM);
         measureReadout.textContent = `📏 累計距離：${txt}（${measurePts.length} 點；雙擊結束）`;
       });
-      map.addListener("dblclick", () => {
+      map.addListener("dblclick", (ev) => {
         if (!measureOn) return;
+        ev.stop();
         measureOn = false;
         measureBtn.classList.remove("active");
         map.setOptions({ draggableCursor: null });
+        if (measurePts.length < 2) {
+          measureReadout.textContent = "📏 量測結束：請至少點選 2 個點";
+          measureReadout.style.display = "block";
+          return;
+        }
+        const totalM = getMeasureTotalM();
+        const txt = formatMeasureDistance(totalM);
+        const segments = [];
+        for (let i = 1; i < measurePts.length; i++) {
+          const segM = google.maps.geometry.spherical.computeDistanceBetween(measurePts[i - 1], measurePts[i]);
+          segments.push(`第 ${i} 段 ${formatMeasureDistance(segM)}`);
+        }
+        measureReadout.innerHTML =
+          `📏 量測完成：總距離 <strong>${txt}</strong>（${measurePts.length} 點）` +
+          (segments.length > 1 ? `<br><small>${segments.join(" · ")}</small>` : "");
+        measureReadout.style.display = "block";
       });
 
       // 全螢幕
