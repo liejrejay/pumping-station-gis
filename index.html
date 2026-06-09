@@ -155,12 +155,6 @@
       flex: 1;
       min-width: 0;
     }
-    .gis-search-row .alert-toggle-btn {
-      position: static;
-      top: auto;
-      right: auto;
-      flex-shrink: 0;
-    }
     .search-input {
       width: 100%;
       padding: 8px 10px;
@@ -272,17 +266,17 @@
     /* =========================================================
        User panel：頂右
        ========================================================= */
-    /* 右上角：使用者 + 氣象按鈕橫排，不互相遮擋 */
+    /* 右上角：使用者面板 + 天氣（直向排列，不擋地圖中央） */
     .hud-top-right {
       position: absolute;
       top: 12px;
       right: 12px;
       z-index: 1001;
       display: flex;
-      flex-direction: row;
-      align-items: flex-start;
-      gap: 8px;
-      max-width: calc(100vw - 340px);
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0;
+      max-width: min(300px, calc(100vw - 24px));
     }
     .user-panel {
       position: static;
@@ -290,7 +284,7 @@
       border-radius: 12px;
       padding: 8px 12px;
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-      max-width: 200px;
+      width: 100%;
       font-size: 0.75rem;
       flex-shrink: 0;
     }
@@ -302,6 +296,17 @@
       transition: background .15s;
     }
     .user-panel .logout-btn:hover { background: #c0392b; }
+    .user-panel .weather-panel-toggle {
+      width: 100%; margin-top: 6px; padding: 5px 6px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff; border: none; border-radius: 6px;
+      font-size: 0.7rem; cursor: pointer; position: relative;
+      transition: background .15s, transform .15s;
+    }
+    .user-panel .weather-panel-toggle:hover { filter: brightness(1.05); }
+    .user-panel .weather-panel-toggle.has-alerts {
+      background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+    }
 
     /* ----------- coordinate readout & measure result ----------- */
     .coord-box {
@@ -438,8 +443,8 @@
       .sidebar.collapsed { transform: translateX(-290px); }
       .sidebar-toggle { left: 292px; }
       .sidebar.collapsed ~ .sidebar-toggle { left: 4px; }
-      .hud-top-right { top: 8px; right: 8px; max-width: calc(100vw - 20px); }
-      .user-panel { max-width: 140px; padding: 6px 10px; }
+      .hud-top-right { top: 8px; right: 8px; max-width: min(260px, calc(100vw - 16px)); }
+      .user-panel { padding: 6px 10px; }
       .gis-search-bar {
         top: 56px;
         width: calc(100vw - 16px);
@@ -473,10 +478,6 @@
     <span class="gis-search-label">屬性查詢</span>
     <div class="gis-search-row">
       <input type="search" class="search-input" id="gisSearchInput" placeholder="🔎 搜尋抽水站 / 水位站 / 親水廊道" />
-      <button id="alertToggleBtn" class="alert-toggle-btn alert-toggle-btn--inline" onclick="toggleAlertPanel()" title="氣象警示" type="button">
-        🌦️
-        <span id="alertBadge" class="alert-badge" style="display: none;">0</span>
-      </button>
     </div>
     <div id="gisSearchResult" class="gis-search-result"></div>
   </div>
@@ -577,7 +578,7 @@
   <!-- 收合按鈕（獨立於 sidebar，因兄弟 selector 才能配合動畫） -->
   <button class="sidebar-toggle" id="sidebarToggle" title="收合 / 展開側邊欄">◀</button>
 
-  <!-- 右上角 HUD -->
+  <!-- 右上角 HUD：使用者 + 天氣 -->
   <div class="hud-top-right">
     <div class="user-panel user-panel-enter" id="userPanel">
       <div class="user-info">
@@ -588,6 +589,64 @@
         </div>
       </div>
       <button onclick="logout()" class="logout-btn">登出</button>
+      <button id="alertToggleBtn" class="weather-panel-toggle" onclick="toggleAlertPanel()" title="開啟／關閉天氣與氣象警示" type="button">
+        🌦️ 天氣
+        <span id="alertBadge" class="alert-badge" style="display: none;">0</span>
+      </button>
+    </div>
+    <div id="weatherAlertPanel" class="weather-alert-panel" role="dialog" aria-label="氣象警示">
+      <div class="alert-header">
+        <h3>🌦️ 氣象警示系統</h3>
+        <button type="button" onclick="toggleAlertPanel()" class="btn-close" aria-label="關閉">×</button>
+      </div>
+      <div class="weather-alert-panel__scroll" id="weatherAlertScroll">
+        <div class="weather-info">
+          <div style="text-align: center; margin-bottom: 6px;">
+            <strong id="weatherPanelTitle">大漢溪流域 · 代表測站</strong>
+          </div>
+          <div id="weatherStationLabel" style="text-align:center;font-size:0.8rem;color:#555;margin-bottom:8px;line-height:1.4;">
+            載入中…
+          </div>
+          <button type="button" id="weatherResetPinBtn" onclick="LocalWeatherDisplay.clearPin()"
+            style="display:none;width:100%;margin-bottom:8px;padding:6px 10px;font-size:0.8rem;border:1px solid #bee5eb;background:#e8f4fc;color:#0b5394;border-radius:6px;cursor:pointer;">
+            ↩ 恢復流域預設測站
+          </button>
+          <div class="weather-grid">
+            <div class="weather-item">
+              <div class="weather-value" id="currentRainfall">--</div>
+              <div class="weather-label">雨量 (mm/hr)</div>
+            </div>
+            <div class="weather-item">
+              <div class="weather-value" id="currentTemp">--</div>
+              <div class="weather-label">溫度 (°C)</div>
+            </div>
+            <div class="weather-item">
+              <div class="weather-value" id="currentHumidity">--</div>
+              <div class="weather-label">濕度 (%)</div>
+            </div>
+            <div class="weather-item">
+              <div class="weather-value" id="currentWind">--</div>
+              <div class="weather-label">風速 km/h <span id="currentWindBf" style="font-weight:normal;opacity:0.85;"></span></div>
+            </div>
+          </div>
+          <div id="weatherSourceNote" class="weather-source-note"></div>
+          <div id="weatherUpdateHint" style="text-align:center;font-size:0.72rem;color:#888;margin-top:6px;"></div>
+          <div class="risk-indicator" style="margin-top: 15px;">
+            <span class="risk-text">整體風險:</span>
+            <div class="risk-bar">
+              <div id="overallRiskFill" class="risk-fill" style="width: 0%"></div>
+            </div>
+            <span id="overallRiskText" class="risk-text">低</span>
+          </div>
+          <div id="forecastRiskDetail" style="font-size:0.72rem;color:#666;margin-top:8px;line-height:1.45;text-align:left;"></div>
+        </div>
+        <div id="alertPanel" class="alert-content-area">
+          <div class="loading-weather">
+            <div class="loading-spinner"></div>
+            正在載入氣象資料…
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -602,61 +661,6 @@
     <div class="legend-row"><span class="swatch" style="background:#27ae60"></span>親水園區</div>
     <div class="legend-row"><span class="swatch-line" style="background:#27ae60"></span>親水廊道（河濱自行車道）</div>
     <div class="legend-row"><span class="swatch-line" style="background:#0b8fe6"></span>大漢溪河道</div>
-  </div>
-
-  <div id="weatherAlertPanel" class="weather-alert-panel" role="dialog" aria-label="氣象警示">
-    <div class="alert-header">
-      <h3>🌦️ 氣象警示系統</h3>
-      <button type="button" onclick="toggleAlertPanel()" class="btn-close" aria-label="關閉">×</button>
-    </div>
-    <div class="weather-alert-panel__scroll" id="weatherAlertScroll">
-      <div class="weather-info">
-        <div style="text-align: center; margin-bottom: 6px;">
-          <strong id="weatherPanelTitle">大漢溪流域 · 代表測站</strong>
-        </div>
-        <div id="weatherStationLabel" style="text-align:center;font-size:0.8rem;color:#555;margin-bottom:8px;line-height:1.4;">
-          載入中…
-        </div>
-        <button type="button" id="weatherResetPinBtn" onclick="LocalWeatherDisplay.clearPin()"
-          style="display:none;width:100%;margin-bottom:8px;padding:6px 10px;font-size:0.8rem;border:1px solid #bee5eb;background:#e8f4fc;color:#0b5394;border-radius:6px;cursor:pointer;">
-          ↩ 恢復流域預設測站
-        </button>
-        <div class="weather-grid">
-          <div class="weather-item">
-            <div class="weather-value" id="currentRainfall">--</div>
-            <div class="weather-label">雨量 (mm/hr)</div>
-          </div>
-          <div class="weather-item">
-            <div class="weather-value" id="currentTemp">--</div>
-            <div class="weather-label">溫度 (°C)</div>
-          </div>
-          <div class="weather-item">
-            <div class="weather-value" id="currentHumidity">--</div>
-            <div class="weather-label">濕度 (%)</div>
-          </div>
-          <div class="weather-item">
-            <div class="weather-value" id="currentWind">--</div>
-            <div class="weather-label">風速 km/h <span id="currentWindBf" style="font-weight:normal;opacity:0.85;"></span></div>
-          </div>
-        </div>
-        <div id="weatherSourceNote" class="weather-source-note"></div>
-        <div id="weatherUpdateHint" style="text-align:center;font-size:0.72rem;color:#888;margin-top:6px;"></div>
-        <div class="risk-indicator" style="margin-top: 15px;">
-          <span class="risk-text">整體風險:</span>
-          <div class="risk-bar">
-            <div id="overallRiskFill" class="risk-fill" style="width: 0%"></div>
-          </div>
-          <span id="overallRiskText" class="risk-text">低</span>
-        </div>
-        <div id="forecastRiskDetail" style="font-size:0.72rem;color:#666;margin-top:8px;line-height:1.45;text-align:left;"></div>
-      </div>
-      <div id="alertPanel" class="alert-content-area">
-        <div class="loading-weather">
-          <div class="loading-spinner"></div>
-          正在載入氣象資料…
-        </div>
-      </div>
-    </div>
   </div>
 
   <script src="js/apiBase.js?v=20260604a"></script>

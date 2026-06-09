@@ -2,15 +2,16 @@
    氣象警示系統 UI 樣式
    =========================== */
 
-/* 警示面板：標題固定，內容區可捲動 */
+/* 警示面板：掛在右上角使用者區塊下方，不擋地圖中央 */
 .weather-alert-panel {
-    position: fixed;
-    top: 78px;
-    left: 50%;
+    position: relative;
+    top: auto;
+    left: auto;
     right: auto;
-    transform: translateX(-50%);
-    width: min(460px, calc(100vw - 380px));
-    max-height: calc(100vh - 90px);
+    transform: none;
+    width: 100%;
+    max-height: calc(100vh - 120px);
+    margin-top: 8px;
     background: rgba(255, 255, 255, 0.98);
     backdrop-filter: blur(10px);
     border-radius: 12px;
@@ -24,19 +25,19 @@
 
 .weather-alert-panel.show {
     display: flex;
-    animation: slideInDown 0.3s ease-out;
+    animation: weatherPanelIn 0.25s ease-out;
 }
 
-@keyframes slideInDown {
-    from { transform: translateX(-50%) translateY(-10px); opacity: 0; }
-    to { transform: translateX(-50%) translateY(0); opacity: 1; }
+@keyframes weatherPanelIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 /* 可捲動主體（氣象 + 警示列表） */
 .weather-alert-panel__scroll {
     flex: 1 1 auto;
     min-height: 0;
-    max-height: calc(100vh - 150px);
+    max-height: calc(100vh - 180px);
     overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior: contain;
@@ -378,24 +379,11 @@
 
 @media screen and (max-width: 768px) {
     .weather-alert-panel {
-        width: calc(100vw - 16px);
-        max-width: none;
-        left: 50%;
-        right: auto;
-        transform: translateX(-50%);
-        top: 108px;
-        max-height: calc(100vh - 116px);
+        max-height: calc(100vh - 100px);
     }
 
     .weather-alert-panel__scroll {
-        max-height: calc(100vh - 130px);
-    }
-
-    .alert-toggle-btn--compact,
-    .alert-toggle-btn--inline {
-        width: 38px;
-        height: 38px;
-        font-size: 17px;
+        max-height: calc(100vh - 150px);
     }
 
     .weather-grid {
