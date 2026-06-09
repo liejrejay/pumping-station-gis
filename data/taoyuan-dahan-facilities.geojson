@@ -1,0 +1,675 @@
+{
+  "type": "FeatureCollection",
+  "name": "taoyuan-dahan-facilities",
+  "description": "大漢溪流域設施（桃園水位站、親水景點、河系大漢溪抽水站）",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.28376815071928,
+          24.884893737773048
+        ]
+      },
+      "properties": {
+        "facility_type": "水位站",
+        "stationid": "1140H046",
+        "name": "大溪",
+        "river": "大漢溪",
+        "status": "已廢",
+        "address": "桃園市大溪區粟仔圓",
+        "county": "桃園市",
+        "source": "WRA opendata"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.3031374849812,
+          24.89517091487682
+        ]
+      },
+      "properties": {
+        "facility_type": "水位站",
+        "stationid": "1140H047",
+        "name": "烏塗堀",
+        "river": "大漢溪",
+        "status": "已廢",
+        "address": "桃園市大溪區月眉里",
+        "county": "桃園市",
+        "source": "WRA opendata"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.25181226509942,
+          24.81132673047768
+        ]
+      },
+      "properties": {
+        "facility_type": "水位站",
+        "stationid": "1140H005",
+        "name": "石門(1)",
+        "river": "大漢溪",
+        "status": "已廢",
+        "address": "桃園市龍潭區大坪里",
+        "county": "桃園市",
+        "source": "WRA opendata"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.24133232037093,
+          24.806005325615303
+        ]
+      },
+      "properties": {
+        "facility_type": "水位站",
+        "stationid": "1140H044",
+        "name": "石門(2)",
+        "river": "大漢溪",
+        "status": "已廢",
+        "address": "桃園市龍潭區大坪里",
+        "county": "桃園市",
+        "source": "WRA opendata"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.24933704002572,
+          24.80237174559303
+        ]
+      },
+      "properties": {
+        "facility_type": "水位站",
+        "stationid": "1140H045",
+        "name": "石門(3)",
+        "river": "大漢溪",
+        "status": "已廢",
+        "address": "桃園市龍潭區大坪里",
+        "county": "桃園市",
+        "source": "WRA opendata"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.25306032470942,
+          24.82574980142982
+        ]
+      },
+      "properties": {
+        "facility_type": "水位站",
+        "stationid": "1140H050",
+        "name": "大坪",
+        "river": "大漢溪",
+        "status": "已廢",
+        "address": "桃園市龍潭區大坪里",
+        "county": "桃園市",
+        "source": "WRA opendata"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.36911981572891,
+          24.797586205818714
+        ]
+      },
+      "properties": {
+        "facility_type": "水位站",
+        "stationid": "1140H003",
+        "name": "拉號",
+        "river": "大漢溪",
+        "status": "已廢",
+        "address": "桃園市復興區拉號",
+        "county": "桃園市",
+        "source": "WRA opendata"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.34222681275473,
+          24.804778046664662
+        ]
+      },
+      "properties": {
+        "facility_type": "水位站",
+        "stationid": "1140H004",
+        "name": "角板山",
+        "river": "大漢溪",
+        "status": "已廢",
+        "address": "桃園市復興區角板",
+        "county": "桃園市",
+        "source": "WRA opendata"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.35641136381858,
+          24.66822168053713
+        ]
+      },
+      "properties": {
+        "facility_type": "水位站",
+        "stationid": "1140H042",
+        "name": "三光",
+        "river": "大漢溪",
+        "status": "已廢",
+        "address": "桃園市復興區三光里",
+        "county": "桃園市",
+        "source": "WRA opendata"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.36432175041493,
+          24.71436594048179
+        ]
+      },
+      "properties": {
+        "facility_type": "水位站",
+        "stationid": "1140H043",
+        "name": "高義",
+        "river": "大漢溪",
+        "status": "現存",
+        "address": "桃園市復興區高義里",
+        "county": "桃園市",
+        "source": "WRA opendata"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.36234267797336,
+          24.76802477053209
+        ]
+      },
+      "properties": {
+        "facility_type": "水位站",
+        "stationid": "1140H054",
+        "name": "霞雲",
+        "river": "大漢溪",
+        "status": "現存",
+        "address": "桃園市復興區羅浮里",
+        "county": "桃園市",
+        "source": "WRA opendata"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.25302654563664,
+          24.822952366119218
+        ]
+      },
+      "properties": {
+        "facility_type": "水位站",
+        "stationid": "1140H076",
+        "name": "石門(後池)",
+        "river": "大漢溪",
+        "status": "現存",
+        "address": "桃園市龍潭區大坪里",
+        "county": "桃園市",
+        "source": "WRA opendata"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.2863125,
+          24.8876875
+        ]
+      },
+      "properties": {
+        "facility_type": "親水園區",
+        "name": "大漢溪山豬湖生態親水園區",
+        "river": "大漢溪",
+        "status": "景點",
+        "address": "桃園市大溪區",
+        "county": "桃園市",
+        "source": "親水廊道清冊"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.2941875,
+          24.9044375
+        ]
+      },
+      "properties": {
+        "facility_type": "親水園區",
+        "name": "大嵙崁親水園區",
+        "river": "大漢溪",
+        "status": "景點",
+        "address": "桃園市大溪區瑞興里",
+        "county": "桃園市",
+        "source": "親水廊道清冊"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.2891875,
+          24.8941875
+        ]
+      },
+      "properties": {
+        "facility_type": "水利設施",
+        "name": "中庄調整池",
+        "river": "大漢溪",
+        "status": "景點",
+        "address": "桃園市大溪區",
+        "county": "桃園市",
+        "source": "親水廊道清冊"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.2921875,
+          24.9104375
+        ]
+      },
+      "properties": {
+        "facility_type": "親水步道",
+        "name": "大鶯綠野景觀自行車道",
+        "river": "大漢溪",
+        "status": "景點",
+        "address": "桃園市大溪區",
+        "county": "桃園市",
+        "source": "親水廊道清冊"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4701312,
+          25.0357016
+        ]
+      },
+      "properties": {
+        "facility_type": "抽水站",
+        "name": "華江抽水站",
+        "river": "大漢溪",
+        "address": "新北市板橋區長江路2段311巷18號之1",
+        "pump_type": "豎軸式",
+        "year_ce": 1997,
+        "construction_year": 1997,
+        "county": "新北市",
+        "source": "reference table",
+        "status": "運作中"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4555218,
+          25.0284731
+        ]
+      },
+      "properties": {
+        "facility_type": "抽水站",
+        "name": "新海抽水站",
+        "river": "大漢溪",
+        "address": "新北市板橋區中正路511號",
+        "pump_type": "豎軸式",
+        "year_ce": 1997,
+        "construction_year": 1997,
+        "county": "新北市",
+        "source": "reference table",
+        "status": "運作中"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4477,
+          25.0205
+        ]
+      },
+      "properties": {
+        "facility_type": "抽水站",
+        "name": "湳仔溝抽水站",
+        "river": "大漢溪",
+        "address": "新北市板橋區環河西路5段500號",
+        "pump_type": "豎軸式",
+        "year_ce": 1995,
+        "construction_year": 1995,
+        "county": "新北市",
+        "source": "reference table",
+        "status": "運作中"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4481,
+          25.0209
+        ]
+      },
+      "properties": {
+        "facility_type": "抽水站",
+        "name": "湳仔溝二抽水站",
+        "river": "大漢溪",
+        "address": "新北市板橋區環河西路5段500號",
+        "pump_type": "豎軸式",
+        "year_ce": 2006,
+        "construction_year": 2006,
+        "county": "新北市",
+        "source": "reference table",
+        "status": "運作中"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4391,
+          24.9818
+        ]
+      },
+      "properties": {
+        "facility_type": "抽水站",
+        "name": "土城抽水站含臨時站",
+        "river": "大漢溪",
+        "address": "新北市土城區擺接堡路301號",
+        "pump_type": "豎軸式及沉水式",
+        "year_ce": 1996,
+        "construction_year": 1996,
+        "county": "新北市",
+        "source": "reference table",
+        "status": "運作中"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4284131,
+          24.9802862
+        ]
+      },
+      "properties": {
+        "facility_type": "抽水站",
+        "name": "沙崙抽水站",
+        "river": "大漢溪",
+        "address": "新北市板橋區溪城路90-2號",
+        "pump_type": "豎軸式",
+        "year_ce": 2006,
+        "construction_year": 2006,
+        "county": "新北市",
+        "source": "reference table",
+        "status": "運作中"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4350082,
+          25.0014598
+        ]
+      },
+      "properties": {
+        "facility_type": "抽水站",
+        "name": "西盛抽水站",
+        "river": "大漢溪",
+        "address": "新北市新莊區環漢路3段530號",
+        "pump_type": "豎軸式",
+        "year_ce": 1996,
+        "construction_year": 1996,
+        "county": "新北市",
+        "source": "reference table",
+        "status": "運作中"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.457,
+          25.0394
+        ]
+      },
+      "properties": {
+        "facility_type": "抽水站",
+        "name": "塔寮坑抽水站",
+        "river": "大漢溪",
+        "address": "新北市新莊區環漢路630號",
+        "pump_type": "豎軸式",
+        "year_ce": 1997,
+        "construction_year": 1997,
+        "county": "新北市",
+        "source": "reference table",
+        "status": "運作中"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4498,
+          25.0316
+        ]
+      },
+      "properties": {
+        "facility_type": "抽水站",
+        "name": "塔寮坑二抽水站",
+        "river": "大漢溪",
+        "address": "新北市新莊區環漢路2段535號",
+        "pump_type": "豎軸式",
+        "year_ce": 2016,
+        "construction_year": 2016,
+        "county": "新北市",
+        "source": "reference table",
+        "status": "運作中"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4528,
+          25.0356
+        ]
+      },
+      "properties": {
+        "facility_type": "抽水站",
+        "name": "公館溝抽水站",
+        "river": "大漢溪",
+        "address": "新北市新莊區環漢路2段385號",
+        "pump_type": "豎軸式",
+        "year_ce": 2006,
+        "construction_year": 2006,
+        "county": "新北市",
+        "source": "reference table",
+        "status": "運作中"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4573,
+          25.0405
+        ]
+      },
+      "properties": {
+        "facility_type": "抽水站",
+        "name": "新莊抽水站",
+        "river": "大漢溪",
+        "address": "新北市新莊區環漢路2段142號",
+        "pump_type": "豎軸式",
+        "year_ce": 1997,
+        "construction_year": 1997,
+        "county": "新北市",
+        "source": "reference table",
+        "status": "運作中"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4705964,
+          25.0428182
+        ]
+      },
+      "properties": {
+        "facility_type": "抽水站",
+        "name": "重新抽水站",
+        "river": "大漢溪",
+        "address": "新北市三重區中興南街82號",
+        "pump_type": "豎軸式",
+        "year_ce": 2004,
+        "construction_year": 2004,
+        "county": "新北市",
+        "source": "reference table",
+        "status": "運作中"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.5004375,
+          25.057187499999998
+        ]
+      },
+      "properties": {
+        "facility_type": "抽水站",
+        "name": "新北市政府水利局同安抽水站",
+        "river": "大漢溪",
+        "address": "新北市三重區同慶里",
+        "pump_type": null,
+        "year_ce": null,
+        "construction_year": null,
+        "county": "新北市",
+        "source": "legacy plus_code",
+        "status": "運作中"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4863125,
+          25.017812499999998
+        ]
+      },
+      "properties": {
+        "facility_type": "抽水站",
+        "name": "自來水光復抽水加壓站",
+        "river": "大漢溪",
+        "address": "新北市板橋區光復里環河西路四段55號",
+        "pump_type": null,
+        "year_ce": null,
+        "construction_year": null,
+        "county": "新北市",
+        "source": "legacy plus_code",
+        "status": "運作中"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.3436875,
+          24.929812499999997
+        ]
+      },
+      "properties": {
+        "facility_type": "抽水站",
+        "name": "鳶山堰抽水站",
+        "river": "大漢溪",
+        "address": "新北市三峽區鳶山里中山路576號",
+        "pump_type": null,
+        "year_ce": null,
+        "construction_year": null,
+        "county": "新北市",
+        "source": "legacy plus_code",
+        "status": "運作中"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.42581249999999,
+          24.979187500000002
+        ]
+      },
+      "properties": {
+        "facility_type": "抽水站",
+        "name": "浮洲加壓站",
+        "river": "大漢溪",
+        "address": "新北市樹林區彭興里水源街",
+        "pump_type": null,
+        "year_ce": null,
+        "construction_year": null,
+        "county": "新北市",
+        "source": "legacy plus_code",
+        "status": "運作中"
+      }
+    }
+  ]
+}

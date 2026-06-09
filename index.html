@@ -1,0 +1,2580 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <title>大漢溪抽水站 Web GIS</title>
+  <link rel="stylesheet" href="css/animations.css?v=20260602c" />
+  <link rel="stylesheet" href="css/responsive.css?v=20260602c" />
+  <link rel="stylesheet" href="css/weatherAlert.css?v=20260607b" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: "PingFang TC", "Noto Sans TC", system-ui, sans-serif; color: #2d3436; }
+    #map { width: 100%; height: 100vh; background: #e9eef3; }
+
+    /* =========================================================
+       Sidebar：左側統一面板（資訊 + 工具 + 圖層 + 管理）
+       ========================================================= */
+    .sidebar {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      bottom: 12px;
+      width: 304px;
+      z-index: 1000;
+      background: rgba(255, 255, 255, 0.98);
+      border-radius: 14px;
+      box-shadow: 0 8px 28px rgba(20, 50, 90, 0.18);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: transform 0.28s cubic-bezier(.45,.05,.55,.95);
+      backdrop-filter: blur(6px);
+    }
+    .sidebar.collapsed { transform: translateX(-310px); }
+
+    .sidebar-toggle {
+      position: absolute;
+      top: 60px;
+      left: 316px;
+      width: 26px;
+      height: 50px;
+      background: #1a5276;
+      color: #fff;
+      border: none;
+      border-radius: 0 8px 8px 0;
+      cursor: pointer;
+      font-size: 14px;
+      z-index: 1001;
+      box-shadow: 2px 2px 8px rgba(0,0,0,.18);
+      transition: left 0.28s cubic-bezier(.45,.05,.55,.95);
+    }
+    .sidebar.collapsed ~ .sidebar-toggle { left: 6px; }
+    .sidebar-toggle:hover { background: #154360; }
+
+    .sidebar-header {
+      padding: 14px 16px 12px;
+      background: linear-gradient(135deg, #1a5276 0%, #2471a3 60%, #2980b9 100%);
+      color: #fff;
+      flex-shrink: 0;
+    }
+    .sidebar-header h1 {
+      font-size: 1rem;
+      margin-bottom: 3px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+    }
+    .sidebar-header .subtitle {
+      font-size: 0.7rem;
+      opacity: 0.88;
+      line-height: 1.3;
+    }
+
+    .sidebar-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 4px 14px 10px;
+    }
+    .sidebar-body::-webkit-scrollbar { width: 6px; }
+    .sidebar-body::-webkit-scrollbar-thumb { background: #cdd6e0; border-radius: 3px; }
+    .sidebar-body::-webkit-scrollbar-thumb:hover { background: #8a9ba8; }
+
+    .section {
+      padding: 12px 0;
+      border-bottom: 1px dashed #e3e8ee;
+    }
+    .section:last-child { border-bottom: none; padding-bottom: 6px; }
+    .section h2 {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: #7f8c9b;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+    .stat-card {
+      background: linear-gradient(135deg, #f5f9fc 0%, #e8f0f7 100%);
+      padding: 8px 10px;
+      border-radius: 8px;
+      border-left: 3px solid #2471a3;
+    }
+    .stat-card .label { font-size: 0.68rem; color: #6c7a89; }
+    .stat-card .value { font-size: 1.15rem; font-weight: 700; color: #1a5276; margin-top: 1px; }
+    .stat-card .stat-sub { font-size: 0.65rem; color: #6c7a89; margin-top: 3px; line-height: 1.25; }
+    .stat-card.wl { border-left-color: #2980b9; }
+    .stat-card.wl .value { color: #2471a3; }
+    .stat-card.waterfront { border-left-color: #27ae60; }
+    .stat-card.waterfront .value { color: #1e8449; }
+
+    .status-row {
+      display: flex; align-items: center; gap: 8px;
+      margin-top: 8px; padding: 6px 8px; background: #f5f9fc; border-radius: 6px;
+      font-size: 0.78rem; color: #555;
+    }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #ccc; }
+
+    /* ---- search（地圖上方中央） ---- */
+    .gis-search-bar {
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1001;
+      width: min(460px, calc(100vw - 380px));
+      background: rgba(255, 255, 255, 0.98);
+      border-radius: 12px;
+      padding: 8px 12px 10px;
+      box-shadow: 0 4px 18px rgba(20, 50, 90, 0.16);
+      backdrop-filter: blur(6px);
+    }
+    .gis-search-bar .gis-search-label {
+      display: block;
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 1.1px;
+      color: #7f8c9b;
+      margin-bottom: 6px;
+      font-weight: 700;
+    }
+    .gis-search-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .gis-search-row .search-input {
+      flex: 1;
+      min-width: 0;
+    }
+    .search-input {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #d5dde6;
+      border-radius: 8px;
+      font-size: 13px;
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+      background: #fbfcfd;
+    }
+    .search-input:focus { border-color: #2471a3; box-shadow: 0 0 0 3px rgba(36,113,163,.15); background: #fff; }
+
+    .gis-search-result {
+      display: none;
+      max-height: 260px;
+      overflow-y: auto;
+      background: #fff;
+      border: 1px solid #e0e6ed;
+      border-radius: 8px;
+      font-size: 12px;
+      margin-top: 6px;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+    }
+    .gis-search-result .hit { padding: 7px 10px; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: background .12s; }
+    .gis-search-result .hit:last-child { border-bottom: none; }
+    .gis-search-result .hit:hover { background: #f5faff; }
+    .gis-search-result .hit-kind {
+      display: inline-block;
+      background: linear-gradient(135deg, #1a5276 0%, #2980b9 100%);
+      color: #fff; font-size: 10px; padding: 1px 6px;
+      border-radius: 8px; margin-right: 6px; font-weight: 600;
+    }
+
+    /* ---- tools ---- */
+    .tools-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .tool-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      padding: 8px 10px;
+      font-size: 12px;
+      background: #fff;
+      border: 1px solid #d5dde6;
+      border-radius: 8px;
+      cursor: pointer;
+      color: #2c3e50;
+      transition: all .15s;
+      font-weight: 500;
+    }
+    .tool-btn:hover { background: #f5f9fc; border-color: #2471a3; color: #1a5276; }
+    .tool-btn.active { background: linear-gradient(135deg, #1a5276 0%, #2471a3 100%); color: #fff; border-color: #1a5276; }
+    .tool-btn.active:hover { background: linear-gradient(135deg, #154360 0%, #1a5276 100%); }
+
+    .select-input {
+      width: 100%;
+      padding: 7px 10px;
+      border: 1px solid #d5dde6;
+      border-radius: 8px;
+      font-size: 13px;
+      background: #fbfcfd;
+      cursor: pointer;
+    }
+    .select-input:focus { border-color: #2471a3; outline: none; }
+
+    .layer-list { display: flex; flex-direction: column; gap: 6px; }
+    .layer-list label {
+      display: flex; align-items: center; gap: 9px;
+      padding: 6px 8px;
+      background: #f9fbfd;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: background .12s;
+    }
+    .layer-list label:hover { background: #eef4fa; }
+    .layer-list input[type="checkbox"] { accent-color: #2471a3; width: 15px; height: 15px; cursor: pointer; }
+    .layer-list .layer-swatch {
+      width: 12px; height: 12px; border-radius: 50%;
+      border: 2px solid #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.18);
+      flex-shrink: 0;
+    }
+
+    /* ---- action buttons (refresh / admin) ---- */
+    .action-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      padding: 8px 10px;
+      font-size: 12px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      color: #fff;
+      width: 100%;
+      margin-bottom: 5px;
+      font-weight: 600;
+      transition: filter .15s, transform .05s;
+    }
+    .action-btn:hover { filter: brightness(1.08); }
+    .action-btn:active { transform: translateY(1px); }
+    .action-btn.primary { background: linear-gradient(135deg, #2471a3 0%, #2980b9 100%); }
+    .action-btn.success { background: linear-gradient(135deg, #16a085 0%, #27ae60 100%); }
+    .action-btn.info    { background: linear-gradient(135deg, #17a2b8 0%, #20c4d6 100%); }
+    .action-btn.warning { background: linear-gradient(135deg, #d68910 0%, #f39c12 100%); }
+    .action-btn.neutral { background: linear-gradient(135deg, #5d6d7e 0%, #7f8c8d 100%); }
+
+    /* =========================================================
+       User panel：頂右
+       ========================================================= */
+    /* 右上角：使用者框框 + 圓形天氣按鈕（橫排，天氣在框外） */
+    .hud-top-right {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      z-index: 2001;
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .user-panel {
+      position: static;
+      background: rgba(255, 255, 255, 0.98);
+      border-radius: 12px;
+      padding: 8px 12px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+      max-width: 200px;
+      font-size: 0.75rem;
+      flex-shrink: 0;
+    }
+    .user-panel .user-info { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .user-panel .user-details { flex: 1; min-width: 0; }
+    .user-panel .logout-btn {
+      width: 100%; padding: 5px 6px; background: #e74c3c; color: #fff;
+      border: none; border-radius: 6px; font-size: 0.7rem; cursor: pointer;
+      transition: background .15s;
+    }
+    .user-panel .logout-btn:hover { background: #c0392b; }
+
+    /* ----------- coordinate readout & measure result ----------- */
+    .coord-box {
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+      z-index: 1000;
+      background: rgba(255, 255, 255, 0.92);
+      padding: 4px 10px;
+      font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+      color: #1a5276;
+      border-radius: 4px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.15);
+    }
+    .measure-readout {
+      margin-top: 8px;
+      padding: 8px 10px;
+      background: #eef5fb;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      line-height: 1.45;
+      color: #154360;
+      border-left: 3px solid #e74c3c;
+      display: none;
+    }
+    .measure-readout strong { color: #1a5276; }
+
+    /* 即時水位：放在左側欄系統概覽內，不擋地圖 */
+    .water-level-sidebar-host {
+      margin-top: 10px;
+      width: 100%;
+    }
+    .water-level-sidebar-host #waterLevelStatusPanel {
+      width: 100%;
+    }
+    .wl-station-list {
+      list-style: none;
+      margin: 6px 0 0;
+      padding: 0;
+      max-height: 200px;
+      overflow-y: auto;
+      font-size: 0.72rem;
+      border-top: 1px solid #e0e8ef;
+    }
+    .wl-station-list li {
+      display: flex;
+      justify-content: space-between;
+      gap: 6px;
+      padding: 4px 2px;
+      border-bottom: 1px solid #eef2f6;
+    }
+    .wl-station-list .wl-name { color: #444; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .wl-station-list .wl-val { font-weight: 600; color: #0b5394; white-space: nowrap; }
+    .wl-station-list .wl-na { color: #aaa; font-weight: normal; }
+    .water-status-panel {
+      width: 100%;
+      box-sizing: border-box;
+      background: #f5f9fc;
+      border: 1px solid #d6e4f0;
+      border-radius: 8px;
+      padding: 8px 10px;
+      margin-top: 4px;
+    }
+    .water-status-panel .status-header {
+      font-weight: 600;
+      font-size: 0.8rem;
+      color: #1a5276;
+      margin-bottom: 6px;
+    }
+    .water-status-panel .status-indicator {
+      padding: 5px 8px;
+      border-radius: 4px;
+      font-size: 0.78rem;
+      margin-bottom: 4px;
+    }
+    .water-status-panel .status-indicator.success { background: #d4edda; color: #155724; }
+    .water-status-panel .status-indicator.error { background: #f8d7da; color: #721c24; }
+    .water-status-panel .status-indicator.pending { background: #fff3cd; color: #856404; }
+    .water-status-panel .status-info { font-size: 0.68rem; color: #666; text-align: center; margin-top: 4px; }
+    .water-status-panel .status-hint { font-size: 0.65rem; color: #888; text-align: center; margin-top: 6px; }
+
+    /* 右下角：僅圖例 */
+    .legend {
+      position: absolute;
+      right: 12px;
+      bottom: 12px;
+      z-index: 1000;
+      background: rgba(255, 255, 255, 0.96);
+      border-radius: 8px;
+      padding: 10px 12px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+      font-size: 12px;
+      min-width: 150px;
+      max-width: min(220px, calc(100vw - 340px));
+      box-sizing: border-box;
+    }
+    .legend .legend-title {
+      font-weight: 600;
+      color: #1a5276;
+      margin-bottom: 6px;
+      padding-bottom: 5px;
+      border-bottom: 1px solid #e5e5e5;
+    }
+    .legend .legend-row {
+      display: flex; align-items: center; gap: 8px; margin: 4px 0; color: #333;
+    }
+    .legend .swatch {
+      width: 14px; height: 14px; border-radius: 50%;
+      border: 2px solid #fff;
+      box-shadow: 0 0 0 1px rgba(0,0,0,.15);
+      flex-shrink: 0;
+    }
+    .legend .swatch-line {
+      width: 18px; height: 4px; border-radius: 2px; flex-shrink: 0;
+    }
+    .legend .swatch-poly {
+      width: 14px; height: 12px;
+      border: 1.5px solid var(--c);
+      background: var(--c);
+      background-clip: padding-box;
+      opacity: 1;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .legend .swatch-poly::before {
+      content: ""; position: absolute; inset: 0; background: var(--c); opacity: 0.15;
+    }
+    .gm-style .gm-style-iw-c { padding: 8px 10px !important; }
+    .gm-style .gm-style-iw-d { overflow: auto !important; }
+
+    @media screen and (max-width: 767px) {
+      body { overflow: auto !important; -webkit-overflow-scrolling: touch !important; }
+      .sidebar { width: 280px; top: 8px; bottom: 8px; left: 8px; }
+      .sidebar.collapsed { transform: translateX(-290px); }
+      .sidebar-toggle { left: 292px; }
+      .sidebar.collapsed ~ .sidebar-toggle { left: 4px; }
+      .hud-top-right { top: 8px; right: 8px; gap: 6px; }
+      .user-panel { max-width: 140px; padding: 6px 10px; }
+      .gis-search-bar {
+        top: 56px;
+        width: calc(100vw - 16px);
+        max-width: none;
+        padding: 8px 10px;
+      }
+      .legend { right: 8px; bottom: 8px; font-size: 11px; min-width: 130px; max-width: calc(100vw - 24px); }
+    }
+  </style>
+</head>
+<body>
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-logo">
+      <span style="font-size: 3rem; color: #1e3c72;">🌊</span>
+    </div>
+    <div class="loading-text">雙北大漢溪抽水站系統</div>
+    <div class="loading-subtitle">正在載入智慧水利管理平台...</div>
+    <div class="loading-spinner"></div>
+    <div class="loading-features">
+      <div class="loading-feature">🏢 即時監控</div>
+      <div class="loading-feature">📊 數據分析</div>
+      <div class="loading-feature">🔧 智慧管理</div>
+      <div class="loading-feature">🌐 政府開放資料</div>
+    </div>
+  </div>
+
+  <div id="map"></div>
+
+  <!-- 屬性查詢（地圖上方中央） -->
+  <div class="gis-search-bar" id="gisSearchBar">
+    <span class="gis-search-label">屬性查詢</span>
+    <div class="gis-search-row">
+      <input type="search" class="search-input" id="gisSearchInput" placeholder="🔎 搜尋抽水站 / 水位站 / 親水廊道" />
+    </div>
+    <div id="gisSearchResult" class="gis-search-result"></div>
+  </div>
+
+  <!-- ============================================================
+       Sidebar：左側統一面板
+       ============================================================ -->
+  <aside class="sidebar panel-enter" id="sidebar" style="display:none;">
+    <div class="sidebar-header">
+      <h1>🌊 大漢溪抽水站 Web GIS</h1>
+      <div class="subtitle">雙北流域 · 政府開放資料 · Google Maps Platform</div>
+    </div>
+
+    <div class="sidebar-body">
+      <!-- 概覽統計 -->
+      <section class="section">
+        <h2>系統概覽</h2>
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="label">🏢 抽水站</div>
+            <div class="value" id="countPumping">—</div>
+            <div class="stat-sub" id="countPumpingDetail">大漢溪 —（桃園 — · 新北等 —）· 其他 —</div>
+          </div>
+          <div class="stat-card wl">
+            <div class="label">💧 水位站</div>
+            <div class="value" id="countWl">—</div>
+            <div class="stat-sub" id="countWlDetail">現存 — · 已廢 —</div>
+          </div>
+          <div class="stat-card waterfront" style="grid-column: 1 / -1;">
+            <div class="label">🌿 親水廊道</div>
+            <div class="value" id="countWaterfront">—</div>
+            <div class="stat-sub" id="countWaterfrontDetail">園區 — · 河濱道 — 段</div>
+          </div>
+        </div>
+        <div class="status-row">
+          <div class="status-dot" id="refreshIndicator"></div>
+          <span id="updateStatus">準備中...</span>
+        </div>
+        <button class="action-btn primary" id="manualRefresh" onclick="manualRefresh()" style="margin-top:8px;">🔄 立即更新</button>
+        <div id="waterLevelPanelHost" class="water-level-sidebar-host">
+          <div id="waterLevelStatusPanel" class="water-status-panel">
+            <div class="status-header"><span>💧 即時水位（大漢溪 8 站）</span></div>
+            <div id="waterLevelStatus" class="status-indicator">準備中…</div>
+            <ul id="waterLevelStationList" class="wl-station-list" aria-label="即時水位站列表"></ul>
+            <div class="status-info"><small>最後更新: <span id="lastWaterUpdate">--</span></small></div>
+            <div class="status-hint">資料來源：水利署 WRA · 版次 20260602c</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 地圖工具 -->
+      <section class="section">
+        <h2>地圖工具 (Tools)</h2>
+        <div class="tools-grid">
+          <button class="tool-btn" id="btnLocate"     title="顯示我的位置">📍 我的位置</button>
+          <button class="tool-btn" id="btnMeasure"    title="距離量測：點擊地圖加點，再按量測結束">📏 量測</button>
+          <button class="tool-btn" id="btnFullscreen" title="全螢幕">⛶ 全螢幕</button>
+          <button class="tool-btn" id="btnPrint"      title="列印 / 匯出 PDF">🖨️ 列印</button>
+        </div>
+        <div class="measure-readout" id="measureReadout"></div>
+      </section>
+
+      <!-- 底圖 -->
+      <section class="section">
+        <h2>底圖 (Basemap)</h2>
+        <select id="basemapSelect" class="select-input">
+          <option value="roadmap">🗺️ Google 街道圖</option>
+          <option value="satellite">🛰️ Google 衛星圖</option>
+          <option value="hybrid">🌐 Google 混合圖</option>
+          <option value="terrain">⛰️ Google 地形圖</option>
+          <option value="osm">📐 OpenStreetMap</option>
+        </select>
+      </section>
+
+      <!-- 業務圖層 -->
+      <section class="section">
+        <h2>業務圖層 (Operational Layers)</h2>
+        <div class="layer-list">
+          <label><input type="checkbox" id="layerPumping"    checked> <span class="layer-swatch" style="background:#e74c3c"></span> 🏢 抽水站</label>
+          <label><input type="checkbox" id="layerWlActive"   checked> <span class="layer-swatch" style="background:#2980b9"></span> 💧 水位站（現存）</label>
+          <label><input type="checkbox" id="layerWlInactive">        <span class="layer-swatch" style="background:#95a5a6"></span> 💧 水位站（已廢）</label>
+          <label><input type="checkbox" id="layerRiver"      checked> <span class="layer-swatch" style="background:#0b8fe6"></span> 🌊 大漢溪河道</label>
+          <label><input type="checkbox" id="layerWaterfront">         <span class="layer-swatch" style="background:#27ae60"></span> 🌿 親水廊道</label>
+        </div>
+      </section>
+
+      <!-- 管理員區（依權限顯示） -->
+      <section class="section" id="adminControls" style="display:none;">
+        <h2>⚙️ 管理員功能</h2>
+        <button class="action-btn success" onclick="exportData()">📥 匯出抽水站資料</button>
+        <button class="action-btn info"    onclick="exportUsers()">👥 匯出用戶資料</button>
+        <button class="action-btn neutral" onclick="showUserStats()">📊 用戶統計</button>
+        <button class="action-btn warning" onclick="openAdminPanel()">⚙️ 開啟管理面板</button>
+      </section>
+    </div>
+  </aside>
+
+  <!-- 收合按鈕（獨立於 sidebar，因兄弟 selector 才能配合動畫） -->
+  <button class="sidebar-toggle" id="sidebarToggle" title="收合 / 展開側邊欄">◀</button>
+
+  <!-- 右上角 HUD：使用者框框 + 圓形天氣按鈕（框外） -->
+  <div class="hud-top-right">
+    <div class="user-panel user-panel-enter" id="userPanel">
+      <div class="user-info">
+        <span style="font-size: 1rem;">👤</span>
+        <div class="user-details">
+          <div id="userName" style="font-weight: 600; color: #1a5276; font-size: 0.8rem; line-height: 1.2;">載入中...</div>
+          <div id="userRole" style="color: #666; font-size: 0.65rem; line-height: 1.1;">載入中...</div>
+        </div>
+      </div>
+      <button onclick="logout()" class="logout-btn">登出</button>
+    </div>
+    <button id="alertToggleBtn" class="alert-toggle-btn alert-toggle-btn--compact" onclick="toggleAlertPanel()" title="開啟／關閉天氣與氣象警示" type="button">
+      🌦️
+      <span id="alertBadge" class="alert-badge" style="display: none;">0</span>
+    </button>
+  </div>
+
+  <!-- 天氣面板：右側滑出，不擋地圖中央 -->
+  <div id="weatherAlertPanel" class="weather-alert-panel" role="dialog" aria-label="氣象警示">
+    <div class="alert-header">
+      <h3>🌦️ 氣象警示系統</h3>
+      <button type="button" onclick="toggleAlertPanel()" class="btn-close" aria-label="關閉">×</button>
+    </div>
+    <div class="weather-alert-panel__scroll" id="weatherAlertScroll">
+      <div class="weather-info">
+        <div style="text-align: center; margin-bottom: 6px;">
+          <strong id="weatherPanelTitle">大漢溪流域 · 代表測站</strong>
+        </div>
+        <div id="weatherStationLabel" style="text-align:center;font-size:0.8rem;color:rgba(255,255,255,0.92);margin-bottom:8px;line-height:1.4;">
+          載入中…
+        </div>
+        <button type="button" id="weatherResetPinBtn" onclick="LocalWeatherDisplay.clearPin()"
+          style="display:none;width:100%;margin-bottom:8px;padding:6px 10px;font-size:0.8rem;border:1px solid #bee5eb;background:#e8f4fc;color:#0b5394;border-radius:6px;cursor:pointer;">
+          ↩ 恢復流域預設測站
+        </button>
+        <div class="weather-grid">
+          <div class="weather-item">
+            <div class="weather-value" id="currentRainfall">--</div>
+            <div class="weather-label">雨量 (mm/hr)</div>
+          </div>
+          <div class="weather-item">
+            <div class="weather-value" id="currentTemp">--</div>
+            <div class="weather-label">溫度 (°C)</div>
+          </div>
+          <div class="weather-item">
+            <div class="weather-value" id="currentHumidity">--</div>
+            <div class="weather-label">濕度 (%)</div>
+          </div>
+          <div class="weather-item">
+            <div class="weather-value" id="currentWind">--</div>
+            <div class="weather-label">風速 km/h <span id="currentWindBf" style="font-weight:normal;opacity:0.85;"></span></div>
+          </div>
+        </div>
+        <div id="weatherSourceNote" class="weather-source-note"></div>
+        <div id="weatherUpdateHint" style="text-align:center;font-size:0.72rem;color:rgba(255,255,255,0.85);margin-top:6px;"></div>
+        <div class="risk-indicator" style="margin-top: 15px;">
+          <span class="risk-text">整體風險:</span>
+          <div class="risk-bar">
+            <div id="overallRiskFill" class="risk-fill" style="width: 0%"></div>
+          </div>
+          <span id="overallRiskText" class="risk-text">低</span>
+        </div>
+        <div id="forecastRiskDetail" style="font-size:0.72rem;color:rgba(255,255,255,0.9);margin-top:8px;line-height:1.45;text-align:left;"></div>
+      </div>
+      <div id="alertPanel" class="alert-content-area">
+        <div class="loading-weather">
+          <div class="loading-spinner"></div>
+          正在載入氣象資料…
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="coord-box" id="coordBox">緯度 — / 經度 —</div>
+
+  <!-- 圖例（右下角，不與即時水位重疊） -->
+  <div class="legend" id="legend">
+    <div class="legend-title">圖例</div>
+    <div class="legend-row"><span class="swatch" style="background:#e74c3c"></span>抽水站</div>
+    <div class="legend-row"><span class="swatch" style="background:#2980b9"></span>水位站（現存）</div>
+    <div class="legend-row"><span class="swatch" style="background:#95a5a6"></span>水位站（已廢）</div>
+    <div class="legend-row"><span class="swatch" style="background:#27ae60"></span>親水園區</div>
+    <div class="legend-row"><span class="swatch-line" style="background:#27ae60"></span>親水廊道（河濱自行車道）</div>
+    <div class="legend-row"><span class="swatch-line" style="background:#0b8fe6"></span>大漢溪河道</div>
+  </div>
+
+  <script src="js/apiBase.js?v=20260604a"></script>
+  <script src="js/api-endpoint.js?v=20260604a"></script>
+  <script src="js/userRoles.js?v=20260607a"></script>
+  <script src="js/userManager.js?v=20260607a"></script>
+  <script src="js/mobileOptimization.js?v=20260602c"></script>
+  <script src="js/weatherApiConfig.js?v=20260602c"></script>
+  <script src="js/realtimeRainfall.js?v=20260602c"></script>
+  <script src="js/realtimeTemperature.js?v=20260602c"></script>
+  <script src="js/realtimeWaterLevel.js?v=20260602c"></script>
+  <script src="js/localWeatherDisplay.js?v=20260602c"></script>
+  <script src="js/townshipForecast.js?v=20260602c"></script>
+  <script src="js/weatherAlert.js?v=20260530g"></script>
+
+  <script>
+    // ============================================================
+    // Google Maps Web GIS：四大組成
+    //   1. Digital basemaps：Google roadmap/satellite/hybrid/terrain + OSM
+    //   2. Operational layers：抽水站 / 水位站 / 大漢溪河道 / 親水廊道
+    //   3. Tasks & tools：搜尋、量測、定位、座標、列印、全螢幕、圖層切換
+    //   4. Geodatabase：data/*.geojson（pumping/water-level/river；districts 保留檔案備用）
+    // ============================================================
+
+    // ---------- 全域狀態 ----------
+    let map, infoWindow, currentUser = null;
+    const pumpingMarkers = [];        // 抽水站 markers
+    const wlActiveMarkers = [];       // 水位站（現存）
+    const wlInactiveMarkers = [];     // 水位站（已廢，預設關閉）
+    const waterfrontMarkers = [];     // 親水園區（點）
+    const waterfrontPolylines = [];   // 親水廊道（線，沿大漢溪河濱自行車道）
+    let riverPolylines = [];       // 大漢溪河道（多條 LineString）
+    let realtimeWaterLevels = {};  // { stationid: { waterlevel, datetime } }
+    let lastUpdateTime = null;
+    let updateInterval = null;
+
+    /** Bump when pumping-stations.geojson changes (cache-bust for mobile/CDN). */
+    const PUMPING_STATIONS_DATA_VERSION = "4ca6e4b";
+
+    /** Prefer reference-table row when legacy plus_code duplicates the same station name. */
+    function dedupePumpingFeatures(features) {
+      const sourceRank = (props) => {
+        const s = props?.source || "";
+        if (s === "reference table") return 0;
+        if (s === "NTPC open data") return 1;
+        if (s === "legacy plus_code") return 9;
+        return 5;
+      };
+      const byName = new Map();
+      const unnamed = [];
+      for (const f of features) {
+        const name = (f.properties?.name || "").trim();
+        if (!name) {
+          unnamed.push(f);
+          continue;
+        }
+        const prev = byName.get(name);
+        if (!prev || sourceRank(f.properties) < sourceRank(prev.properties)) {
+          byName.set(name, f);
+        }
+      }
+      return [...byName.values(), ...unnamed];
+    }
+
+    // 親水廊道（沿大漢溪流域 5 處親水園區 / 步道）
+    const WATERFRONT_FEATURES = [
+      { name: "大漢溪山豬湖生態親水園區", lat: 24.8876875, lng: 121.2863125, plus_code: "8QW3W833+GC", address: "桃園市大溪區" },
+      { name: "大嵙崁親水園區",          lat: 24.9044375, lng: 121.2941875, plus_code: "8QW3W8F8+VV", address: "桃園市大溪區瑞興里" },
+      { name: "中庄調整池",              lat: 24.8941875, lng: 121.2891875, plus_code: "8QW3W874+H6", address: "桃園市大溪區" },
+      { name: "中港大排親水步道",        lat: 25.0454375, lng: 121.4508125, plus_code: "8QW32FX3+86", address: "新北市新莊區自信里" },
+      { name: "大鶯綠野景觀自行車道",    lat: 24.9104375, lng: 121.2921875, plus_code: "8QW3W8HC+3X", address: "桃園市大溪區" },
+      { name: "二重疏洪親水公園",        lat: 25.067, lng: 121.47, plus_code: "", address: "新北市二重（河濱）", note: "河濱親水公園／YouBike" },
+    ];
+
+    const TAIWAN_BOUNDS = { north: 25.5, south: 21.5, east: 122.5, west: 119.5 };
+    const DAHAN_RIVER_CENTER = { lat: 24.99, lng: 121.40 };
+
+    // ---------- 水利署即時水位設定 ----------
+    const WATER_LEVEL_STATIONS = [
+      { stationid: "1140H001", name: "玉峰(馬利哥灣)", lat: 24.656435, lng: 121.298120, address: "新竹縣尖石鄉玉峰村" },
+      { stationid: "1140H043", name: "高義",          lat: 24.714366, lng: 121.364322, address: "桃園市復興區高義里" },
+      { stationid: "1140H054", name: "霞雲",          lat: 24.768025, lng: 121.362343, address: "桃園市復興區羅浮里" },
+      { stationid: "1140H076", name: "石門(後池)",     lat: 24.822952, lng: 121.253027, address: "桃園市龍潭區大坪里" },
+      { stationid: "1140H105", name: "城林橋",        lat: 24.979353, lng: 121.430520, address: "新北市土城區城林橋" },
+      { stationid: "1140H067", name: "三鶯橋",        lat: 24.944756, lng: 121.353383, address: "新北市鶯歌區南靖里" },
+      { stationid: "1140H111", name: "新海大橋(即時)",  lat: 25.033318, lng: 121.454806, address: "新北市板橋區環河路" },
+      { stationid: "1140H118", name: "柑園橋(即時)",   lat: 24.985300, lng: 121.381900, address: "新北市樹林區佳園路二段" },
+    ];
+    // 即時水位：WRA OpenData（與 lib/wraWaterLevel.js 一致）
+    const WL_REALTIME_API =
+      "https://opendata.wra.gov.tw/api/v2/73c4c3de-4045-4765-abeb-89f9f9cd5ff0?page=1&size=1000";
+    const WL_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
+    window.WATER_LEVEL_STATIONS = WATER_LEVEL_STATIONS;
+    window.WL_REALTIME_API = WL_REALTIME_API;
+
+    const APP_ASSET_V = "20260602c";
+
+    /** 僅本機 npm start 有 Express API；GitHub Pages 勿打 /api/* */
+    function isLocalDevServer() {
+      const h = location.hostname;
+      return h === "localhost" || h === "127.0.0.1";
+    }
+
+    function isGitHubPages() {
+      return /\.github\.io$/i.test(location.hostname);
+    }
+
+    function assetUrl(rel) {
+      return new URL(rel, window.location.href).href;
+    }
+
+    function formatWlDatetime(dt) {
+      if (!dt) return "";
+      return String(dt).replace("T", " ").slice(0, 16);
+    }
+
+    function waterLevelMarkerLabel(waterlevel) {
+      const v = parseFloat(waterlevel);
+      if (Number.isNaN(v)) return null;
+      return {
+        text: v.toFixed(1) + "m",
+        color: "#083d6b",
+        fontSize: "11px",
+        fontWeight: "700",
+      };
+    }
+
+    function renderWaterLevelSidebar(data, source) {
+      const list = document.getElementById("waterLevelStationList");
+      const status = document.getElementById("waterLevelStatus");
+      const lastEl = document.getElementById("lastWaterUpdate");
+      const n = Object.keys(data || {}).length;
+      if (list) {
+        list.innerHTML = WATER_LEVEL_STATIONS.map((s) => {
+          const rt = data[s.stationid];
+          const val =
+            rt && rt.waterlevel !== "" && rt.waterlevel != null
+              ? `<span class="wl-val">${parseFloat(rt.waterlevel).toFixed(2)} m</span>`
+              : '<span class="wl-na">—</span>';
+          return `<li><span class="wl-name" title="${s.name}">${s.name}</span>${val}</li>`;
+        }).join("");
+      }
+      if (status) {
+        if (n > 0) {
+          const snap = source === "WRA_SNAPSHOT" ? "（快照）" : source ? "（即時）" : "";
+          status.className = "status-indicator success";
+          status.textContent = `已更新 ${n}/${WATER_LEVEL_STATIONS.length} 站${snap}`;
+        } else {
+          status.className = "status-indicator error";
+          status.textContent = "尚無即時資料";
+        }
+      }
+      if (lastEl) lastEl.textContent = new Date().toLocaleString("zh-TW");
+    }
+    window.renderWaterLevelSidebar = renderWaterLevelSidebar;
+    window.assetUrl = assetUrl;
+    window.updateAlertToggleBadge = updateAlertToggleBadge;
+
+    // ============================================================
+    // Google Maps 主初始化（由 API <script callback=initMap> 觸發）
+    // ============================================================
+
+    function initMapOriginal() {
+      console.log("=== initMapOriginal 開始執行 ===");
+      console.log("checkAuth 狀態:", checkAuth());
+      
+      if (!checkAuth()) {
+        console.log("❌ 使用者未通過驗證，停止地圖初始化");
+        return;
+      }
+
+      try {
+        console.log("檢查 Google Maps API 可用性...");
+        console.log("typeof google:", typeof google);
+        console.log("google.maps:", typeof google?.maps);
+        
+        if (typeof google === 'undefined' || !google.maps) {
+          throw new Error("Google Maps API 未載入");
+        }
+        
+        console.log("[GMaps] ✅ Google Maps API 可用，開始初始化地圖");
+        console.log("[GMaps] 地圖容器 ID: map");
+        
+        const mapElement = document.getElementById("map");
+        console.log("[GMaps] 地圖容器元素:", mapElement);
+        console.log("[GMaps] 容器尺寸:", mapElement?.offsetWidth, "x", mapElement?.offsetHeight);
+        map = new google.maps.Map(document.getElementById("map"), {
+        center: DAHAN_RIVER_CENTER,
+        zoom: 12,
+        minZoom: 7,
+        maxZoom: 20,
+        mapTypeId: "roadmap",
+        mapTypeControl: false,        // 用我們自己的 select
+        fullscreenControl: false,     // 用我們自己的 button
+        streetViewControl: true,
+        scaleControl: true,           // 比例尺（GIS 工具）
+        clickableIcons: false,
+        restriction: { latLngBounds: TAIWAN_BOUNDS, strictBounds: false },
+        styles: [{ featureType: "poi.business", stylers: [{ visibility: "off" }] }],
+      });
+
+      infoWindow = new google.maps.InfoWindow({ maxWidth: 320 });
+
+      registerOsmBasemap();
+      attachCoordTracker();
+      attachToolbar();
+      document.getElementById("sidebar").style.display = "flex";
+      attachSidebarToggle();
+
+      (async () => {
+        try {
+          await loadAllLayers();
+          await loadRealtimeWaterLevels();
+        } catch (e) {
+          console.error("[init] 圖層或水位載入失敗:", e);
+        }
+        setInterval(loadRealtimeWaterLevels, WL_REFRESH_INTERVAL_MS);
+      })();
+
+      startAutoUpdate();
+
+      setTimeout(hideLoadingOverlay, 350);
+      } catch (error) {
+        console.error("[initMap] Google Maps 初始化失敗:", error);
+        const el = document.getElementById("updateStatus");
+        if (el) el.textContent = "地圖初始化失敗，正在重新載入...";
+        setTimeout(() => window.location.reload(), 2000);
+      }
+    }
+
+    // initMap 將在載入 Google Maps 時動態定義
+
+    // ============================================================
+    // 1. Digital basemaps：註冊 OSM 為自訂底圖
+    // ============================================================
+    function registerOsmBasemap() {
+      const osmType = new google.maps.ImageMapType({
+        name: "OpenStreetMap",
+        getTileUrl: (coord, zoom) => {
+          const n = 1 << zoom;
+          const x = ((coord.x % n) + n) % n;
+          if (zoom < 0 || zoom > 19) return null;
+          const s = ["a", "b", "c"][Math.floor(Math.random() * 3)];
+          return `https://${s}.tile.openstreetmap.org/${zoom}/${x}/${coord.y}.png`;
+        },
+        tileSize: new google.maps.Size(256, 256),
+        maxZoom: 19,
+        minZoom: 0,
+      });
+      map.mapTypes.set("osm", osmType);
+    }
+
+    // ============================================================
+    // 2. Operational layers：4 個來源全部載入
+    // ============================================================
+    async function loadAllLayers(silentStatus = false) {
+      if (!silentStatus) updateStatus("載入抽水站…", false, false);
+      try {
+        await Promise.all([
+          loadPumpingStations(),
+          loadWaterLevelStations(),
+          loadRiver(),
+        ]);
+        await loadWaterfront();
+        if (!silentStatus) updateStatus("資料載入完成", false, true);
+      } catch (e) {
+        console.error(e);
+        if (!silentStatus) updateStatus("資料載入失敗: " + e.message, true, false);
+        throw e;
+      }
+      lastUpdateTime = Date.now();
+      if (Object.keys(realtimeWaterLevels).length) {
+        applyWaterLevelsToMap(realtimeWaterLevels);
+      }
+    }
+
+    function applyWaterLevelsToMap(data) {
+      if (typeof window.updateWaterLevelMarkers === "function") {
+        window.updateWaterLevelMarkers(data);
+      }
+      renderWaterLevelSidebar(data, window.__wlLastSource || "");
+    }
+
+    async function loadWaterfront() {
+      clearMarkers(waterfrontMarkers);
+      clearOverlays(waterfrontPolylines);
+      const show = document.getElementById("layerWaterfront")?.checked;
+
+      WATERFRONT_FEATURES.forEach((f) => {
+        const marker = new google.maps.Marker({
+          map: show ? map : null,
+          position: { lat: f.lat, lng: f.lng },
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 9,
+            fillColor: COLORS.waterfront,
+            fillOpacity: 0.95,
+            strokeColor: "#ffffff",
+            strokeWeight: 3,
+          },
+          title: f.name,
+          zIndex: 40,
+        });
+        marker._feature = { properties: f, geometry: { coordinates: [f.lng, f.lat] } };
+        marker._kind = "waterfront";
+        marker.addListener("click", () => {
+          const snap = LocalWeatherDisplay.showWeatherForPoint(f.lat, f.lng, f.name);
+          const plus = f.plus_code ? `<div style="margin-bottom:6px;"><strong>Plus Code:</strong> <code>${f.plus_code}</code></div>` : "";
+          const note = f.note ? `<div style="margin-bottom:6px;">${f.note}</div>` : "";
+          infoWindow.setContent(`
+            <div style="min-width:240px;">
+              <h3 style="margin:0 0 8px 0;color:#1e8449;font-size:1.05rem;">🌿 ${f.name}</h3>
+              <div style="margin-bottom:6px;"><strong>地址:</strong> ${f.address}</div>
+              ${plus}${note}
+              ${LocalWeatherDisplay.buildPopupWeatherHtml(snap)}
+              <hr style="margin:8px 0;border:none;border-top:1px solid #eee;">
+              <div style="font-size:0.78rem;color:#666;">
+                <div>座標: ${f.lat.toFixed(5)}, ${f.lng.toFixed(5)}</div>
+                <div>類型: 親水園區／水利景點</div>
+              </div>
+            </div>
+          `);
+          infoWindow.open({ map, anchor: marker });
+        });
+        waterfrontMarkers.push(marker);
+      });
+
+      let pathCount = 0;
+      try {
+        const res = await fetch("data/dahan-waterfront-paths.geojson", { cache: "no-store" });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const gj = await res.json();
+        (gj.features || []).forEach((feat) => {
+          const coords = (feat.geometry.coordinates || []).map(([lng, lat]) => ({ lat, lng }));
+          if (coords.length < 2) return;
+          const p = feat.properties || {};
+          const pl = new google.maps.Polyline({
+            map: show ? map : null,
+            path: coords,
+            strokeColor: COLORS.waterfront,
+            strokeOpacity: 0.92,
+            strokeWeight: 5,
+            clickable: true,
+            zIndex: 38,
+          });
+          pl._feature = feat;
+          pl._kind = "waterfront-path";
+          pl.addListener("click", (ev) => {
+            const lenKm = p.length_m ? `${(p.length_m / 1000).toFixed(1)} 公里` : "—";
+            infoWindow.setContent(`
+              <div style="min-width:240px;">
+                <h3 style="margin:0 0 8px 0;color:#1e8449;font-size:1.05rem;">🌿 ${p.name || "大漢溪親水廊道"}</h3>
+                <div style="margin-bottom:4px;"><strong>河川:</strong> ${p.river || "大漢溪"}</div>
+                <div style="margin-bottom:4px;"><strong>路段長度:</strong> ${lenKm}</div>
+                <div style="font-size:0.78rem;color:#666;margin-top:6px;">
+                  ${p.category || "親水廊道"}<br>
+                  ${p.source || ""}
+                </div>
+              </div>
+            `);
+            infoWindow.setPosition(ev.latLng);
+            infoWindow.open(map);
+          });
+          waterfrontPolylines.push(pl);
+          pathCount += 1;
+        });
+      } catch (e) {
+        console.warn("[親水廊道] 線段 GeoJSON 載入失敗:", e.message);
+      }
+
+      let pathKm = 0;
+      waterfrontPolylines.forEach((pl) => {
+        const lm = pl._feature?.properties?.length_m;
+        if (lm) pathKm += lm;
+      });
+      const parks = WATERFRONT_FEATURES.length;
+      document.getElementById("countWaterfront").textContent = `${parks} 園區 · ${pathCount} 段`;
+      document.getElementById("countWaterfrontDetail").textContent =
+        pathKm > 0 ? `河濱自行車道約 ${(pathKm / 1000).toFixed(1)} 公里` : "河濱道線段";
+
+      console.log(`[親水廊道] 園區 ${parks} 處、河濱道線段 ${pathCount} 段`);
+    }
+
+    async function loadPumpingStations() {
+      const res = await fetch(
+        `data/pumping-stations.geojson?v=${PUMPING_STATIONS_DATA_VERSION}`,
+        { cache: "no-store" }
+      );
+      if (!res.ok) throw new Error("pumping-stations.geojson HTTP " + res.status);
+      const gj = await res.json();
+      const feats = dedupePumpingFeatures(gj.features || []).map((f, i) => {
+        const p = f.properties || {};
+        if (p.id == null) p.id = i + 1;
+        if (!p.construction_year && p.year_ce) p.construction_year = p.year_ce;
+        p.nearest_wl = findNearestWaterStation(f.geometry.coordinates[1], f.geometry.coordinates[0]);
+        return f;
+      });
+      const isDahanRiver = (f) => ((f.properties?.river || "").trim().includes("大漢"));
+      const isTaoyuanSite = (f) =>
+        (f.properties?.address || "").includes("桃園") ||
+        (f.properties?.county || "") === "桃園市";
+      const dahanCount = feats.filter(isDahanRiver).length;
+      const taoyuanCount = feats.filter((f) => isDahanRiver(f) && isTaoyuanSite(f)).length;
+      const otherCount = feats.length - dahanCount;
+      clearMarkers(pumpingMarkers);
+      const bounds = new google.maps.LatLngBounds();
+      feats.forEach((feat) => {
+        const [lng, lat] = feat.geometry.coordinates;
+        const marker = new google.maps.Marker({
+          map,
+          position: { lat, lng },
+          icon: pumpingStationIcon(),
+          title: feat.properties.name,
+        });
+        marker._feature = feat;
+        marker._kind = "pumping";
+        marker.addListener("click", () => {
+          const snap = LocalWeatherDisplay.showWeatherForPoint(
+            lat,
+            lng,
+            feat.properties?.name || "抽水站"
+          );
+          infoWindow.setContent(buildStationPopupHtml(feat, snap));
+          infoWindow.open({ map, anchor: marker });
+        });
+        pumpingMarkers.push(marker);
+        bounds.extend({ lat, lng });
+      });
+      if (feats.length) map.fitBounds(bounds);
+      document.getElementById("countPumping").textContent = feats.length;
+      const detailEl = document.getElementById("countPumpingDetail");
+      if (detailEl) {
+        const dahanOther = dahanCount - taoyuanCount;
+        detailEl.textContent = `大漢溪 ${dahanCount}（桃園 ${taoyuanCount} · 新北等 ${dahanOther}）· 其他 ${otherCount}`;
+      }
+    }
+
+    async function loadWaterLevelStations() {
+      const res = await fetch("data/water-level-stations.geojson", { cache: "no-store" });
+      if (!res.ok) throw new Error("water-level-stations.geojson HTTP " + res.status);
+      const gj = await res.json();
+      
+      if (window.rainfallSystem) {
+        rainfallSystem.startAutoUpdate();
+      }
+      if (window.temperatureSystem) {
+        temperatureSystem.startAutoUpdate();
+      }
+      clearMarkers(wlActiveMarkers);
+      clearMarkers(wlInactiveMarkers);
+      const showInactive = document.getElementById("layerWlInactive")?.checked;
+      (gj.features || []).forEach((feat) => {
+        const [lng, lat] = feat.geometry.coordinates;
+        const active = (feat.properties || {}).status === "現存";
+        const sid = feat.properties?.stationid;
+        const rt0 = sid ? realtimeWaterLevels[sid] : null;
+        const marker = new google.maps.Marker({
+          map: active || showInactive ? map : null,
+          position: { lat, lng },
+          icon: waterStationIcon(active),
+          title: feat.properties.name,
+          label: active && rt0 ? waterLevelMarkerLabel(rt0.waterlevel) : null,
+          zIndex: 50,
+        });
+        if (rt0) marker._realTimeData = rt0;
+        marker._feature = feat;
+        marker._kind = active ? "wl-active" : "wl-inactive";
+        marker.addListener("click", () => {
+          const realTimeData = marker._realTimeData || realtimeWaterLevels[sid] || null;
+          const snap = typeof LocalWeatherDisplay !== 'undefined'
+            ? LocalWeatherDisplay.showWeatherForPoint(lat, lng, feat.properties?.name || '水位站')
+            : null;
+          infoWindow.setContent(buildWaterLevelPopupHtmlWithRealtime(feat, realTimeData, snap));
+          infoWindow.open({ map, anchor: marker });
+          marker._infoWindowOpen = true;
+        });
+        
+        // 監聽 InfoWindow 關閉事件
+        google.maps.event.addListener(infoWindow, 'closeclick', () => {
+          marker._infoWindowOpen = false;
+        });
+        (active ? wlActiveMarkers : wlInactiveMarkers).push(marker);
+      });
+      const wlActive = wlActiveMarkers.length;
+      const wlInactive = wlInactiveMarkers.length;
+      document.getElementById("countWl").textContent = wlActive + wlInactive;
+      document.getElementById("countWlDetail").textContent = `現存 ${wlActive} · 已廢 ${wlInactive}`;
+    }
+
+    async function loadRiver() {
+      const res = await fetch("data/dahan-river.geojson", { cache: "no-store" });
+      if (!res.ok) throw new Error("dahan-river.geojson HTTP " + res.status);
+      const gj = await res.json();
+      clearOverlays(riverPolylines);
+      (gj.features || []).forEach((feat) => {
+        const coords = (feat.geometry.coordinates || []).map(([lng, lat]) => ({ lat, lng }));
+        if (coords.length < 2) return;
+        const pl = new google.maps.Polyline({
+          map,
+          path: coords,
+          strokeColor: COLORS.river,
+          strokeOpacity: 0.85,
+          strokeWeight: 4,
+          clickable: false,
+          zIndex: 30,
+        });
+        riverPolylines.push(pl);
+      });
+    }
+
+    // ---------- Marker 樣式 ----------
+    // 配色策略：抽水站=紅、水位站=藍（水的顏色）、廢站=灰、親水廊道=綠
+    const COLORS = {
+      pumping: "#e74c3c",         // 🔴 抽水站
+      waterActive: "#2980b9",     // 🔵 水位站（現存）
+      waterInactive: "#95a5a6",   // ⚪ 水位站（已廢）
+      waterfront: "#27ae60",      // 🟢 親水廊道
+      river: "#0b8fe6",           // 大漢溪河道線色
+    };
+
+    function pumpingStationIcon() {
+      return {
+        path: google.maps.SymbolPath.CIRCLE,
+        scale: 8,
+        fillColor: COLORS.pumping,
+        fillOpacity: 0.95,
+        strokeColor: "#ffffff",
+        strokeWeight: 2,
+      };
+    }
+    function waterStationIcon(active) {
+      return {
+        path: google.maps.SymbolPath.CIRCLE,
+        scale: 7,
+        fillColor: active ? COLORS.waterActive : COLORS.waterInactive,
+        fillOpacity: 0.95,
+        strokeColor: "#ffffff",
+        strokeWeight: 2,
+      };
+    }
+
+    function clearMarkers(arr) {
+      arr.forEach((m) => m.setMap(null));
+      arr.length = 0;
+    }
+    function clearOverlays(arr) {
+      arr.forEach((o) => o.setMap(null));
+      arr.length = 0;
+    }
+
+    // ============================================================
+    // 即時水位 + 最近水位站
+    // ============================================================
+    async function loadRealtimeWaterLevels() {
+      const wanted = new Set(WATER_LEVEL_STATIONS.map((s) => s.stationid));
+      let next = {};
+      let source = "";
+
+      const applyRows = (rows) => {
+        for (const row of rows) {
+          if (!wanted.has(row.stationid)) continue;
+          const wl = row.waterlevel;
+          if (wl === null || wl === undefined || wl === "") continue;
+          next[row.stationid] = {
+            waterlevel: String(wl),
+            datetime: row.datetime || row.recordtime || null,
+          };
+        }
+      };
+
+      const loadSnapshot = async () => {
+        const r = await fetch(assetUrl(`data/wra-water-latest.json?v=${APP_ASSET_V}`), {
+          cache: "no-store",
+        });
+        if (!r.ok) throw new Error("快照 HTTP " + r.status);
+        const j = await r.json();
+        if (j.stations) {
+          next = { ...j.stations };
+          source = "WRA_SNAPSHOT";
+        } else if (Array.isArray(j.rows)) {
+          applyRows(j.rows);
+          source = "WRA_SNAPSHOT";
+        }
+      };
+
+      const loadWraLive = async () => {
+        const r = await fetch(WL_REALTIME_API, { cache: "no-store" });
+        if (!r.ok) throw new Error("WRA HTTP " + r.status);
+        const arr = await r.json();
+        if (!Array.isArray(arr)) throw new Error("WRA 回應格式異常");
+        next = {};
+        applyRows(arr);
+        source = "WRA";
+      };
+
+      // 優先即時 API（警示需最新資料）；快照僅在 API 全部失敗時備援
+      if (isLocalDevServer()) {
+        try {
+          const r = await fetch("/api/water-level/current", { cache: "no-store" });
+          if (r.ok) {
+            const j = await r.json();
+            if (j.stations && typeof j.stations === "object") {
+              next = { ...j.stations };
+              source = j.source || "WRA_API";
+            }
+          }
+        } catch (e) {
+          console.warn("[水位] 本機 API 失敗:", e.message);
+        }
+      }
+
+      if (!Object.keys(next).length) {
+        try {
+          await loadWraLive();
+        } catch (e) {
+          console.warn("[水位] WRA 直連失敗:", e.message);
+        }
+      }
+
+      if (!Object.keys(next).length) {
+        try {
+          await loadSnapshot();
+        } catch (e) {
+          console.warn("[水位] 快照失敗:", e.message);
+        }
+      }
+
+      realtimeWaterLevels = next;
+      window.realtimeWaterLevels = next;
+      window.__wlLastSource = source;
+
+      const n = Object.keys(next).length;
+      console.log(`[水位] 已更新 ${n}/${WATER_LEVEL_STATIONS.length} 站 (${source || "無資料"})`);
+
+      renderWaterLevelSidebar(next, source);
+      applyWaterLevelsToMap(next);
+
+      if (window.weatherAlert?.updateWaterLevelData) {
+        weatherAlert.updateWaterLevelData(next);
+      }
+      if (n > 0 && window.weatherAlert?.checkAlerts) {
+        weatherAlert.checkAlerts().catch((e) =>
+          console.warn("[警示] 水位更新後檢查失敗:", e.message)
+        );
+      }
+      return next;
+    }
+    window.loadRealtimeWaterLevels = loadRealtimeWaterLevels;
+
+    function findNearestWaterStation(lat, lng) {
+      let best = null;
+      let bestD = Infinity;
+      for (const s of WATER_LEVEL_STATIONS) {
+        const d = haversineM(lat, lng, s.lat, s.lng);
+        if (d < bestD) { bestD = d; best = s; }
+      }
+      if (!best) return null;
+      return { stationid: best.stationid, name: best.name, distance_m: bestD };
+    }
+    function haversineM(lat1, lon1, lat2, lon2) {
+      const R = 6371000;
+      const φ1 = (lat1 * Math.PI) / 180, φ2 = (lat2 * Math.PI) / 180;
+      const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+      const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+      const a = Math.sin(Δφ/2)**2 + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ/2)**2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    // ============================================================
+    // InfoWindow popup builders
+    // ============================================================
+    function buildStationPopupHtml(feature, weatherSnap) {
+      const p = feature.properties || {};
+      const [lng, lat] = feature.geometry.coordinates;
+      const snap = weatherSnap || LocalWeatherDisplay.getSnapshotAt(lat, lng, { pinName: p.name });
+      const yearText = (p.year_ce || p.construction_year)
+        ? (p.year_ce_range && p.year_ce_range[0] !== p.year_ce_range[1]
+            ? `${p.year_ce_range[0]}–${p.year_ce_range[1]} 年（西元）`
+            : `${p.year_ce || p.construction_year} 年（西元）`)
+        : "—（資料源未提供）";
+      const pumpTypeText = p.pump_type || "—（資料源未提供）";
+
+      let waterRow = "";
+      const wl = p.nearest_wl;
+      if (wl) {
+        const rt = realtimeWaterLevels[wl.stationid];
+        const distText = wl.distance_m >= 1000
+          ? `${(wl.distance_m / 1000).toFixed(1)} 公里`
+          : `${Math.round(wl.distance_m)} 公尺`;
+        let valueHtml;
+        if (rt && rt.waterlevel !== "" && rt.waterlevel != null) {
+          const t = formatWlDatetime(rt.datetime);
+          valueHtml = `<span style="color:#0b5394;font-weight:600;">${parseFloat(rt.waterlevel).toFixed(2)} m</span>
+                       <span style="color:#888;font-size:0.8rem;"> @ ${t}</span>`;
+        } else {
+          valueHtml = '<span style="color:#888;">載入中…</span>';
+        }
+        waterRow = `
+          <div style="margin-bottom:6px;"><strong>鄰近河川水位:</strong> ${valueHtml}</div>
+          <div style="font-size:0.8rem;color:#666;margin-bottom:6px;">
+            水位站：${wl.name}（${wl.stationid}）· 距離 ${distText}
+          </div>
+        `;
+      }
+
+      return `
+        <div style="min-width:260px;">
+          <h3 style="margin:0 0 8px 0;color:#1a5276;font-size:1.05rem;">🏢 ${p.name || "抽水站"}</h3>
+          <div style="margin-bottom:6px;"><strong>抽水站 ID:</strong>
+            <code style="background:#f0f0f0;padding:2px 4px;border-radius:3px;">${p.id ?? "—"}</code>
+          </div>
+          <div style="margin-bottom:6px;"><strong>竣工年份:</strong> ${yearText}</div>
+          <div style="margin-bottom:6px;"><strong>抽水站類型:</strong> ${pumpTypeText}</div>
+          <div style="margin-bottom:6px;"><strong>地址:</strong> ${p.address || "—"}</div>
+          <div style="margin-bottom:6px;"><strong>所屬河川:</strong> ${p.river || "大漢溪"}</div>
+          <hr style="margin:8px 0;border:none;border-top:1px solid #eee;">
+          ${waterRow}
+          ${LocalWeatherDisplay.buildPopupWeatherHtml(snap)}
+          <hr style="margin:8px 0;border:none;border-top:1px solid #eee;">
+          <div style="font-size:0.78rem;color:#666;">
+            <div>座標: ${feature.geometry.coordinates[1].toFixed(5)}, ${feature.geometry.coordinates[0].toFixed(5)}</div>
+            <div>資料來源: ${p.source || "—"}</div>
+            <div>更新時間: ${lastUpdateTime ? new Date(lastUpdateTime).toLocaleString("zh-TW") : "載入中"}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function buildWaterLevelPopupHtml(feature) {
+      const p = feature.properties || {};
+      const rt = realtimeWaterLevels[p.stationid];
+      let valueHtml = `<span style="color:#888;">${p.status === "現存" ? "載入中…" : "已廢站，無即時資料"}</span>`;
+      if (rt && rt.waterlevel !== "" && rt.waterlevel != null) {
+        const t = formatWlDatetime(rt.datetime);
+        valueHtml = `<span style="color:#0b5394;font-weight:600;">${parseFloat(rt.waterlevel).toFixed(2)} m</span>
+                     <span style="color:#888;font-size:0.8rem;"> @ ${t}</span>`;
+      }
+      return `
+        <div style="min-width:240px;">
+          <h3 style="margin:0 0 6px 0;color:#0b5394;font-size:1rem;">💧 ${p.name}</h3>
+          <div style="margin-bottom:4px;"><strong>站號:</strong> <code>${p.stationid}</code></div>
+          <div style="margin-bottom:4px;"><strong>所屬河川:</strong> ${p.river}</div>
+          <div style="margin-bottom:4px;"><strong>狀態:</strong> ${p.status || "—"}</div>
+          <div style="margin-bottom:4px;"><strong>位置:</strong> ${p.address || "—"}</div>
+          <hr style="margin:6px 0;border:none;border-top:1px solid #eee;">
+          <div><strong>即時水位:</strong> ${valueHtml}</div>
+          <div style="font-size:0.78rem;color:#666;margin-top:4px;">資料來源：${p.source || "WRA"}</div>
+        </div>
+      `;
+    }
+
+    // ============================================================
+    // 3. Tasks & Tools 工具列邏輯
+    // ============================================================
+    function attachToolbar() {
+      // 底圖切換
+      document.getElementById("basemapSelect").addEventListener("change", (e) => {
+        map.setMapTypeId(e.target.value);
+      });
+
+      // 圖層 toggle
+      const toggle = (els, checked) => els.forEach((m) => m.setMap(checked ? map : null));
+      document.getElementById("layerPumping").addEventListener("change",    (e) => toggle(pumpingMarkers,    e.target.checked));
+      document.getElementById("layerWlActive").addEventListener("change",   (e) => toggle(wlActiveMarkers,   e.target.checked));
+      document.getElementById("layerWlInactive").addEventListener("change", (e) => toggle(wlInactiveMarkers, e.target.checked));
+      document.getElementById("layerRiver").addEventListener("change",      (e) => toggle(riverPolylines,    e.target.checked));
+      document.getElementById("layerWaterfront").addEventListener("change", (e) => {
+        const on = e.target.checked;
+        toggle(waterfrontMarkers, on);
+        toggle(waterfrontPolylines, on);
+      });
+      // 我的位置
+      let locateMarker = null, locateCircle = null;
+      document.getElementById("btnLocate").addEventListener("click", () => {
+        if (!navigator.geolocation) { alert("瀏覽器不支援地理定位"); return; }
+        navigator.geolocation.getCurrentPosition((pos) => {
+          const p = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          if (locateMarker) locateMarker.setMap(null);
+          if (locateCircle) locateCircle.setMap(null);
+          locateMarker = new google.maps.Marker({
+            map, position: p, title: "我的位置",
+            icon: { path: google.maps.SymbolPath.CIRCLE, scale: 7, fillColor: "#4285f4", fillOpacity: 1, strokeColor: "#fff", strokeWeight: 2 },
+          });
+          locateCircle = new google.maps.Circle({
+            map, center: p, radius: pos.coords.accuracy || 30,
+            strokeColor: "#4285f4", strokeOpacity: 0.5, strokeWeight: 1,
+            fillColor: "#4285f4", fillOpacity: 0.12,
+          });
+          map.panTo(p);
+          map.setZoom(15);
+        }, (err) => alert("無法取得位置：" + err.message), { enableHighAccuracy: true, timeout: 8000 });
+      });
+
+      // 量測（距離）
+      const measureBtn = document.getElementById("btnMeasure");
+      const measureReadout = document.getElementById("measureReadout");
+      let measureOn = false;
+      let measurePts = [];
+      let measureLine = null;
+      let measureMarkers = [];
+
+      const formatMeasureDistance = (totalM) =>
+        totalM >= 1000 ? `${(totalM / 1000).toFixed(3)} 公里` : `${Math.round(totalM)} 公尺`;
+
+      const getMeasureTotalM = () => {
+        let totalM = 0;
+        for (let i = 1; i < measurePts.length; i++) {
+          totalM += google.maps.geometry.spherical.computeDistanceBetween(measurePts[i - 1], measurePts[i]);
+        }
+        return totalM;
+      };
+
+      const clearMeasure = () => {
+        if (measureLine) { measureLine.setMap(null); measureLine = null; }
+        measureMarkers.forEach((m) => m.setMap(null));
+        measureMarkers = [];
+        measurePts = [];
+        measureReadout.style.display = "none";
+        measureReadout.textContent = "";
+      };
+
+      const finishMeasure = () => {
+        measureOn = false;
+        measureBtn.classList.remove("active");
+        map.setOptions({ draggableCursor: null });
+        if (measurePts.length < 2) {
+          measureReadout.textContent = "📏 請至少點選 2 個點";
+          measureReadout.style.display = "block";
+          return;
+        }
+        const totalM = getMeasureTotalM();
+        const txt = formatMeasureDistance(totalM);
+        const segments = [];
+        for (let i = 1; i < measurePts.length; i++) {
+          const segM = google.maps.geometry.spherical.computeDistanceBetween(measurePts[i - 1], measurePts[i]);
+          segments.push(`第 ${i} 段 ${formatMeasureDistance(segM)}`);
+        }
+        measureReadout.innerHTML =
+          `📏 總距離 <strong>${txt}</strong>（${measurePts.length} 點）` +
+          (segments.length > 1 ? `<br><small>${segments.join(" · ")}</small>` : "") +
+          `<br><small>再按 📏 量測 可重新量測</small>`;
+        measureReadout.style.display = "block";
+      };
+
+      const startMeasure = () => {
+        measureOn = true;
+        measureBtn.classList.add("active");
+        measureReadout.textContent = "📏 點擊地圖加點，再按 📏 量測 結束";
+        measureReadout.style.display = "block";
+        map.setOptions({ draggableCursor: "crosshair" });
+      };
+
+      measureBtn.addEventListener("click", () => {
+        if (measureOn) {
+          finishMeasure();
+          return;
+        }
+        if (measurePts.length > 0) clearMeasure();
+        startMeasure();
+      });
+
+      map.addListener("click", (ev) => {
+        if (!measureOn) return;
+        measurePts.push(ev.latLng);
+        measureMarkers.push(new google.maps.Marker({
+          map, position: ev.latLng,
+          icon: { path: google.maps.SymbolPath.CIRCLE, scale: 4, fillColor: "#e74c3c", fillOpacity: 1, strokeColor: "#fff", strokeWeight: 1 },
+        }));
+        if (measureLine) measureLine.setMap(null);
+        measureLine = new google.maps.Polyline({
+          map, path: measurePts, strokeColor: "#e74c3c", strokeOpacity: 0.9, strokeWeight: 3,
+        });
+        const totalM = getMeasureTotalM();
+        const txt = formatMeasureDistance(totalM);
+        measureReadout.textContent = `📏 累計 ${txt}（${measurePts.length} 點）· 再按 📏 量測 結束`;
+      });
+
+      // 全螢幕
+      document.getElementById("btnFullscreen").addEventListener("click", () => {
+        const el = document.getElementById("map");
+        if (document.fullscreenElement) document.exitFullscreen();
+        else el.requestFullscreen?.();
+      });
+
+      // 列印 / 匯出 PDF
+      document.getElementById("btnPrint").addEventListener("click", () => window.print());
+
+      // 屬性搜尋
+      const input = document.getElementById("gisSearchInput");
+      const out = document.getElementById("gisSearchResult");
+      const searchBar = document.getElementById("gisSearchBar");
+      input.addEventListener("input", (e) => gisSearch(e.target.value, out));
+      document.addEventListener("click", (e) => {
+        if (searchBar && !searchBar.contains(e.target)) out.style.display = "none";
+      });
+    }
+
+    function attachSidebarToggle() {
+      const sidebar = document.getElementById("sidebar");
+      const btn = document.getElementById("sidebarToggle");
+      btn.addEventListener("click", () => {
+        sidebar.classList.toggle("collapsed");
+        btn.textContent = sidebar.classList.contains("collapsed") ? "▶" : "◀";
+      });
+    }
+
+    function attachCoordTracker() {
+      const box = document.getElementById("coordBox");
+      map.addListener("mousemove", (ev) => {
+        box.textContent = `緯度 ${ev.latLng.lat().toFixed(5)} / 經度 ${ev.latLng.lng().toFixed(5)}`;
+      });
+    }
+
+    function gisSearch(q, outEl) {
+      q = (q || "").trim().toLowerCase();
+      if (!q) { outEl.style.display = "none"; outEl.innerHTML = ""; return; }
+      const hits = [];
+      pumpingMarkers.forEach((m) => {
+        const p = (m._feature.properties) || {};
+        const text = `${p.name || ""} ${p.address || ""}`.toLowerCase();
+        if (text.includes(q)) hits.push({ kind: "抽水站", name: p.name, sub: p.address || "", marker: m });
+      });
+      [...wlActiveMarkers, ...wlInactiveMarkers].forEach((m) => {
+        const p = (m._feature.properties) || {};
+        const text = `${p.name || ""} ${p.address || ""} ${p.stationid || ""}`.toLowerCase();
+        if (text.includes(q)) {
+          const status = p.status || "";
+          hits.push({ kind: `水位站${status ? `·${status}` : ""}`, name: p.name, sub: p.address || "", marker: m });
+        }
+      });
+      waterfrontMarkers.forEach((m) => {
+        const p = (m._feature.properties) || {};
+        const text = `${p.name || ""} ${p.address || ""}`.toLowerCase();
+        if (text.includes(q)) hits.push({ kind: "親水園區", name: p.name, sub: p.address || "", marker: m });
+      });
+      waterfrontPolylines.forEach((pl) => {
+        const p = (pl._feature.properties) || {};
+        const text = `${p.name || ""} ${p.river || ""} ${p.category || ""}`.toLowerCase();
+        if (text.includes(q)) {
+          const path = pl.getPath();
+          const bounds = new google.maps.LatLngBounds();
+          path.forEach((ll) => bounds.extend(ll));
+          hits.push({ kind: "親水廊道", name: p.name || "大漢溪親水廊道", sub: p.river || "大漢溪", bounds });
+        }
+      });
+      outEl.style.display = "block";
+      if (!hits.length) {
+        outEl.innerHTML = '<div class="hit" style="color:#888;">查無結果</div>';
+        return;
+      }
+      outEl.innerHTML = hits.slice(0, 30).map((h, i) =>
+        `<div class="hit" data-i="${i}">
+          <span class="hit-kind">${h.kind}</span>
+          <strong>${h.name}</strong>${h.sub ? `<br><span style="color:#666;font-size:11px;">${h.sub}</span>` : ""}
+        </div>`
+      ).join("");
+      outEl.querySelectorAll(".hit[data-i]").forEach((el) => {
+        el.addEventListener("click", () => {
+          const h = hits[parseInt(el.dataset.i, 10)];
+          if (h.bounds) map.fitBounds(h.bounds);
+          else if (h.marker) {
+            map.panTo(h.marker.getPosition());
+            map.setZoom(16);
+            google.maps.event.trigger(h.marker, "click");
+          }
+          outEl.style.display = "none";
+          document.getElementById("gisSearchInput").value = h.name;
+        });
+      });
+    }
+
+    // ============================================================
+    // Refresh / status / loading
+    // ============================================================
+    function updateStatus(message, isError = false, isSuccess = false) {
+      const statusEl = document.getElementById("updateStatus");
+      const indicator = document.getElementById("refreshIndicator");
+      if (statusEl) statusEl.textContent = message;
+      if (indicator) {
+        if (isError)        indicator.style.background = "#dc3545";
+        else if (isSuccess) indicator.style.background = "#28a745";
+        else                indicator.style.background = "#ffc107";
+      }
+    }
+
+    async function manualRefresh() {
+      updateStatus("正在更新全部資料…", false, false);
+      try {
+        const jobs = [
+          loadAllLayers(true),
+          loadRealtimeWaterLevels(),
+        ];
+        if (typeof updateWeatherDisplay === "function") {
+          jobs.push(updateWeatherDisplay());
+        }
+        await Promise.all(jobs);
+        updateStatus("全部資料更新完成", false, true);
+      } catch (e) {
+        console.error(e);
+        updateStatus("更新失敗: " + e.message, true, false);
+      }
+    }
+
+    function startAutoUpdate() {
+      if (updateInterval) clearInterval(updateInterval);
+      updateInterval = setInterval(() => loadAllLayers(), 30 * 60 * 1000);
+    }
+    window.addEventListener("beforeunload", () => updateInterval && clearInterval(updateInterval));
+
+    function hideLoadingOverlay() {
+      const overlay = document.getElementById("loadingOverlay");
+      const mapEl = document.getElementById("map");
+      if (!overlay) return;
+      overlay.style.opacity = "0";
+      mapEl.classList.add("loaded");
+      setTimeout(() => {
+        overlay.style.display = "none";
+        // 地圖載入完成後初始化氣象警示系統
+        initWeatherAlert();
+      }, 180);
+    }
+
+    // ============================================================
+    // 氣象警示系統整合
+    // ============================================================
+    
+    function initWeatherPanelScroll() {
+      const panel = document.getElementById("weatherAlertPanel");
+      const scroll = document.getElementById("weatherAlertScroll");
+      if (!panel || !scroll) return;
+      // 避免滾輪／觸控被 Google 地圖吃掉（其他電腦常見）
+      const stopToMap = (e) => e.stopPropagation();
+      panel.addEventListener("wheel", stopToMap, { passive: true });
+      scroll.addEventListener("wheel", stopToMap, { passive: true });
+      panel.addEventListener("touchstart", stopToMap, { passive: true });
+      scroll.addEventListener("touchmove", stopToMap, { passive: true });
+    }
+
+    function toggleAlertPanel() {
+      const panel = document.getElementById('weatherAlertPanel');
+      
+      if (panel.classList.contains('show')) {
+        panel.classList.remove('show');
+      } else {
+        panel.classList.add('show');
+        updateWeatherDisplay();
+      }
+    }
+    
+    function formatWeatherVal(v, digits) {
+      if (v == null || !Number.isFinite(v)) return '--';
+      return digits === 0 ? String(Math.round(v)) : v.toFixed(digits);
+    }
+
+    /** m/s → 蒲福風力級數 */
+    function msToBeaufort(ms) {
+      if (ms < 0.3)  return 0;
+      if (ms < 1.6)  return 1;
+      if (ms < 3.4)  return 2;
+      if (ms < 5.5)  return 3;
+      if (ms < 8.0)  return 4;
+      if (ms < 10.8) return 5;
+      if (ms < 13.9) return 6;
+      if (ms < 17.2) return 7;
+      if (ms < 20.8) return 8;
+      if (ms < 24.5) return 9;
+      if (ms < 28.5) return 10;
+      if (ms < 32.7) return 11;
+      return 12;
+    }
+
+    function setWindDisplay(ms) {
+      const windEl = document.getElementById('currentWind');
+      const bfEl = document.getElementById('currentWindBf');
+      if (!windEl) return;
+      if (ms != null && Number.isFinite(ms)) {
+        windEl.textContent = (ms * 3.6).toFixed(1);
+        if (bfEl) bfEl.textContent = `(蒲福 ${msToBeaufort(ms)} 級)`;
+      } else {
+        windEl.textContent = '--';
+        if (bfEl) bfEl.textContent = '';
+      }
+    }
+
+    function applyWeatherSnapshotToPanel(snap) {
+      const labelEl = document.getElementById('weatherStationLabel');
+      const hintEl = document.getElementById('weatherUpdateHint');
+      const titleEl = document.getElementById('weatherPanelTitle');
+      const resetBtn = document.getElementById('weatherResetPinBtn');
+      const pinned = LocalWeatherDisplay.pinned;
+
+      if (titleEl) {
+        titleEl.textContent = pinned
+          ? `📍 ${pinned.name}`
+          : '大漢溪流域 · 代表測站';
+      }
+      if (resetBtn) {
+        resetBtn.style.display = pinned ? 'block' : 'none';
+      }
+
+      if (!snap?.ready) {
+        if (labelEl) labelEl.textContent = snap?.message || '尚無觀測資料';
+        ['currentRainfall', 'currentTemp', 'currentHumidity', 'currentWind'].forEach((id) => {
+          const el = document.getElementById(id);
+          if (el) el.textContent = '--';
+        });
+        if (hintEl) hintEl.textContent = '';
+        return;
+      }
+
+      if (labelEl) {
+        const wx = snap.weatherDesc ? ` · ${snap.weatherDesc}` : '';
+        const hiLo =
+          snap.dailyHigh != null && snap.dailyLow != null
+            ? `<br>今日 ${snap.dailyLow.toFixed(1)}～${snap.dailyHigh.toFixed(1)}°C`
+            : '';
+        const distLabel = pinned
+          ? `距「${pinned.name}」約 ${snap.distanceKm} km`
+          : `距大漢溪流域中心約 ${snap.distanceKm} km`;
+        labelEl.innerHTML =
+          `觀測站 <strong>${snap.stationName}</strong>` +
+          (snap.county ? `（${snap.county}）` : '') +
+          wx +
+          `<br>${distLabel}` +
+          hiLo;
+      }
+
+      const setVal = (id, val, digits = 1) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.textContent = val != null && !Number.isNaN(val) ? Number(val).toFixed(digits) : '--';
+      };
+
+      setVal('currentRainfall', snap.rainfall, 1);
+      setVal('currentTemp', snap.temperature, 1);
+      setVal('currentHumidity', snap.humidity, 0);
+      setWindDisplay(snap.windSpeed);
+
+      if (hintEl) {
+        const t = snap.lastUpdate ? snap.lastUpdate.toLocaleString('zh-TW') : '--';
+        hintEl.textContent = `${snap.source} · 觀測 ${t} · 點選地圖站點可切換地點（面板需手動開啟）`;
+      }
+
+      if (typeof weatherAlert !== 'undefined') {
+        weatherAlert.weatherData.rainfall = {
+          current: snap.rainfall ?? 0,
+          forecast_3hr: 0,
+          stations: window.rainfallSystem?.rainfallData,
+          lastUpdate: new Date().toISOString(),
+        };
+        weatherAlert.weatherData.temperature = snap.temperature;
+        weatherAlert.weatherData.humidity = snap.humidity;
+        weatherAlert.weatherData.windSpeed = snap.windSpeed;
+        weatherAlert.weatherData.representativeStation = snap.stationName;
+
+        const avgRisk = calculateOverallRisk();
+        updateRiskDisplay(avgRisk);
+        weatherAlert.updateAlertUI();
+        updateAlertToggleBadge();
+      }
+    }
+    window.applyWeatherSnapshotToPanel = applyWeatherSnapshotToPanel;
+
+    async function updateWeatherDisplay() {
+      try {
+        const needTemp =
+          (!window.temperatureSystem?.temperatureData ||
+            !Object.keys(window.temperatureSystem.temperatureData).length) &&
+          window.temperatureSystem?.fetchTemperatureData;
+        const needRain =
+          (!window.rainfallSystem?.rainfallData ||
+            !Object.keys(window.rainfallSystem.rainfallData).length) &&
+          window.rainfallSystem?.fetchRainfallData;
+
+        if (needTemp) await temperatureSystem.fetchTemperatureData();
+        if (needRain) await rainfallSystem.fetchRainfallData();
+
+        if (typeof LocalWeatherDisplay !== 'undefined') {
+          const snap = LocalWeatherDisplay.getSnapshot();
+          if (snap?.ready) {
+            applyWeatherSnapshotToPanel(snap);
+            return;
+          }
+        }
+
+        if (typeof weatherAlert === 'undefined') return;
+
+        const weatherData = await weatherAlert.fetchWeatherData();
+        const note = document.getElementById('weatherSourceNote');
+
+        if (document.getElementById('currentRainfall')) {
+          document.getElementById('currentRainfall').textContent =
+            formatWeatherVal(weatherData.rainfall?.current, 1);
+        }
+        if (document.getElementById('currentTemp')) {
+          document.getElementById('currentTemp').textContent =
+            formatWeatherVal(weatherData.temperature, 1);
+        }
+        if (document.getElementById('currentHumidity')) {
+          document.getElementById('currentHumidity').textContent =
+            formatWeatherVal(weatherData.humidity, 0);
+        }
+        setWindDisplay(weatherData.windSpeed);
+
+        if (note) {
+          if (weatherData.source === 'CWA_API' || weatherData.source === 'CWA_CLIENT' || weatherData.source === 'CWA_SNAPSHOT') {
+            const n = weatherData.representativeStation || '大漢溪流域';
+            const t = weatherData.snapshotAt || weatherData.lastUpdate;
+            const tStr = t ? new Date(t).toLocaleString('zh-TW') : '';
+            const snapHint = weatherData.source === 'CWA_SNAPSHOT' ? '（部署快照）' : '（即時）';
+            note.textContent = `資料來源：中央氣象署${snapHint} · ${n}${tStr ? ' · ' + tStr : ''}`;
+            note.style.color = '#1e8449';
+          } else {
+            note.textContent = weatherData.statusMessage || '尚未連線氣象 API';
+            note.style.color = '#c0392b';
+          }
+        }
+
+        const avgRisk = calculateOverallRisk();
+        updateRiskDisplay(avgRisk);
+        weatherAlert.updateAlertUI();
+        updateAlertToggleBadge();
+      } catch (error) {
+        console.error('更新氣象顯示失敗:', error);
+      }
+    }
+    window.updateWeatherDisplay = updateWeatherDisplay;
+
+    function calculateOverallRisk() {
+      if (typeof weatherAlert === 'undefined') return { score: 0, level: 'low', forecast: null };
+
+      const active = weatherAlert.alerts.filter((a) => !a.acknowledged);
+      let stationScore = 0;
+      active.forEach((a) => {
+        if (a.level === 'critical') stationScore += 40;
+        else if (a.level === 'high') stationScore += 25;
+        else if (a.level === 'medium') stationScore += 15;
+        else stationScore += 5;
+      });
+      stationScore = Math.min(100, stationScore);
+
+      let forecastRisk = null;
+      if (window.townshipForecastSystem?.getBasinForecastRisk) {
+        forecastRisk = townshipForecastSystem.getBasinForecastRisk();
+      }
+
+      let finalScore = stationScore;
+      if (forecastRisk && Object.keys(townshipForecastSystem.forecastsByTown || {}).length > 0) {
+        finalScore = Math.round(stationScore * 0.55 + forecastRisk.score * 0.45);
+      }
+      finalScore = Math.min(100, finalScore);
+
+      const level =
+        finalScore >= 81 ? 'critical' :
+        finalScore >= 61 ? 'high' :
+        finalScore >= 31 ? 'medium' : 'low';
+
+      return {
+        score: finalScore,
+        level,
+        stationScore: Math.round(stationScore),
+        forecastRisk,
+      };
+    }
+
+    function updateRiskDisplay(risk) {
+      const fill = document.getElementById('overallRiskFill');
+      const text = document.getElementById('overallRiskText');
+      const detailEl = document.getElementById('forecastRiskDetail');
+
+      if (fill) fill.style.width = `${risk.score}%`;
+
+      const levelText = {
+        low: '低風險',
+        medium: '中風險',
+        high: '高風險',
+        critical: '極高風險',
+      };
+
+      if (text) text.textContent = levelText[risk.level] || '低風險';
+
+      if (detailEl) {
+        const fr = risk.forecastRisk;
+        if (fr && fr.towns?.length) {
+          const top = fr.towns
+            .slice()
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 3)
+            .map((t) => `${t.name} 降雨${t.forecast.pop ?? '—'}%`)
+            .join(' · ');
+          detailEl.innerHTML =
+            `<strong>預報風險</strong>（F-D0047-071）${fr.maxTown ? ` · 最高 ${fr.maxTown}` : ''}<br>` +
+            `即時監測 ${risk.stationScore ?? '—'}分 + 鄉鎮預報 ${fr.score}分<br>` +
+            top;
+        } else {
+          detailEl.textContent = '鄉鎮預報載入中…（新北市 F-D0047-071）';
+        }
+      }
+
+      updateAlertToggleBadge();
+    }
+
+    function updateAlertToggleBadge() {
+      const btn = document.getElementById('alertToggleBtn');
+      if (!btn || typeof weatherAlert === 'undefined') return;
+      const n = weatherAlert.alerts.filter((a) => !a.acknowledged).length;
+      const risk = calculateOverallRisk();
+      btn.classList.toggle('has-alerts', n > 0 || risk.level === 'high' || risk.level === 'critical');
+    }
+
+    window.flyToPumpingStation = function (stationId) {
+      if (!map || !infoWindow) return false;
+      const marker = pumpingMarkers.find((m) => m._feature?.properties?.id == stationId);
+      if (!marker) return false;
+      const pos = marker.getPosition();
+      map.panTo(pos);
+      if (map.getZoom() < 14) map.setZoom(14);
+      infoWindow.setContent(buildStationPopupHtml(marker._feature));
+      infoWindow.open({ map, anchor: marker });
+      return true;
+    };
+
+    window.highlightPumpingStation = function(stationId, level) {
+      const marker = pumpingMarkers.find(m => m._feature?.properties?.id == stationId);
+      if (marker) {
+        const colors = { low: '#28a745', medium: '#ffc107', high: '#fd7e14', critical: '#dc3545' };
+        const color = colors[level] || '#28a745';
+        
+        const alertIcon = {
+          url: 'data:image/svg+xml,' + encodeURIComponent(`
+            <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="16" cy="16" r="12" fill="${color}" stroke="#fff" stroke-width="2"/>
+              <text x="16" y="20" text-anchor="middle" fill="white" font-size="10" font-weight="bold">🚨</text>
+            </svg>
+          `),
+          scaledSize: new google.maps.Size(32, 32),
+          anchor: new google.maps.Point(16, 16)
+        };
+        
+        marker.setIcon(alertIcon);
+        setTimeout(() => marker.setIcon(pumpingStationIcon()), 30000);
+      }
+    };
+    
+    function initWeatherAlert() {
+      console.log('🌦️ 初始化氣象警示系統');
+      
+      setTimeout(() => {
+        if (typeof weatherAlert === 'undefined') {
+          console.warn('weatherAlert 系統尚未載入');
+          return;
+        }
+        
+        const stations = pumpingMarkers.map((marker, index) => {
+          const [lng, lat] = marker._feature?.geometry?.coordinates || [0, 0];
+          return {
+            id: marker._feature?.properties?.id || index + 1,
+            name: marker._feature?.properties?.name || `抽水站${index + 1}`,
+            lat,
+            lng,
+            nearestWaterStation: marker._feature?.properties?.nearest_wl,
+            waterLevel: 0
+          };
+        });
+
+        if (window.townshipForecastSystem) {
+          townshipForecastSystem.startAutoUpdate();
+        }
+        
+        weatherAlert.updatePumpingStations(stations);
+        weatherAlert.updateWaterLevelData(realtimeWaterLevels || {});
+        weatherAlert.startMonitoring(300000);
+        
+        setTimeout(updateWeatherDisplay, 1000);
+        
+        console.log('✅ 氣象警示系統初始化完成');
+        
+      }, 5000);
+    }
+    
+    // ============================================================
+    // 即時水位資料更新整合
+    // ============================================================
+    
+    // 監聽降雨資料更新事件
+    window.addEventListener('rainfallUpdated', function(event) {
+      const { data, stats, stationCount } = event.detail;
+      console.log(`🌧️ 降雨資料已更新，共 ${stationCount} 個站點`);
+      
+      // 更新氣象警示系統的降雨資料
+      if (window.weatherAlert && window.weatherAlert.weatherData) {
+        window.weatherAlert.weatherData.rainfall = {
+          current: stats.averageHourly,
+          forecast_3hr: stats.maxHourly * 0.7, // 預估
+          stations: data,
+          lastUpdate: new Date().toISOString()
+        };
+      }
+      
+      // 更新降雨狀態面板
+      if (window.rainfallSystem) {
+        rainfallSystem.updateStatsDisplay();
+      }
+      
+      // 顯示更新通知
+      const notification = `降雨資料已更新 (${stationCount} 站點, 平均 ${stats.averageHourly.toFixed(1)}mm/hr)`;
+      showUpdateNotification(notification);
+    });
+    
+    // 監聽氣溫資料更新事件
+    window.addEventListener('townshipForecastUpdated', function() {
+      const wxPanel = document.getElementById('weatherAlertPanel');
+      if (wxPanel?.classList.contains('show')) {
+        const avgRisk = calculateOverallRisk();
+        updateRiskDisplay(avgRisk);
+        if (typeof weatherAlert !== 'undefined') weatherAlert.updateAlertUI();
+      }
+    });
+
+    window.addEventListener('temperatureUpdated', function(event) {
+      const { data, stats, stationCount } = event.detail;
+      console.log(`🌡️ 氣溫資料已更新，共 ${stationCount} 個站點`);
+      
+      // 更新氣象警示系統的氣溫資料
+      if (window.weatherAlert && window.weatherAlert.weatherData) {
+        window.weatherAlert.weatherData.temperature = {
+          current: stats.averageTemp,
+          max: stats.maxTemp,
+          min: stats.minTemp,
+          humidity: stats.averageHumidity,
+          stations: data,
+          lastUpdate: new Date().toISOString()
+        };
+      }
+      
+      // 更新氣溫狀態面板
+      if (window.temperatureSystem) {
+        temperatureSystem.updateStatsDisplay();
+      }
+
+      const wxPanel = document.getElementById('weatherAlertPanel');
+      if (wxPanel?.classList.contains('show')) {
+        updateWeatherDisplay();
+      }
+      
+      // 顯示更新通知
+      const notification = `氣溫資料已更新 (${stationCount} 站點, 平均 ${stats.averageTemp.toFixed(1)}°C)`;
+      showUpdateNotification(notification);
+    });
+    
+    // 監聽水位資料更新事件
+    window.addEventListener('waterLevelUpdated', function(event) {
+      const { data, stats, stationCount } = event.detail || {};
+      if (!data) return;
+
+      const first = Object.values(data)[0];
+      if (first && (first.waterlevel != null || first.waterlevel === '')) {
+        window.realtimeWaterLevels = data;
+      } else {
+        window.realtimeWaterLevels = {};
+        Object.values(data).forEach((station) => {
+          window.realtimeWaterLevels[station.stationid] = {
+            waterlevel: station.waterLevel,
+            datetime: station.datetime,
+          };
+        });
+      }
+
+      if (window.weatherAlert?.updateWaterLevelData) {
+        weatherAlert.updateWaterLevelData(window.realtimeWaterLevels);
+      } else if (stats && window.weatherAlert?.weatherData) {
+        window.weatherAlert.weatherData.waterLevel = {
+          current: stats.averageLevel,
+          max: stats.maxLevel,
+          alertStations: stats.alertStations,
+          stations: data,
+          lastUpdate: new Date().toISOString(),
+        };
+      }
+
+      if (typeof waterLevelSystem?.updateStatsDisplay === 'function') {
+        waterLevelSystem.updateStatsDisplay();
+      } else if (typeof renderWaterLevelSidebar === 'function') {
+        renderWaterLevelSidebar(window.realtimeWaterLevels, window.__wlLastSource || '');
+      }
+
+      updateWaterLevelMarkers(window.realtimeWaterLevels);
+
+      const n = stationCount ?? Object.keys(window.realtimeWaterLevels).length;
+      console.log(`💧 水位資料已更新，共 ${n} 個站點`);
+      if (stats?.averageLevel != null) {
+        showUpdateNotification(`水位資料已更新 (${n} 站點, 平均 ${stats.averageLevel.toFixed(2)}m)`);
+      }
+    });
+    
+    // 更新水位站標記的顯示資訊
+    window.updateWaterLevelMarkers = function(waterLevelData) {
+      const wlMarkers = [...wlActiveMarkers, ...wlInactiveMarkers];
+      wlMarkers.forEach((marker) => {
+        const stationId = marker._feature?.properties?.stationid;
+        if (!stationId || !waterLevelData[stationId]) return;
+        const realTimeData = waterLevelData[stationId];
+        marker._realTimeData = realTimeData;
+        const wl = parseFloat(realTimeData.waterlevel);
+        if (!Number.isNaN(wl) && marker._kind === "wl-active") {
+          const baseName = marker._feature?.properties?.name || stationId;
+          marker.setTitle(`${baseName} · ${wl.toFixed(2)} m`);
+          marker.setLabel(waterLevelMarkerLabel(realTimeData.waterlevel));
+        }
+        if (marker._infoWindowOpen && marker._feature) {
+          const feat = marker._feature;
+          const [lng, lat] = feat.geometry.coordinates;
+          const snap = typeof LocalWeatherDisplay !== 'undefined'
+            ? LocalWeatherDisplay.getSnapshotAt(lat, lng, { pinName: feat.properties?.name })
+            : null;
+          infoWindow.setContent(buildWaterLevelPopupHtmlWithRealtime(feat, realTimeData, snap));
+        }
+      });
+    };
+    
+    // 修改水位站彈出視窗內容建立函數，使用即時資料
+    function buildWaterLevelPopupHtmlWithRealtime(feature, realTimeData = null, weatherSnap = null) {
+      const p = feature.properties || {};
+      const [lng, lat] = feature.geometry.coordinates;
+      const snap = weatherSnap || (typeof LocalWeatherDisplay !== 'undefined'
+        ? LocalWeatherDisplay.getSnapshotAt(lat, lng, { pinName: p.name })
+        : null);
+
+      // 優先使用即時資料，否則使用快取資料
+      const currentData = realTimeData || realtimeWaterLevels[p.stationid];
+      
+      let valueHtml = `<span style="color:#888;">${p.status === "現存" ? "載入中…" : "已廢站，無即時資料"}</span>`;
+      
+      if (currentData && currentData.waterlevel !== "" && currentData.waterlevel != null) {
+        const waterLevel = parseFloat(currentData.waterlevel);
+        const updateTime = formatWlDatetime(currentData.datetime) || "未知時間";
+        
+        // 根據水位高低設定顏色
+        let levelColor = '#0b5394'; // 預設藍色
+        if (waterLevel > 5) levelColor = '#dc3545';      // 紅色 - 危險
+        else if (waterLevel > 3) levelColor = '#fd7e14';  // 橙色 - 警戒
+        else if (waterLevel > 2) levelColor = '#ffc107';  // 黃色 - 注意
+        
+        valueHtml = `
+          <span style="color:${levelColor};font-weight:600;font-size:1.1em;">
+            ${waterLevel.toFixed(2)} m
+          </span>
+          <br>
+          <span style="color:#666;font-size:0.8rem;">
+            📅 ${updateTime}
+          </span>
+        `;
+      }
+      
+      return `
+        <div style="min-width:260px;">
+          <h3 style="margin:0 0 8px 0;color:#0b5394;font-size:1.1rem;">💧 ${p.name}</h3>
+          <div style="margin-bottom:6px;"><strong>站號:</strong> <code>${p.stationid}</code></div>
+          <div style="margin-bottom:6px;"><strong>所屬河川:</strong> ${p.river}</div>
+          <div style="margin-bottom:6px;"><strong>狀態:</strong> ${p.status || "—"}</div>
+          <div style="margin-bottom:6px;"><strong>位置:</strong> ${p.address || "—"}</div>
+          <hr style="margin:8px 0;border:none;border-top:1px solid #eee;">
+          <div style="padding:8px;background:#f8f9fa;border-radius:4px;">
+            <strong>即時水位:</strong><br>
+            ${valueHtml}
+          </div>
+          ${typeof LocalWeatherDisplay !== 'undefined' ? LocalWeatherDisplay.buildPopupWeatherHtml(snap) : ''}
+          <div style="font-size:0.75rem;color:#666;margin-top:6px;text-align:center;">
+            水位：水利署 WRA · 氣象：中央氣象署逐時觀測
+          </div>
+        </div>
+      `;
+    }
+    
+    // 顯示更新通知
+    function showUpdateNotification(message) {
+      // 創建通知元素
+      const notification = document.createElement('div');
+      notification.className = 'update-notification';
+      notification.innerHTML = `
+        <div class="notification-content">
+          <span class="notification-icon">🔄</span>
+          <span class="notification-text">${message}</span>
+        </div>
+      `;
+      
+      // 添加樣式
+      const style = `
+        .update-notification {
+          position: fixed;
+          top: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+          background: rgba(40, 167, 69, 0.95);
+          color: white;
+          padding: 12px 20px;
+          border-radius: 25px;
+          z-index: 2000;
+          font-size: 14px;
+          font-weight: 500;
+          backdrop-filter: blur(10px);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+          animation: slideDown 0.3s ease-out;
+        }
+        
+        .notification-content {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        
+        .notification-icon {
+          font-size: 16px;
+        }
+        
+        @keyframes slideDown {
+          from { transform: translateX(-50%) translateY(-100%); opacity: 0; }
+          to { transform: translateX(-50%) translateY(0); opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+          from { transform: translateX(-50%) translateY(0); opacity: 1; }
+          to { transform: translateX(-50%) translateY(-100%); opacity: 0; }
+        }
+      `;
+      
+      // 添加樣式到頁面
+      if (!document.getElementById('notification-styles')) {
+        const styleElement = document.createElement('style');
+        styleElement.id = 'notification-styles';
+        styleElement.textContent = style;
+        document.head.appendChild(styleElement);
+      }
+      
+      // 顯示通知
+      document.body.appendChild(notification);
+      
+      // 3秒後移除通知
+      setTimeout(() => {
+        notification.style.animation = 'slideUp 0.3s ease-in';
+        setTimeout(() => {
+          if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+          }
+        }, 300);
+      }, 3000);
+    }
+
+    // ============================================================
+    // 用戶 / 權限
+    // ============================================================
+    function checkAuth() {
+      const userData = localStorage.getItem("currentUser");
+      if (!userData) {
+        window.location.href = "login.html";
+        return false;
+      }
+      try {
+        currentUser = JSON.parse(userData);
+        if (!window.isAllowedRole?.(currentUser.role)) {
+          localStorage.removeItem("currentUser");
+          window.location.href = "login.html";
+          return false;
+        }
+        updateUserInterface();
+        return true;
+      } catch (err) {
+        console.warn("用戶資料解析失敗:", err);
+        localStorage.removeItem("currentUser");
+        window.location.href = "login.html";
+        return false;
+      }
+    }
+    function updateUserInterface() {
+      if (!currentUser) return;
+      document.getElementById("userName").textContent = currentUser.name || currentUser.displayName || "使用者";
+      document.getElementById("userRole").textContent = window.getRoleText?.(currentUser.role) || "註冊民眾";
+      if (currentUser.permissions && currentUser.permissions.includes("manage")) {
+        document.getElementById("adminControls").style.display = "block";
+      } else if (window.userManager?.stopStatsAutoRefresh) {
+        window.userManager.stopStatsAutoRefresh();
+      }
+    }
+    function logout() {
+      if (confirm("確定要登出系統嗎？")) {
+        if (window.userManager?.stopStatsAutoRefresh) {
+          window.userManager.stopStatsAutoRefresh();
+        }
+        localStorage.removeItem("currentUser");
+        window.location.href = "login.html";
+      }
+    }
+
+    // ============================================================
+    // 匯出 / 管理
+    // ============================================================
+    async function exportData() {
+      if (!currentUser || !currentUser.permissions.includes("export")) { alert("您沒有資料匯出權限"); return; }
+      try {
+        const res = await fetch(
+          `data/pumping-stations.geojson?v=${PUMPING_STATIONS_DATA_VERSION}`,
+          { cache: "no-store" }
+        );
+        const gj = await res.json();
+        gj.features = dedupePumpingFeatures(gj.features || []);
+        const timestamp = new Date().toISOString().slice(0, 19).replace(/[:.]/g, "-");
+        const payload = {
+          exportTime: new Date().toISOString(),
+          exportUser: currentUser.name,
+          totalStations: (gj.features || []).length,
+          data: gj,
+        };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `pumping_stations_${timestamp}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        alert("抽水站資料匯出完成！");
+      } catch (e) { alert("匯出失敗：" + e.message); }
+    }
+    async function exportUsers() {
+      if (!currentUser || !currentUser.permissions.includes("export")) { alert("您沒有用戶資料匯出權限"); return; }
+      try {
+        const usersData = await window.userManager.fetchLiveUsersData();
+        if (!usersData) { alert("無法從共用後端取得用戶資料"); return; }
+        window.userManager.usersData = usersData;
+        const userData = window.userManager.exportRegisteredUsers();
+        if (!userData) { alert("沒有可匯出的用戶資料"); return; }
+        const timestamp = new Date().toISOString().slice(0, 19).replace(/[:.]/g, "-");
+        const blob = new Blob([userData], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `registered_users_${timestamp}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        alert("用戶資料匯出完成！");
+      } catch (e) { alert("匯出失敗：" + e.message); }
+    }
+    async function showUserStats() {
+      if (!currentUser || !currentUser.permissions.includes("manage")) { alert("您沒有查看用戶統計的權限"); return; }
+      try {
+        const s = await window.userManager.fetchLiveStats();
+        if (!s) { alert("無法取得用戶統計資料"); return; }
+        alert(window.userManager.formatStatsMessage(s));
+      } catch (e) { alert("取得用戶統計時發生錯誤：" + e.message); }
+    }
+    function openAdminPanel() {
+      if (!currentUser || !currentUser.permissions.includes("manage")) { alert("您沒有管理面板存取權限"); return; }
+      window.open("admin-panel.html", "_blank");
+    }
+
+    // ============================================================
+    // Google Maps API key（不入 HTML）
+    //   1. GET /api/config        ← 本機 node server.js + .env
+    //   2. js/runtime-config.js   ← GitHub Pages CI 從 Secret 產生
+    //   3. localStorage / ?api_key=  備用
+    // ============================================================
+    function loadScriptOnce(src) {
+      return new Promise((resolve, reject) => {
+        const existing = document.querySelector(`script[data-src="${src}"]`);
+        if (existing) {
+          existing.addEventListener("load", resolve);
+          existing.addEventListener("error", reject);
+          return;
+        }
+        const s = document.createElement("script");
+        s.src = src;
+        s.dataset.src = src;
+        s.onload = resolve;
+        s.onerror = reject;
+        document.head.appendChild(s);
+      });
+    }
+
+    async function resolveApiKey() {
+      // 1) 本機 node server：/api/config（.env → process.env）
+      try {
+        const res = await fetch("/api/config", { cache: "no-store" });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.googleMapsApiKey) {
+            console.log("[Config] ✅ 已從 /api/config（環境變數）取得 key");
+            return data.googleMapsApiKey;
+          }
+        }
+      } catch (e) {
+        console.warn("[Config] /api/config 無法連線:", e.message);
+      }
+
+      // 2) 本機備援：js/runtime-config.js（npm start 會從 .env 產生）
+      //    或 GitHub Pages 部署時由 Secret 產生
+      if (!window.GOOGLE_MAPS_API_KEY) {
+        try {
+          await loadScriptOnce("js/runtime-config.js");
+        } catch (_) { /* 404：公開站可能尚未設定 GitHub Secret */ }
+      }
+      if (window.GOOGLE_MAPS_API_KEY && window.GOOGLE_MAPS_API_KEY.length > 10) {
+        console.log("[Config] ✅ 已從 js/runtime-config.js 取得 key");
+        return window.GOOGLE_MAPS_API_KEY;
+      }
+
+      // 3) 本機備援：/api/config.js（與 server 相同來源）
+      try {
+        await loadScriptOnce("/api/config.js");
+        if (window.GOOGLE_MAPS_API_KEY && window.GOOGLE_MAPS_API_KEY.length > 10) {
+          console.log("[Config] ✅ 已從 /api/config.js 取得 key");
+          return window.GOOGLE_MAPS_API_KEY;
+        }
+      } catch (_) {}
+
+      const fromStorage = localStorage.getItem("GOOGLE_MAPS_API_KEY");
+      if (fromStorage) return fromStorage;
+
+      const fromUrl = new URLSearchParams(window.location.search).get("api_key");
+      if (fromUrl) return fromUrl;
+
+      return null;
+    }
+
+    // 捕捉 Google Maps 自家的鑑權失敗（key 無效 / referer 不對 / billing 未開）
+    window.gm_authFailure = function () {
+      const el = document.getElementById("updateStatus");
+      const msg = "Google Maps API Key 驗證失敗";
+      console.error("[GMaps]", msg);
+      console.error("[GMaps] 可能原因：1) API Key 有網域限制 2) 計費未啟用 3) API 未啟用");
+      console.error("[GMaps] 請檢查 Google Cloud Console 設定");
+      if (el) {
+        el.innerHTML = `
+          ${msg}<br>
+          <small style="color: #e74c3c;">可能原因：API Key 網域限制</small><br>
+          <small>請到 Google Cloud Console 設定 HTTP referrers</small><br>
+          <small>新增：*.github.io/*</small>
+        `;
+      }
+      // 不自動重新載入，讓使用者看到錯誤訊息
+    };
+
+    (async function loadGoogleMapsScript() {
+      console.log("=== Google Maps 載入開始 ===");
+      console.log("網址:", window.location.href);
+
+      const key = await resolveApiKey();
+      if (!key) {
+        const el = document.getElementById("updateStatus");
+        const onGithub = /github\.io$/i.test(window.location.hostname);
+        const msg = onGithub
+          ? "公開網站尚未注入 API key"
+          : "未設定 Google Maps API key";
+        console.error("[GMaps]", msg);
+        if (el) {
+          el.innerHTML = onGithub
+            ? `${msg}<br>
+               <small style="color:#e74c3c;">1. Secret：<code>GOOGLE_MAPS_API_KEY</code>（Actions）</small><br>
+               <small>2. Pages 來源：<code>gh-pages</code> 分支 / root</small><br>
+               <small>3. Actions「Deploy to GitHub Pages」需成功</small>`
+            : `${msg}<br>
+               <small style="color:#e74c3c;">1. <code>cp .env.example .env</code> 並填入 key</small><br>
+               <small>2. <code>npm start</code> 或 <code>node server.js</code></small><br>
+               <small>3. 開 <code>http://localhost:3000</code>（勿用 file://）</small>`;
+        }
+        hideLoadingOverlay();
+        return;
+      }
+      
+      console.log("[GMaps] ✅ API Key 已取得:", key.substring(0, 20) + "...");
+      console.log("[GMaps] Key 長度:", key.length);
+      console.log("[GMaps] 開始載入 Google Maps JavaScript API...");
+      
+        // 設定載入超時檢測
+        const timeoutId = setTimeout(() => {
+          console.error("[GMaps] 載入超時 - 可能是網路問題或 API 限制");
+          console.error("[GMaps] 當前網域:", window.location.origin);
+          console.error("[GMaps] 請確認 API Key 允許此網域存取");
+          const el = document.getElementById("updateStatus");
+          if (el) {
+            el.innerHTML = `
+              載入超時<br>
+              <small style="color: #e74c3c;">網域：${window.location.hostname}</small><br>
+              <small>請檢查 API Key 網域限制設定</small>
+            `;
+          }
+          // 不自動重新載入，顯示錯誤資訊
+        }, 10000); // 10秒超時
+      
+        // 載入成功時清除超時
+        window.initMap = function() {
+          clearTimeout(timeoutId);
+          console.log("[GMaps] ✅ Google Maps API 腳本載入成功");
+          console.log("[GMaps] google 物件:", typeof google);
+          console.log("[GMaps] google.maps 物件:", typeof google?.maps);
+          initMapOriginal();
+        };
+      
+      const s = document.createElement("script");
+      s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&libraries=geometry&language=zh-TW&region=TW&callback=initMap&v=weekly`;
+      s.async = true;
+      s.defer = true;
+        s.onerror = () => {
+          clearTimeout(timeoutId);
+          const el = document.getElementById("updateStatus");
+          console.error("[GMaps] 腳本載入失敗 - 網路問題或 API Key 問題");
+          console.error("[GMaps] 請檢查：1) 網路連線 2) API Key 是否有效 3) 計費是否啟用");
+          if (el) {
+            el.innerHTML = `
+              Google Maps 載入失敗<br>
+              <small style="color: #e74c3c;">請檢查網路連線或 API Key 設定</small><br>
+              <small>按 F12 查看詳細錯誤訊息</small>
+            `;
+          }
+          // 不自動重新載入，讓使用者看到錯誤
+        };
+      document.head.appendChild(s);
+    })();
+
+    // 不等 Google Maps：頁面一載入就先顯示側欄水位（避免快取舊版或地圖延遲）
+    document.addEventListener("DOMContentLoaded", () => {
+      initWeatherPanelScroll();
+      if (typeof loadRealtimeWaterLevels === "function") {
+        loadRealtimeWaterLevels().catch((e) => console.warn("[水位] 初次載入:", e));
+      }
+    });
+  </script>
+</body>
+</html>

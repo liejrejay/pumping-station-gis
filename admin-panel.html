@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>用戶管理面板</title>
+    <!-- 早期權限檢查：在頁面 render 前就攔截，避免內容外洩 -->
+    <script>
+      (function () {
+        var allowed = false;
+        try {
+          var u = JSON.parse(localStorage.getItem('currentUser') || '{}');
+          allowed = !!(u && Array.isArray(u.permissions) && u.permissions.includes('manage'));
+        } catch (e) { allowed = false; }
+        if (!allowed) {
+          // 直接替換頁面內容並轉向，避免任何結構外露
+          document.documentElement.style.display = 'none';
+          alert('您沒有管理面板存取權限');
+          location.replace('index.html');
+        }
+      })();
+    </script>
+    <link rel="stylesheet" href="css/responsive.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        .section h2 {
+            color: #1a5276;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .btn-primary { background: #007bff; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-info { background: #17a2b8; color: white; }
+        .btn-warning { background: #ffc107; color: black; }
+
+        .btn:hover { opacity: 0.8; }
+
+        .user-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            background: #f8f9fa;
+        }
+
+        .user-item {
+            padding: 8px;
+            margin-bottom: 8px;
+            background: white;
+            border-radius: 4px;
+            border-left: 4px solid #007bff;
+        }
+
+        .json-output {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        .copy-btn {
+            margin-top: 10px;
+            background: #28a745;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .back-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: #6c757d;
+            color: white;
+            padding: 10px 15px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+
+        .back-link:hover {
+            background: #5a6268;
+            color: white;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-link">← 返回主系統</a>
+
+    <div class="container">
+        <h1>🔧 用戶管理面板</h1>
+        
+        <div class="stats" id="statsContainer">
+            <!-- 統計卡片將由 JS 動態生成 -->
+        </div>
+        <p id="statsUpdatedAt" style="text-align:center;color:#666;font-size:0.85rem;margin:0 0 16px;">統計更新中…</p>
+
+        <div class="section">
+            <h2>📊 快速操作</h2>
+            <button class="btn btn-info" onclick="refreshData()">刷新資料</button>
+            <button class="btn btn-success" onclick="exportToFile()">匯出用戶檔案</button>
+            <button class="btn btn-warning" onclick="showSyncInstructions()">同步說明</button>
+            <button class="btn btn-primary" onclick="generateUsersJson()">產生 users.json</button>
+        </div>
+
+        <div class="section">
+            <h2>👥 註冊民眾列表</h2>
+            <div id="usersList" class="user-list">
+                載入中...
+            </div>
+        </div>
+
+        <div class="section" id="jsonSection" style="display: none;">
+            <h2>📁 users.json 內容</h2>
+            <p>複製以下內容到 <code>data/users.json</code> 檔案：</p>
+            <div id="jsonOutput" class="json-output"></div>
+            <button class="copy-btn" onclick="copyToClipboard()">複製到剪貼簿</button>
+        </div>
+    </div>
+
+    <script src="js/apiBase.js?v=4ca6e4b"></script>
+    <script src="js/runtime-config.js?v=4ca6e4b"></script>
+    <script src="js/api-endpoint.js?v=4ca6e4b"></script>
+    <script src="js/userRoles.js?v=4ca6e4b"></script>
+    <script src="js/apiClient.js?v=4ca6e4b"></script>
+    <script src="js/userManager.js?v=4ca6e4b"></script>
+    <script>
+        let currentUsersData = null;
+
+        // 頁面載入時初始化
+        window.addEventListener('load', async function() {
+            // 檢查管理員權限
+            const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            if (!currentUser.permissions || !currentUser.permissions.includes('manage')) {
+                alert('您沒有管理員權限，將跳轉到登入頁面');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            await loadRuntimeConfigScript();
+            if (window.apiClient) {
+                window.apiClient.baseUrl = window.getSharedApiBase?.() || window.apiClient.getApiBaseUrl();
+                await window.apiClient.checkServerAvailability();
+            }
+            await refreshData();
+            window.userManager.startStatsAutoRefresh(async (stats) => {
+                onStatsRefreshed(stats);
+                updateUsersList(await fetchUsersForList());
+            }, 30000);
+        });
+
+        function loadRuntimeConfigScript() {
+            return new Promise((resolve) => {
+                if (window.__runtimeConfigLoaded) return resolve();
+                const s = document.createElement('script');
+                s.src = 'js/runtime-config.js';
+                s.onload = () => { window.__runtimeConfigLoaded = true; resolve(); };
+                s.onerror = () => resolve();
+                document.head.appendChild(s);
+            });
+        }
+
+        window.addEventListener('beforeunload', () => {
+            window.userManager?.stopStatsAutoRefresh();
+        });
+
+        async function fetchUsersForList() {
+            if (typeof window.userManager.fetchLiveUsersData === 'function') {
+                return window.userManager.fetchLiveUsersData();
+            }
+            const apiBase = window.getSharedApiBase?.();
+            if (apiBase) {
+                try {
+                    const res = await fetch(`${apiBase}/users`, { cache: 'no-store' });
+                    if (res.ok) {
+                        const data = await res.json();
+                        window.userManager.usersData = data;
+                        return { ...data, source: 'server' };
+                    }
+                } catch (e) {
+                    console.warn('[用戶列表] 備援 fetch 失敗:', e.message);
+                }
+            }
+            if (window.apiClient?.isServerMode && window.apiClient.getUsers) {
+                const data = await window.apiClient.getUsers();
+                if (data?.registeredUsers) {
+                    window.userManager.usersData = data;
+                    return { ...data, source: 'server' };
+                }
+            }
+            return null;
+        }
+
+        async function refreshData() {
+            try {
+                const [stats, usersData] = await Promise.all([
+                    window.userManager.fetchLiveStats(),
+                    fetchUsersForList(),
+                ]);
+                onStatsRefreshed(stats);
+                updateUsersList(usersData);
+            } catch (error) {
+                console.error('刷新資料失敗:', error);
+                alert('刷新資料失敗: ' + error.message);
+            }
+        }
+
+        function onStatsRefreshed(stats) {
+            updateStats(stats);
+            const el = document.getElementById('statsUpdatedAt');
+            if (el && stats) {
+                const src =
+                    stats.source === 'server'
+                        ? '共用後端（全組）'
+                        : stats.source === 'unconfigured'
+                          ? '未設定後端'
+                          : '僅本機瀏覽器';
+                const queried = stats.lastUpdated
+                    ? new Date(stats.lastUpdated).toLocaleString('zh-TW')
+                    : '—';
+                const modified = stats.dataLastModified
+                    ? new Date(stats.dataLastModified).toLocaleString('zh-TW')
+                    : queried;
+                el.textContent = `資料來源：${src} · 每 30 秒更新 · 查詢 ${queried} · 資料異動 ${modified}`;
+            }
+        }
+
+        function updateStats(stats) {
+            const container = document.getElementById('statsContainer');
+            container.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-number">${stats.totalUsers}</div>
+                    <div>總用戶數</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${stats.totalSystemUsers}</div>
+                    <div>系統管理員</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${stats.totalRegisteredUsers}</div>
+                    <div>註冊民眾</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${stats.activeUsers}</div>
+                    <div>活躍用戶</div>
+                </div>
+            `;
+        }
+
+        function updateUsersList(usersPayload) {
+            const container = document.getElementById('usersList');
+            if (!usersPayload) {
+                container.innerHTML =
+                    '<div style="text-align: center; color: #c0392b;">無法從共用後端載入用戶列表（Render 可能休眠中，請稍後按「刷新資料」）</div>';
+                return;
+            }
+            const registeredUsers = usersPayload.registeredUsers || {};
+            const source = usersPayload?.source === 'server' ? '共用後端' : '本機';
+            const keys = Object.keys(registeredUsers);
+
+            if (keys.length === 0) {
+                container.innerHTML =
+                    '<div style="text-align: center; color: #666;">目前沒有註冊民眾</div>';
+                return;
+            }
+
+            const items = keys
+                .map((username) => {
+                    const user = registeredUsers[username];
+                    const reg = user.registrationDate
+                        ? new Date(user.registrationDate).toLocaleString('zh-TW')
+                        : '—';
+                    const status = user.status || 'active';
+                    return `
+                        <div class="user-item">
+                            <strong>${user.name || username}</strong> (@${username})
+                            <br><small>📧 ${user.email || '—'} | 📞 ${user.phone || '—'}</small>
+                            <br><small>📅 註冊: ${reg} | 狀態: ${status}</small>
+                        </div>
+                    `;
+                })
+                .join('');
+
+            container.innerHTML = `
+                <div style="margin-bottom:8px;color:#666;font-size:0.85rem;">
+                    共 ${keys.length} 人（資料來源：${source}）
+                </div>
+                ${items}
+            `;
+        }
+
+        async function generateUsersJson() {
+            try {
+                const usersData = await fetchUsersForList();
+                if (!usersData) {
+                    alert('無法從共用後端取得用戶資料');
+                    return;
+                }
+
+                const usersJson = {
+                    systemUsers: usersData.systemUsers || {},
+                    registeredUsers: usersData.registeredUsers || {},
+                    metadata: usersData.metadata || {
+                        totalUsers:
+                            Object.keys(usersData.systemUsers || {}).length +
+                            Object.keys(usersData.registeredUsers || {}).length,
+                        totalRegistered: Object.keys(usersData.registeredUsers || {}).length,
+                        lastUpdated: new Date().toISOString(),
+                        version: '1.0',
+                    },
+                };
+
+                currentUsersData = usersJson;
+                
+                // 顯示 JSON 內容
+                document.getElementById('jsonOutput').textContent = JSON.stringify(usersJson, null, 2);
+                document.getElementById('jsonSection').style.display = 'block';
+                
+                // 滾動到 JSON 區域
+                document.getElementById('jsonSection').scrollIntoView({ behavior: 'smooth' });
+
+            } catch (error) {
+                alert('產生 users.json 失敗: ' + error.message);
+            }
+        }
+
+        function copyToClipboard() {
+            const jsonText = document.getElementById('jsonOutput').textContent;
+            navigator.clipboard.writeText(jsonText).then(() => {
+                alert('已複製到剪貼簿！請貼到 data/users.json 檔案中');
+            }).catch(() => {
+                // 備用方案
+                const textarea = document.createElement('textarea');
+                textarea.value = jsonText;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                alert('已複製到剪貼簿！請貼到 data/users.json 檔案中');
+            });
+        }
+
+        function exportToFile() {
+            if (!currentUsersData) {
+                alert('請先點擊「產生 users.json」');
+                return;
+            }
+
+            const timestamp = new Date().toISOString().slice(0, 19).replace(/[:.]/g, '-');
+            const filename = `users_backup_${timestamp}.json`;
+            
+            const blob = new Blob([JSON.stringify(currentUsersData, null, 2)], {
+                type: 'application/json'
+            });
+            
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            alert('用戶資料已匯出為檔案！');
+        }
+
+        function showSyncInstructions() {
+            const instructions = `
+📋 同步說明
+
+1️⃣ 點擊「產生 users.json」按鈕
+2️⃣ 複製產生的 JSON 內容
+3️⃣ 開啟 data/users.json 檔案
+4️⃣ 將內容完全替換
+5️⃣ 儲存檔案
+6️⃣ 重新整理網站
+
+💡 提示：
+- 建議定期備份用戶資料
+- 可以使用「匯出用戶檔案」功能
+- 系統會自動合併系統用戶和註冊用戶
+            `;
+            
+            alert(instructions);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,461 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.34400168750649,
+          24.93114699121841
+        ]
+      },
+      "properties": {
+        "stationid": "1140H006",
+        "name": "鳶山(1)",
+        "river": "大漢溪",
+        "status": "已廢",
+        "address": "新北市三峽區鳶山里",
+        "elev_zero_m": 43.0,
+        "source": "WRA opendata"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.35312078958034,
+          24.942562146902883
+        ]
+      },
+      "properties": {
+        "stationid": "1140H007",
+        "name": "鳶山(2)",
+        "river": "大漢溪",
+        "status": "已廢",
+        "address": "新北市三峽區鳶山里",
+        "elev_zero_m": 43.0,
+        "source": "WRA opendata"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.45874078376085,
+          25.03432352109858
+        ]
+      },
+      "properties": {
+        "stationid": "1140H009",
+        "name": "新莊",
+        "river": "大漢溪",
+        "status": "已廢",
+        "address": "新北市新莊區榮和里",
+        "elev_zero_m": 2.0,
+        "source": "WRA opendata"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.35348160839882,
+          24.936483229314625
+        ]
+      },
+      "properties": {
+        "stationid": "1140H051",
+        "name": "鳶山(3)",
+        "river": "大漢溪",
+        "status": "已廢",
+        "address": "新北市三峽區鳶山里",
+        "elev_zero_m": 43.0,
+        "source": "WRA opendata"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.46071079090943,
+          25.03379650258651
+        ]
+      },
+      "properties": {
+        "stationid": "1140H060",
+        "name": "板新大橋",
+        "river": "大漢溪",
+        "status": "已廢",
+        "address": "新北市新莊區板新大橋",
+        "elev_zero_m": 2.0,
+        "source": "WRA opendata"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.43480345025574,
+          24.990598875807265
+        ]
+      },
+      "properties": {
+        "stationid": "1140H069",
+        "name": "浮洲",
+        "river": "大漢溪",
+        "status": "已廢",
+        "address": "新北市板橋區浮洲里",
+        "elev_zero_m": 3.0,
+        "source": "WRA opendata"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.29811961211165,
+          24.656434741302512
+        ]
+      },
+      "properties": {
+        "stationid": "1140H001",
+        "name": "玉峰(馬利哥灣)",
+        "river": "大漢溪",
+        "status": "現存",
+        "address": "新竹縣尖石鄉玉峰村",
+        "elev_zero_m": 688.0,
+        "source": "WRA opendata"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.28376815071928,
+          24.884893737773048
+        ]
+      },
+      "properties": {
+        "stationid": "1140H046",
+        "name": "大溪",
+        "river": "大漢溪",
+        "status": "已廢",
+        "address": "桃園市大溪區粟仔圓",
+        "elev_zero_m": 83.0,
+        "source": "WRA opendata"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.3031374849812,
+          24.89517091487682
+        ]
+      },
+      "properties": {
+        "stationid": "1140H047",
+        "name": "烏塗堀",
+        "river": "大漢溪",
+        "status": "已廢",
+        "address": "桃園市大溪區月眉里",
+        "elev_zero_m": 81.0,
+        "source": "WRA opendata"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.25181226509942,
+          24.81132673047768
+        ]
+      },
+      "properties": {
+        "stationid": "1140H005",
+        "name": "石門(1)",
+        "river": "大漢溪",
+        "status": "已廢",
+        "address": "桃園市龍潭區大坪里",
+        "elev_zero_m": 137.0,
+        "source": "WRA opendata"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.24133232037093,
+          24.806005325615303
+        ]
+      },
+      "properties": {
+        "stationid": "1140H044",
+        "name": "石門(2)",
+        "river": "大漢溪",
+        "status": "已廢",
+        "address": "桃園市龍潭區大坪里",
+        "elev_zero_m": 137.0,
+        "source": "WRA opendata"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.24933704002572,
+          24.80237174559303
+        ]
+      },
+      "properties": {
+        "stationid": "1140H045",
+        "name": "石門(3)",
+        "river": "大漢溪",
+        "status": "已廢",
+        "address": "桃園市龍潭區大坪里",
+        "elev_zero_m": 137.0,
+        "source": "WRA opendata"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.25306032470942,
+          24.82574980142982
+        ]
+      },
+      "properties": {
+        "stationid": "1140H050",
+        "name": "大坪",
+        "river": "大漢溪",
+        "status": "已廢",
+        "address": "桃園市龍潭區大坪里",
+        "elev_zero_m": 120.0,
+        "source": "WRA opendata"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.36911981572891,
+          24.797586205818714
+        ]
+      },
+      "properties": {
+        "stationid": "1140H003",
+        "name": "拉號",
+        "river": "大漢溪",
+        "status": "已廢",
+        "address": "桃園市復興區拉號",
+        "elev_zero_m": 236.0,
+        "source": "WRA opendata"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.34222681275473,
+          24.804778046664662
+        ]
+      },
+      "properties": {
+        "stationid": "1140H004",
+        "name": "角板山",
+        "river": "大漢溪",
+        "status": "已廢",
+        "address": "桃園市復興區角板",
+        "elev_zero_m": 190.0,
+        "source": "WRA opendata"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.35641136381858,
+          24.66822168053713
+        ]
+      },
+      "properties": {
+        "stationid": "1140H042",
+        "name": "三光",
+        "river": "大漢溪",
+        "status": "已廢",
+        "address": "桃園市復興區三光里",
+        "elev_zero_m": 545.0,
+        "source": "WRA opendata"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.36432175041493,
+          24.71436594048179
+        ]
+      },
+      "properties": {
+        "stationid": "1140H043",
+        "name": "高義",
+        "river": "大漢溪",
+        "status": "現存",
+        "address": "桃園市復興區高義里",
+        "elev_zero_m": 438.0,
+        "source": "WRA opendata"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.36234267797336,
+          24.76802477053209
+        ]
+      },
+      "properties": {
+        "stationid": "1140H054",
+        "name": "霞雲",
+        "river": "大漢溪",
+        "status": "現存",
+        "address": "桃園市復興區羅浮里",
+        "elev_zero_m": 249.0,
+        "source": "WRA opendata"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.37485461075694,
+          24.934901786547734
+        ]
+      },
+      "properties": {
+        "stationid": "1140H129",
+        "name": "三峽大橋",
+        "river": "大漢溪",
+        "status": "已廢",
+        "address": "新北市三峽區介壽路一段",
+        "elev_zero_m": 0.0,
+        "source": "WRA opendata"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.25302654563664,
+          24.822952366119218
+        ]
+      },
+      "properties": {
+        "stationid": "1140H076",
+        "name": "石門(後池)",
+        "river": "大漢溪",
+        "status": "現存",
+        "address": "桃園市龍潭區大坪里",
+        "elev_zero_m": 132.26,
+        "source": "WRA opendata"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.43052048605506,
+          24.97935348004568
+        ]
+      },
+      "properties": {
+        "stationid": "1140H105",
+        "name": "城林橋",
+        "river": "大漢溪",
+        "status": "現存",
+        "address": "新北市土城區城林橋",
+        "elev_zero_m": 20.42,
+        "source": "WRA opendata"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.35338301944888,
+          24.944756134051694
+        ]
+      },
+      "properties": {
+        "stationid": "1140H067",
+        "name": "三鶯橋",
+        "river": "大漢溪",
+        "status": "現存",
+        "address": "新北市鶯歌區南靖里",
+        "elev_zero_m": 52.24,
+        "source": "WRA opendata"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.4548056099724,
+          25.033317871918875
+        ]
+      },
+      "properties": {
+        "stationid": "1140H111",
+        "name": "新海大橋(即時)",
+        "river": "大漢溪",
+        "status": "現存",
+        "address": "環河路新海橋下游測堤防",
+        "elev_zero_m": 0.0,
+        "source": "WRA opendata"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          121.3819,
+          24.9853
+        ]
+      },
+      "properties": {
+        "stationid": "1140H118",
+        "name": "柑園橋(即時)",
+        "river": "大漢溪",
+        "status": "現存",
+        "address": "佳園路二段柑園橋橋上下游測",
+        "elev_zero_m": 33.54,
+        "source": "WRA opendata"
+      }
+    }
+  ]
+}
