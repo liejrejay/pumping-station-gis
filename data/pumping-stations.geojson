@@ -470,31 +470,7 @@
         "label": "浮洲加壓站"
       }
     },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          121.4466875,
-          25.029562499999997
-        ]
-      },
-      "properties": {
-        "name": "農業部農田水利署桃園管理處新莊工作站",
-        "address": "新北市新莊區泰豐里豐年街59號",
-        "river": " 塔寮坑溪 ",
-        "pump_type": null,
-        "year_ce": null,
-        "year_ce_range": null,
-        "source": "legacy plus_code",
-        "geocode_quality": "plus_code",
-        "plus_code": "2CHW+RM",
-        "village": "泰豐里",
-        "district": "新北市新莊區",
-        "id": 26,
-        "label": "農業部農田水利署桃園管理處新莊工作站"
-      }
-    },
+   
     {
       "type": "Feature",
       "geometry": {
