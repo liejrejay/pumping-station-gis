@@ -317,18 +317,17 @@
       box-shadow: 0 1px 4px rgba(0,0,0,.15);
     }
     .measure-readout {
-      position: absolute;
-      bottom: 48px;
-      left: 12px;
-      z-index: 1000;
-      background: rgba(255, 255, 255, 0.96);
-      padding: 6px 10px;
-      font: 13px/1.4 system-ui;
+      margin-top: 8px;
+      padding: 8px 10px;
+      background: #eef5fb;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      line-height: 1.45;
       color: #154360;
-      border-radius: 4px;
-      box-shadow: 0 1px 4px rgba(0,0,0,.15);
+      border-left: 3px solid #e74c3c;
       display: none;
     }
+    .measure-readout strong { color: #1a5276; }
 
     /* 即時水位：放在左側欄系統概覽內，不擋地圖 */
     .water-level-sidebar-host {
@@ -533,10 +532,11 @@
         <h2>地圖工具 (Tools)</h2>
         <div class="tools-grid">
           <button class="tool-btn" id="btnLocate"     title="顯示我的位置">📍 我的位置</button>
-          <button class="tool-btn" id="btnMeasure"    title="距離量測：點擊地圖加點，雙擊結束">📏 量測</button>
+          <button class="tool-btn" id="btnMeasure"    title="距離量測：點擊地圖加點，再按量測結束">📏 量測</button>
           <button class="tool-btn" id="btnFullscreen" title="全螢幕">⛶ 全螢幕</button>
           <button class="tool-btn" id="btnPrint"      title="列印 / 匯出 PDF">🖨️ 列印</button>
         </div>
+        <div class="measure-readout" id="measureReadout"></div>
       </section>
 
       <!-- 底圖 -->
@@ -592,7 +592,6 @@
   </div>
 
   <div class="coord-box" id="coordBox">緯度 — / 經度 —</div>
-  <div class="measure-readout" id="measureReadout"></div>
 
   <!-- 圖例（右下角，不與即時水位重疊） -->
   <div class="legend" id="legend">
@@ -1476,19 +1475,47 @@
         measureMarkers = [];
         measurePts = [];
         measureReadout.style.display = "none";
+        measureReadout.textContent = "";
+      };
+
+      const finishMeasure = () => {
+        measureOn = false;
+        measureBtn.classList.remove("active");
+        map.setOptions({ draggableCursor: null });
+        if (measurePts.length < 2) {
+          measureReadout.textContent = "📏 請至少點選 2 個點";
+          measureReadout.style.display = "block";
+          return;
+        }
+        const totalM = getMeasureTotalM();
+        const txt = formatMeasureDistance(totalM);
+        const segments = [];
+        for (let i = 1; i < measurePts.length; i++) {
+          const segM = google.maps.geometry.spherical.computeDistanceBetween(measurePts[i - 1], measurePts[i]);
+          segments.push(`第 ${i} 段 ${formatMeasureDistance(segM)}`);
+        }
+        measureReadout.innerHTML =
+          `📏 總距離 <strong>${txt}</strong>（${measurePts.length} 點）` +
+          (segments.length > 1 ? `<br><small>${segments.join(" · ")}</small>` : "") +
+          `<br><small>再按 📏 量測 可重新量測</small>`;
+        measureReadout.style.display = "block";
+      };
+
+      const startMeasure = () => {
+        measureOn = true;
+        measureBtn.classList.add("active");
+        measureReadout.textContent = "📏 點擊地圖加點，再按 📏 量測 結束";
+        measureReadout.style.display = "block";
+        map.setOptions({ draggableCursor: "crosshair" });
       };
 
       measureBtn.addEventListener("click", () => {
-        measureOn = !measureOn;
-        measureBtn.classList.toggle("active", measureOn);
         if (measureOn) {
-          measureReadout.textContent = "📏 距離量測中：點擊地圖加點，雙擊結束";
-          measureReadout.style.display = "block";
-          map.setOptions({ draggableCursor: "crosshair" });
-        } else {
-          clearMeasure();
-          map.setOptions({ draggableCursor: null });
+          finishMeasure();
+          return;
         }
+        if (measurePts.length > 0) clearMeasure();
+        startMeasure();
       });
 
       map.addListener("click", (ev) => {
@@ -1504,30 +1531,7 @@
         });
         const totalM = getMeasureTotalM();
         const txt = formatMeasureDistance(totalM);
-        measureReadout.textContent = `📏 累計距離：${txt}（${measurePts.length} 點；雙擊結束）`;
-      });
-      map.addListener("dblclick", (ev) => {
-        if (!measureOn) return;
-        ev.stop();
-        measureOn = false;
-        measureBtn.classList.remove("active");
-        map.setOptions({ draggableCursor: null });
-        if (measurePts.length < 2) {
-          measureReadout.textContent = "📏 量測結束：請至少點選 2 個點";
-          measureReadout.style.display = "block";
-          return;
-        }
-        const totalM = getMeasureTotalM();
-        const txt = formatMeasureDistance(totalM);
-        const segments = [];
-        for (let i = 1; i < measurePts.length; i++) {
-          const segM = google.maps.geometry.spherical.computeDistanceBetween(measurePts[i - 1], measurePts[i]);
-          segments.push(`第 ${i} 段 ${formatMeasureDistance(segM)}`);
-        }
-        measureReadout.innerHTML =
-          `📏 量測完成：總距離 <strong>${txt}</strong>（${measurePts.length} 點）` +
-          (segments.length > 1 ? `<br><small>${segments.join(" · ")}</small>` : "");
-        measureReadout.style.display = "block";
+        measureReadout.textContent = `📏 累計 ${txt}（${measurePts.length} 點）· 再按 📏 量測 結束`;
       });
 
       // 全螢幕
